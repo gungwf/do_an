@@ -6,6 +6,5 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, UUID> {
-    // Tìm bệnh án theo ID của lịch hẹn
     Optional<MedicalRecord> findByAppointmentId(UUID appointmentId);
 }

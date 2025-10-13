@@ -43,13 +43,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String userEmail = jwtService.extractUsername(jwt);
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // Chúng ta không cần kiểm tra token với DB nữa, chỉ cần kiểm tra chữ ký
-            // (việc này đã được thực hiện bên trong hàm extractUsername)
-
-            // Lấy danh sách quyền từ token
             List<SimpleGrantedAuthority> authorities = jwtService.extractAuthorities(jwt);
 
-            // Tạo đối tượng UserDetails trực tiếp từ thông tin trong token
             UserDetails userDetails = new User(userEmail, "", authorities);
 
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

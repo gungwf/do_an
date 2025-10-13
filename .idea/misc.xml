@@ -11,6 +11,7 @@
         <option value="$PROJECT_DIR$/appointment-service/pom.xml" />
         <option value="$PROJECT_DIR$/product-inventory-service/pom.xml" />
         <option value="$PROJECT_DIR$/reporting-service/pom.xml" />
+        <option value="$PROJECT_DIR$/sys-service/pom.xml" />
       </list>
     </option>
   </component>

@@ -1,0 +1,12 @@
+springdoc:
+  swagger-ui:
+    persist-authorization: false
+  api-docs:
+    path: /v3/api-docs/medical
+spring:
+  web:
+    cors:
+      allowed-origins: "http://localhost:8080"
+      allowed-methods: "*"
+      allowed-headers: "*"
+      allow-credentials: true

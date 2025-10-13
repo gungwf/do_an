@@ -11,4 +11,5 @@ public class MedicalRecordRequest {
     private String diagnosis;
     private List<PrescriptionItemRequest> prescriptionItems;
     private String icd10Code;
+    private UUID templateId;
 }

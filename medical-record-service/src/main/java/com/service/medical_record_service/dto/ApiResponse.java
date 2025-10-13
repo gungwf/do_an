@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @Builder
-@JsonInclude(JsonInclude.Include.NON_NULL) // Bỏ qua các trường null khi chuyển sang JSON
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
     private int code;
     private String message;

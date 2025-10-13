@@ -1,6 +1,8 @@
 package com.service.appointment_service.controller;
 
 
+import com.service.appointment_service.client.UserDto;
+import com.service.appointment_service.client.UserServiceClient;
 import com.service.appointment_service.dto.AppointmentRequest;
 import com.service.appointment_service.dto.AppointmentResponseDto;
 import com.service.appointment_service.dto.UpdateAppointmentStatusRequest;
@@ -21,10 +23,11 @@ import java.util.UUID;
 @PreAuthorize("isAuthenticated()")
 public class AppointmentController {
     private final AppointmentService appointmentService;
+    private final UserServiceClient userServiceClient;
 
     //tạo appointment
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('patient', 'staff')")
+    @PreAuthorize("hasAnyAuthority('patient', 'staff', 'doctor')")
     public ResponseEntity<?> createAppointment(
             Authentication authentication,
             @RequestBody AppointmentRequest request
@@ -40,7 +43,6 @@ public class AppointmentController {
 
     //get appointment by id
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('admin')")
     public ResponseEntity<AppointmentResponseDto> getAppointmentById(@PathVariable UUID id) {
         try {
             return ResponseEntity.ok(appointmentService.getAppointmentById(id));
@@ -80,19 +82,33 @@ public class AppointmentController {
 
     // get all appointment
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('admin', 'staff')")
     public ResponseEntity<List<AppointmentResponseDto>> getAllAppointments() {
         return ResponseEntity.ok(appointmentService.getAllAppointments());
     }
 
     // update appointment
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('admin', 'staff')")
     public ResponseEntity<AppointmentResponseDto> updateAppointment(
             @PathVariable UUID id,
             @RequestBody AppointmentRequest request
     ) {
         AppointmentResponseDto updatedAppointment = appointmentService.updateAppointment(id, request);
         return ResponseEntity.ok(updatedAppointment);
+    }
+
+    @PatchMapping("/{id}/cancel")
+    @PreAuthorize("hasAuthority('patient')") // Chỉ bệnh nhân mới được tự hủy lịch
+    public ResponseEntity<?> cancelAppointment(
+            @PathVariable UUID id,
+            Authentication authentication
+    ) {
+        // Lấy email của bệnh nhân từ token
+        String patientEmail = authentication.getName();
+        // Gọi sang sys-srv để lấy ID của bệnh nhân
+        UserDto patient = userServiceClient.getUserByEmail(patientEmail);
+
+        // Gọi service để thực hiện hủy lịch
+        AppointmentResponseDto canceledAppointment = appointmentService.cancelAppointment(id, patient.id());
+        return ResponseEntity.ok(canceledAppointment);
     }
 }

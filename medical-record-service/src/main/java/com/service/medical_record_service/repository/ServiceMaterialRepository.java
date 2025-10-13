@@ -7,6 +7,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ServiceMaterialRepository extends JpaRepository<ServiceMaterial, ServiceMaterialId> {
-    // Tìm tất cả vật tư tiêu hao cho một dịch vụ
     List<ServiceMaterial> findById_ServiceId(UUID serviceId);
 }

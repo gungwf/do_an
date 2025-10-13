@@ -6,6 +6,8 @@ import com.service.medical_record_service.dto.ServiceSimpleDto;
 import com.service.medical_record_service.entity.Service;
 import com.service.medical_record_service.entity.ServiceMaterial;
 import com.service.medical_record_service.entity.ServiceMaterialId;
+import com.service.medical_record_service.exception.AppException;
+import com.service.medical_record_service.exception.ERROR_CODE;
 import com.service.medical_record_service.repository.ServiceMaterialRepository;
 import com.service.medical_record_service.repository.ServiceRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +31,7 @@ public class ClinicService {
 
     public Service getServiceById(UUID id) {
         return serviceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Service not found with id: " + id));
+                .orElseThrow(() -> new AppException(ERROR_CODE.SERVICE_NOT_FOUND));
     }
 
     public Service updateService(UUID id, Service serviceDetails) {
@@ -76,7 +78,7 @@ public class ClinicService {
     public List<ServiceSimpleDto> getAllServicesSimple() {
         return serviceRepository.findAll()
                 .stream()
-                .filter(Service::isActive) // Chỉ lấy các dịch vụ đang hoạt động
+                .filter(Service::isActive)
                 .map(service -> new ServiceSimpleDto(service.getId(), service.getServiceName()))
                 .collect(Collectors.toList());
     }

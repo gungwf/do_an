@@ -24,7 +24,6 @@ public class UserController {
     private final AuthService authService;
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('admin')")
     public ResponseEntity<UserDto> getUserById(@PathVariable UUID id) {
         try {
             UserDto userDto = authService.getUserById(id);
@@ -35,7 +34,6 @@ public class UserController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('admin')")
     public ResponseEntity<List<User>> getAllUser() {
         return ResponseEntity.ok(authService.getAllUser());
     }
@@ -48,13 +46,11 @@ public class UserController {
     }
 
     @GetMapping("/by-email")
-    @PreAuthorize("hasAuthority('admin')")
     public ResponseEntity<UserDto> getUserByEmail(@RequestParam String email) {
         return ResponseEntity.ok(authService.getUserByEmail(email));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('admin')")
     public ResponseEntity<UserDto> updateUser(
             @PathVariable UUID id,
             @RequestBody UpdateUserRequest request

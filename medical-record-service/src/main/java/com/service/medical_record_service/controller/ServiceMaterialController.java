@@ -21,7 +21,7 @@ public class ServiceMaterialController {
     private final ClinicService clinicService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('admin')") // Chỉ admin mới được định nghĩa BOM
+    @PreAuthorize("hasAuthority('admin')")
     public ResponseEntity<ServiceMaterial> addMaterialToService(@RequestBody ServiceMaterialRequest request) {
         return ResponseEntity.ok(clinicService.addMaterialToService(request));
     }

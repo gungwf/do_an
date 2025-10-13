@@ -18,18 +18,17 @@ public class ServiceController {
     private final ClinicService clinicService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('admin')")
     public ResponseEntity<Service> createService(@RequestBody Service service) {
         return ResponseEntity.ok(clinicService.createService(service));
     }
 
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Service>> getAllServices() {
         return ResponseEntity.ok(clinicService.getAllServices());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Service> getServiceById(@PathVariable UUID id) {
         try {
             return ResponseEntity.ok(clinicService.getServiceById(id));
@@ -39,6 +38,7 @@ public class ServiceController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('admin')")
     public ResponseEntity<Service> updateService(@PathVariable UUID id, @RequestBody Service serviceDetails) {
         try {
             return ResponseEntity.ok(clinicService.updateService(id, serviceDetails));
@@ -48,6 +48,7 @@ public class ServiceController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('admin')")
     public ResponseEntity<Void> deleteService(@PathVariable UUID id) {
         try {
             clinicService.deleteService(id);

@@ -5,11 +5,14 @@ import com.service.appointment_service.client.ServiceDto;
 import com.service.appointment_service.dto.*;
 import com.service.appointment_service.entity.Appointment;
 import com.service.appointment_service.entity.Enum.AppointmentStatus;
+import com.service.appointment_service.entity.Enum.ProtocolStatus;
 import com.service.appointment_service.exception.AppException;
 import com.service.appointment_service.exception.ERROR_CODE;
 import com.service.appointment_service.repository.AppointmentRepository;
+import com.service.appointment_service.repository.ProtocolTrackingRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -19,12 +22,14 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final MedicalServiceClient medicalServiceClient;
     private final UserServiceClient userServiceClient;
     private final ProductInventoryClient productInventoryClient;
     private final EmailService emailService;
+    private final ProtocolTrackingRepository protocolTrackingRepository;
 
     public Appointment createAppointment(String patientEmail,AppointmentRequest request) {
         ServiceDto service = medicalServiceClient.getServiceById(request.getServiceId());
@@ -195,6 +200,26 @@ public class AppointmentService {
 
                     productInventoryClient.deductStock(deductRequest);
                 }
+
+                protocolTrackingRepository
+                        .findByPatientIdAndProtocolServiceIdAndStatus(
+                                appointment.getPatientId(),
+                                appointment.getServiceId(), // Giả định serviceId này là một phần của liệu trình
+                                ProtocolStatus.IN_PROGRESS)
+                        .ifPresent(protocol -> { // ifPresent: Chỉ thực hiện nếu tìm thấy
+
+                            log.info("--- Cập nhật tiến độ cho liệu trình ID: {} ---", protocol.getId());
+
+                            // Tăng số buổi đã hoàn thành
+                            protocol.setCompletedSessions(protocol.getCompletedSessions() + 1);
+
+                            // Nếu đã đủ số buổi, đánh dấu liệu trình là hoàn thành
+                            if (protocol.getCompletedSessions() >= protocol.getTotalSessions()) {
+                                protocol.setStatus(ProtocolStatus.COMPLETED);
+                                log.info("--- Liệu trình ID: {} đã hoàn thành! ---", protocol.getId());
+                            }
+                            protocolTrackingRepository.save(protocol);
+                        });
             }
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid status: " + newStatusStr);
@@ -252,5 +277,25 @@ public class AppointmentService {
         return appointments.stream()
                 .map(this::mapToResponseDto)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public AppointmentResponseDto cancelAppointment(UUID appointmentId, UUID patientId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new AppException(ERROR_CODE.APPOINTMENT_NOT_FOUND));
+
+        if (!appointment.getPatientId().equals(patientId)) {
+            throw new AppException(ERROR_CODE.UNAUTHORIZED);
+        }
+
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED || appointment.getStatus() == AppointmentStatus.CANCELED) {
+            throw new AppException(ERROR_CODE.INVALID_STATUS);
+        }
+
+        appointment.setStatus(AppointmentStatus.CANCELED);
+        Appointment updatedAppointment = appointmentRepository.save(appointment);
+        AppointmentResponseDto appointmentResponseDto = mapToResponseDto(updatedAppointment);
+        emailService.sendAppointmentCancellation(appointmentResponseDto);
+        return mapToResponseDto(updatedAppointment);
     }
 }

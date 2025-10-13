@@ -81,4 +81,41 @@ public class EmailService {
         message.setText(text);
         mailSender.send(message);
     }
+
+    public void sendAppointmentCancellation(AppointmentResponseDto appointment) {
+        if (appointment.patient() == null || appointment.patient().email() == null) {
+            System.out.println("Không thể gửi email: thiếu thông tin bệnh nhân.");
+            return;
+        }
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(appointment.patient().email());
+        message.setSubject("Thông báo Hủy Lịch hẹn tại Phòng khám của chúng tôi");
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm 'ngày' dd/MM/yyyy");
+        String formattedTime = appointment.appointmentTime().format(formatter);
+
+        // Nội dung email
+        String text = String.format(
+                "Chào bạn %s,\n\n" +
+                        "Chúng tôi rất tiếc phải thông báo rằng lịch hẹn của bạn đã được hủy.\n\n" +
+                        "Thông tin lịch hẹn đã hủy:\n" +
+                        "- Dịch vụ: %s\n" +
+                        "- Thời gian: %s\n\n" +
+                        "Nếu bạn không phải là người yêu cầu hủy, vui lòng liên hệ với chúng tôi ngay lập tức. " +
+                        "Nếu bạn muốn đặt lại lịch hẹn khác, vui lòng truy cập website của chúng tôi.\n\n" +
+                        "Trân trọng,\n" +
+                        "Đội ngũ Phòng khám.",
+                appointment.patient().fullName(),
+                appointment.service().serviceName(),
+                formattedTime
+        );
+
+        message.setText(text);
+
+        // Gửi email
+        mailSender.send(message);
+
+        System.out.println("Đã gửi email thông báo hủy lịch đến: " + appointment.patient().email());
+    }
 }

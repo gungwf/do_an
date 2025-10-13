@@ -7,6 +7,6 @@
     <file url="file://$PROJECT_DIR$/medical-record-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/product-inventory-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/reporting-service/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/sys-srv/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/sys-service/src/main/java" charset="UTF-8" />
   </component>
 </project>

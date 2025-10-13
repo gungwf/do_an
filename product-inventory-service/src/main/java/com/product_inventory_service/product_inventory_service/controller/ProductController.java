@@ -3,6 +3,8 @@ package com.product_inventory_service.product_inventory_service.controller;
 import com.product_inventory_service.product_inventory_service.dto.ProductSimpleDto;
 import com.product_inventory_service.product_inventory_service.entity.Product;
 import com.product_inventory_service.product_inventory_service.service.ProductService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -44,6 +46,7 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Get user info", security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/simple")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ProductSimpleDto>> getAllProductsSimple() {

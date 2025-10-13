@@ -16,7 +16,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/inventory")
 @RequiredArgsConstructor
-@PreAuthorize("isAuthenticated()")
 public class InventoryController {
     private final InventoryService inventoryService;
 

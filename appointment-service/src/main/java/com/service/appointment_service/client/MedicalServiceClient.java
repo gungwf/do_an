@@ -15,5 +15,6 @@ public interface MedicalServiceClient {
     @GetMapping("/service-materials/service/{serviceId}")
     List<ServiceMaterialDto> getMaterialsForService(@PathVariable("serviceId") UUID serviceId);
 
-
+    @GetMapping("/protocols/{id}")
+    ProtocolDto getProtocolById(@PathVariable("id") UUID id);
 }

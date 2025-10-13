@@ -10,18 +10,27 @@
         <module name="api-gateway" />
         <module name="eureka-server" />
       </profile>
-      <profile name="Annotation profile for appointment-service" enabled="true">
+      <profile name="Annotation profile for reporting-service" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.40/lombok-1.18.40.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.40/lombok-1.18.40.jar" />
+        </processorPath>
+        <module name="reporting-service" />
+      </profile>
+      <profile name="Annotation profile for sys-srv" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.40/lombok-1.18.40.jar" />
         </processorPath>
-        <module name="reporting-service" />
+        <module name="sys-service" />
         <module name="appointment-service" />
         <module name="medical-record-service" />
         <module name="product-inventory-service" />
-        <module name="sys-srv" />
       </profile>
     </annotationProcessing>
   </component>
@@ -33,7 +42,7 @@
       <module name="medical-record-service" options="-parameters" />
       <module name="product-inventory-service" options="-parameters" />
       <module name="reporting-service" options="-parameters" />
-      <module name="sys-srv" options="-parameters" />
+      <module name="sys-service" options="-parameters" />
     </option>
   </component>
 </project>

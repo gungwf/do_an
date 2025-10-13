@@ -7,25 +7,21 @@ spring:
   cloud:
     gateway:
       routes:
-        # Route 1: Cho đường dẫn /auth/**, trỏ đến sys-srv
         - id: auth-service-auth-route
           uri: lb://sys-srv
           predicates:
             - Path=/auth/**
 
-        # Route 2: Cho đường dẫn /users/**, cũng trỏ đến sys-srv
         - id: auth-service-users-route
           uri: lb://sys-srv
           predicates:
             - Path=/users/**
 
-        # Route 2 (MỚI): Cho Medical Record Service
         - id: medical-record-service-route
           uri: lb://medical-record-service
           predicates:
             - Path=/services/**
 
-        # Route 3 (MỚI): Cho Appointment Service
         - id: appointment-service-route
           uri: lb://appointment-service
           predicates:
@@ -35,6 +31,11 @@ spring:
           uri: lb://appointment-service
           predicates:
             - Path=/reviews/**
+
+        - id: medical-record-service--protocols-route
+          uri: lb://medical-record-service
+          predicates:
+            - Path=/protocols/**
 
         - id: auth-service-branches-route
           uri: lb://sys-srv
@@ -61,16 +62,43 @@ spring:
           predicates:
             - Path=/service-materials/**
 
+        - id: medical-record-service-service-templates
+          uri: lb://medical-record-service
+          predicates:
+            - Path=/templates/**
+
         - id: reporting-service-route
           uri: lb://reporting-service
           predicates:
             - Path=/reports/**
 
-        # Route MỚI: Cho Patient Profiles, cũng trỏ đến sys-srv
         - id: auth-service-profiles-route
           uri: lb://sys-srv
           predicates:
             - Path=/patient-profiles/**
+
+        - id: appointment-service-protocol-tracking-route
+          uri: lb://appointment-service
+          predicates:
+            - Path=/protocol-tracking/**
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    urls:
+      - name: SYS Service
+        url: http://localhost:8081/v3/api-docs/sys
+      - name: Medical Record Service
+        url: http://localhost:8082/v3/api-docs/medical
+      - name: Appointment Service
+        url: http://localhost:8083/v3/api-docs/appointment
+      - name: Product & Inventory Service
+        url: http://localhost:8084/v3/api-docs/product
+      - name: Reporting Service
+        url: http://localhost:8085/v3/api-docs/report
 
 eureka:
   client:
