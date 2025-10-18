@@ -1,8 +1,8 @@
 package com.service.medical_record_service.controller;
 
-import com.service.medical_record_service.client.UserDto;
-import com.service.medical_record_service.client.UserServiceClient;
-import com.service.medical_record_service.dto.TemplateRequest;
+import com.service.medical_record_service.client.dto.UserDto;
+import com.service.medical_record_service.client.client.UserServiceClient;
+import com.service.medical_record_service.dto.request.TemplateRequest;
 import com.service.medical_record_service.entity.DiagnosisTemplate;
 import com.service.medical_record_service.service.TemplateService;
 import lombok.RequiredArgsConstructor;

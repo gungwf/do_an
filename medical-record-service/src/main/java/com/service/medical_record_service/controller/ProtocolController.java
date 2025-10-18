@@ -1,6 +1,6 @@
 package com.service.medical_record_service.controller;
 
-import com.service.medical_record_service.dto.LinkServiceRequest;
+import com.service.medical_record_service.dto.request.LinkServiceRequest;
 import com.service.medical_record_service.entity.Protocol;
 import com.service.medical_record_service.entity.ProtocolServiceLink;
 import com.service.medical_record_service.service.ProtocolService;

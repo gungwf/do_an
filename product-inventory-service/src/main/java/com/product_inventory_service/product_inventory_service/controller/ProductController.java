@@ -1,6 +1,6 @@
 package com.product_inventory_service.product_inventory_service.controller;
 
-import com.product_inventory_service.product_inventory_service.dto.ProductSimpleDto;
+import com.product_inventory_service.product_inventory_service.dto.response.ProductSimpleDto;
 import com.product_inventory_service.product_inventory_service.entity.Product;
 import com.product_inventory_service.product_inventory_service.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;

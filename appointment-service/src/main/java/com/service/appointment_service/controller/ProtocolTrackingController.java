@@ -1,9 +1,9 @@
 package com.service.appointment_service.controller;
 
-import com.service.appointment_service.client.UserDto;
-import com.service.appointment_service.client.UserServiceClient;
-import com.service.appointment_service.dto.ProtocolTrackingResponseDto;
-import com.service.appointment_service.dto.StartProtocolRequest;
+import com.service.appointment_service.client.dto.UserDto;
+import com.service.appointment_service.client.client.UserServiceClient;
+import com.service.appointment_service.dto.response.ProtocolTrackingResponseDto;
+import com.service.appointment_service.dto.request.StartProtocolRequest;
 import com.service.appointment_service.entity.ProtocolTracking;
 import com.service.appointment_service.service.ProtocolTrackingService;
 import lombok.RequiredArgsConstructor;

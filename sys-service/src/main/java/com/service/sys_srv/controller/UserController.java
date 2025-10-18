@@ -1,16 +1,13 @@
 package com.service.sys_srv.controller;
 
-import com.service.sys_srv.dto.request.UpdateProfileRequest;
 import com.service.sys_srv.dto.request.UpdateUserRequest;
 import com.service.sys_srv.dto.response.UserDto;
 import com.service.sys_srv.dto.response.UserSimpleDto;
-import com.service.sys_srv.entity.PatientProfile;
 import com.service.sys_srv.entity.User;
 import com.service.sys_srv.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

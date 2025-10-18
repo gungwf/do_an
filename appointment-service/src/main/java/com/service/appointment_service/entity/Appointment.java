@@ -49,4 +49,5 @@ public class Appointment {
 
     @UpdateTimestamp
     private Instant updatedAt;
+
 }

@@ -1,14 +1,12 @@
 package com.service.medical_record_service.exception;
 
-import com.service.medical_record_service.dto.ApiResponse;
+import com.service.medical_record_service.dto.response.ApiResponse;
 import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-
-import java.nio.file.AccessDeniedException;
 
 @ControllerAdvice
 @Slf4j

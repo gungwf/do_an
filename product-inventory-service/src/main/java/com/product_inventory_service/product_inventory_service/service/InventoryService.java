@@ -1,6 +1,6 @@
 package com.product_inventory_service.product_inventory_service.service;
 
-import com.product_inventory_service.product_inventory_service.dto.DeductStockRequest;
+import com.product_inventory_service.product_inventory_service.dto.request.DeductStockRequest;
 import com.product_inventory_service.product_inventory_service.entity.Inventory;
 import com.product_inventory_service.product_inventory_service.entity.InventoryId;
 import com.product_inventory_service.product_inventory_service.exception.AppException;

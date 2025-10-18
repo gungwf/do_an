@@ -1,18 +1,20 @@
 package com.service.appointment_service.controller;
 
 
-import com.service.appointment_service.client.UserDto;
-import com.service.appointment_service.client.UserServiceClient;
-import com.service.appointment_service.dto.AppointmentRequest;
-import com.service.appointment_service.dto.AppointmentResponseDto;
-import com.service.appointment_service.dto.UpdateAppointmentStatusRequest;
+import com.service.appointment_service.client.dto.UserDto;
+import com.service.appointment_service.client.client.UserServiceClient;
+import com.service.appointment_service.dto.request.AppointmentRequest;
+import com.service.appointment_service.dto.response.AppointmentResponseDto;
+import com.service.appointment_service.dto.request.UpdateAppointmentStatusRequest;
 import com.service.appointment_service.entity.Appointment;
 import com.service.appointment_service.service.AppointmentService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,7 +36,9 @@ public class AppointmentController {
     ) {
         try {
             String patientEmail = authentication.getName();
+//            String payUrl = appointmentService.createAppointment(patientEmail, request);
             Appointment newAppointment = appointmentService.createAppointment(patientEmail, request);
+//            return ResponseEntity.ok(Map.of("payUrl"));
             return ResponseEntity.ok(appointmentService.mapToResponseDto(newAppointment));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

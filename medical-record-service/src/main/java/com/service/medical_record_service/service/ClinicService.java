@@ -1,8 +1,8 @@
 package com.service.medical_record_service.service;
 
-import com.service.medical_record_service.dto.ServiceMaterialRequest;
-import com.service.medical_record_service.dto.ServiceMaterialResponseDto;
-import com.service.medical_record_service.dto.ServiceSimpleDto;
+import com.service.medical_record_service.dto.request.ServiceMaterialRequest;
+import com.service.medical_record_service.dto.response.ServiceMaterialResponseDto;
+import com.service.medical_record_service.dto.response.ServiceSimpleDto;
 import com.service.medical_record_service.entity.Service;
 import com.service.medical_record_service.entity.ServiceMaterial;
 import com.service.medical_record_service.entity.ServiceMaterialId;

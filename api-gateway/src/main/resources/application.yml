@@ -82,6 +82,11 @@ spring:
           predicates:
             - Path=/protocol-tracking/**
 
+        - id: appointment-service-payment
+          uri: lb://appointment-service
+          predicates:
+            - Path=/api/**
+
 springdoc:
   api-docs:
     enabled: true

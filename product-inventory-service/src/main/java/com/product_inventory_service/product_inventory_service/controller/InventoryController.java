@@ -1,13 +1,12 @@
 package com.product_inventory_service.product_inventory_service.controller;
 
-import com.product_inventory_service.product_inventory_service.dto.DeductStockRequest;
-import com.product_inventory_service.product_inventory_service.dto.UpdateStockRequest;
+import com.product_inventory_service.product_inventory_service.dto.request.DeductStockRequest;
+import com.product_inventory_service.product_inventory_service.dto.request.UpdateStockRequest;
 import com.product_inventory_service.product_inventory_service.entity.Inventory;
 import com.product_inventory_service.product_inventory_service.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

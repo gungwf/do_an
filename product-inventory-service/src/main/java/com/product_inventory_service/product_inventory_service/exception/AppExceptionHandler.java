@@ -1,6 +1,6 @@
 package com.product_inventory_service.product_inventory_service.exception;
 
-import com.product_inventory_service.product_inventory_service.dto.ApiResponse;
+import com.product_inventory_service.product_inventory_service.dto.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;

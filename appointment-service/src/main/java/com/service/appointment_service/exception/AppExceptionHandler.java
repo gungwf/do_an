@@ -1,6 +1,6 @@
 package com.service.appointment_service.exception;
 
-import com.service.medical_record_service.dto.ApiResponse;
+import com.service.medical_record_service.dto.response.ApiResponse;
 import com.service.medical_record_service.exception.AppException;
 import com.service.medical_record_service.exception.ERROR_CODE;
 import feign.FeignException;

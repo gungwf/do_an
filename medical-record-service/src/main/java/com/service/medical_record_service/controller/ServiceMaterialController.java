@@ -1,7 +1,7 @@
 package com.service.medical_record_service.controller;
 
-import com.service.medical_record_service.dto.ServiceMaterialRequest;
-import com.service.medical_record_service.dto.ServiceMaterialResponseDto;
+import com.service.medical_record_service.dto.request.ServiceMaterialRequest;
+import com.service.medical_record_service.dto.response.ServiceMaterialResponseDto;
 import com.service.medical_record_service.entity.ServiceMaterial;
 import com.service.medical_record_service.service.ClinicService;
 import lombok.RequiredArgsConstructor;

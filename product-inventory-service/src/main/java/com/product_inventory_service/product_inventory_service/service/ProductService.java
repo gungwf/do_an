@@ -1,6 +1,6 @@
 package com.product_inventory_service.product_inventory_service.service;
 
-import com.product_inventory_service.product_inventory_service.dto.ProductSimpleDto;
+import com.product_inventory_service.product_inventory_service.dto.response.ProductSimpleDto;
 import com.product_inventory_service.product_inventory_service.entity.Product;
 import com.product_inventory_service.product_inventory_service.exception.AppException;
 import com.product_inventory_service.product_inventory_service.exception.ERROR_CODE;

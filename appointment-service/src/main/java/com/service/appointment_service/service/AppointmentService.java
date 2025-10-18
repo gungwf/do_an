@@ -1,8 +1,16 @@
 package com.service.appointment_service.service;
 
-import com.service.appointment_service.client.*;
-import com.service.appointment_service.client.ServiceDto;
-import com.service.appointment_service.dto.*;
+import com.service.appointment_service.client.client.MedicalServiceClient;
+import com.service.appointment_service.client.client.ProductInventoryClient;
+import com.service.appointment_service.client.client.ServiceClient;
+import com.service.appointment_service.client.client.UserServiceClient;
+import com.service.appointment_service.client.dto.*;
+import com.service.appointment_service.client.dto.ServiceDto;
+import com.service.appointment_service.dto.request.AppointmentRequest;
+import com.service.appointment_service.dto.response.AppointmentResponseDto;
+import com.service.appointment_service.dto.response.BranchDto;
+import com.service.appointment_service.dto.response.DoctorDto;
+import com.service.appointment_service.dto.response.PatientDto;
 import com.service.appointment_service.entity.Appointment;
 import com.service.appointment_service.entity.Enum.AppointmentStatus;
 import com.service.appointment_service.entity.Enum.ProtocolStatus;
@@ -10,11 +18,14 @@ import com.service.appointment_service.exception.AppException;
 import com.service.appointment_service.exception.ERROR_CODE;
 import com.service.appointment_service.repository.AppointmentRepository;
 import com.service.appointment_service.repository.ProtocolTrackingRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -30,8 +41,11 @@ public class AppointmentService {
     private final ProductInventoryClient productInventoryClient;
     private final EmailService emailService;
     private final ProtocolTrackingRepository protocolTrackingRepository;
+    private final PaymentService paymentService;
+    private ServiceClient serviceClient;
 
-    public Appointment createAppointment(String patientEmail,AppointmentRequest request) {
+// ko thanh toán
+    public Appointment createAppointment(String patientEmail, AppointmentRequest request) {
         ServiceDto service = medicalServiceClient.getServiceById(request.getServiceId());
         UserDto patient = userServiceClient.getUserByEmail(patientEmail);
         UserDto doctor = userServiceClient.getUserById(request.getDoctorId());
@@ -102,6 +116,72 @@ public class AppointmentService {
         return savedAppointment;
     }
 
+    //có thanh toán
+//    public String createAppointment(String patientEmail, AppointmentRequest request, HttpServletRequest httpServletRequest) throws Exception {
+//        ServiceDto service = medicalServiceClient.getServiceById(request.getServiceId());
+//        UserDto patient = userServiceClient.getUserByEmail(patientEmail);
+//        UserDto doctor = userServiceClient.getUserById(request.getDoctorId());
+//
+//        OffsetDateTime newAppointmentStart = request.getAppointmentTime();
+//        OffsetDateTime newAppointmentEnd = newAppointmentStart.plusMinutes(service.durationMinutes());
+//
+//        // check lịch
+//        List<Appointment> doctorAppointments = appointmentRepository.findByDoctorIdAndAppointmentTimeBetween(
+//                doctor.id(),
+//                newAppointmentStart.withHour(0).withMinute(0),
+//                newAppointmentStart.withHour(23).withMinute(59)
+//        );
+//
+//        for (Appointment existingAppointment : doctorAppointments) {
+//            OffsetDateTime existingStart = existingAppointment.getAppointmentTime();
+//            OffsetDateTime existingEnd = existingStart.plusMinutes(existingAppointment.getDurationMinutes());
+//            if (newAppointmentStart.isBefore(existingEnd) && newAppointmentEnd.isAfter(existingStart)) {
+//                throw new AppException(ERROR_CODE.DOCTOR_BUSY);
+//            }
+//        }
+//
+//        List<Appointment> patientAppointments = appointmentRepository.findByPatientIdAndAppointmentTimeBetween(
+//                patient.id(),
+//                newAppointmentStart.withHour(0).withMinute(0),
+//                newAppointmentStart.withHour(23).withMinute(59)
+//        );
+//        for (Appointment existingAppointment : patientAppointments) {
+//            OffsetDateTime existingStart = existingAppointment.getAppointmentTime();
+//            OffsetDateTime existingEnd = existingStart.plusMinutes(existingAppointment.getDurationMinutes());
+//            if (newAppointmentStart.isBefore(existingEnd) && newAppointmentEnd.isAfter(existingStart)) {
+//                throw new AppException(ERROR_CODE.PATIENT_BUSY);
+//            }
+//        }
+//
+//        // check dị ứng
+//        String notes = request.getNotes() != null ? request.getNotes() : "";
+//        try {
+//            PatientProfileDto profile = userServiceClient.getPatientProfile(patient.id());
+//            String allergies = profile.allergies() != null ? profile.allergies().toLowerCase() : "";
+//
+//            if (!allergies.isEmpty() && allergies.contains(service.serviceName().toLowerCase())) {
+//                notes += " [CẢNH BÁO: Bệnh nhân có thể dị ứng với dịch vụ này!]";
+//            }
+//        } catch (Exception e) {
+//        }
+//
+//        Appointment appointment = new Appointment();
+//        appointment.setPatientId(patient.id());
+//        appointment.setServiceId(service.id());
+//        appointment.setBranchId(request.getBranchId());
+//        appointment.setDoctorId(doctor.id());
+//        appointment.setAppointmentTime(request.getAppointmentTime());
+//        appointment.setPriceAtBooking(service.price());
+//        appointment.setDurationMinutes(service.durationMinutes());
+//        appointment.setStatus(AppointmentStatus.PENDING_PAYMENT);
+//        appointment.setNotes(notes);
+//
+//        Appointment savedAppointment = appointmentRepository.save(appointment);
+//        AppointmentResponseDto appointmentDto = mapToResponseDto(savedAppointment);
+//        emailService.sendAppointmentConfirmation(appointmentDto);
+//        return paymentService.createVnpayPayment(savedAppointment, httpServletRequest);
+//    }
+
     public AppointmentResponseDto getAppointmentById(UUID id) {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new AppException(ERROR_CODE.APPOINTMENT_NOT_FOUND));
@@ -142,7 +222,7 @@ public class AppointmentService {
 
         PatientDto patientDto = (patient != null) ? new PatientDto(patient.id(), patient.fullName(), patient.email()) : null;
         DoctorDto doctorDto = (doctor != null) ? new DoctorDto(doctor.id(), doctor.fullName()) : null;
-        com.service.appointment_service.dto.ServiceDto serviceDto = (service != null) ? new com.service.appointment_service.dto.ServiceDto(service.id(), service.serviceName()) : null;
+        com.service.appointment_service.dto.response.ServiceDto serviceDto = (service != null) ? new com.service.appointment_service.dto.response.ServiceDto(service.id(), service.serviceName()) : null;
         BranchDto branchDto = (branch != null) ? new BranchDto(branch.id(), branch.branchName(), branch.address()) : null;
 
         return new AppointmentResponseDto(
@@ -291,11 +371,62 @@ public class AppointmentService {
         if (appointment.getStatus() == AppointmentStatus.COMPLETED || appointment.getStatus() == AppointmentStatus.CANCELED) {
             throw new AppException(ERROR_CODE.INVALID_STATUS);
         }
+        //chính sách huỷ hẹn
+        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime appointmentTime = appointment.getAppointmentTime();
+
+        // Tính khoảng thời gian (tính bằng giờ) từ lúc hủy đến giờ hẹn
+        long hoursUntilAppointment = Duration.between(now, appointmentTime).toHours();
+
+        int refundPercentage = 0;
+
+        // Hủy trước 24 giờ
+        if (hoursUntilAppointment >= 24) {
+            refundPercentage = 100; // Hoàn 100%
+        }
+        // Hủy trong vòng 24 giờ
+        else {
+            refundPercentage = 0;
+        }
+
+        // (Trong thực tế, bạn sẽ dùng refundPercentage để gọi API thanh toán và hoàn tiền)
+        log.info("Hủy lịch hẹn ID: {}. Thời gian còn lại: {} giờ. Tỷ lệ hoàn tiền: {}%",
+                appointmentId, hoursUntilAppointment, refundPercentage);
 
         appointment.setStatus(AppointmentStatus.CANCELED);
         Appointment updatedAppointment = appointmentRepository.save(appointment);
         AppointmentResponseDto appointmentResponseDto = mapToResponseDto(updatedAppointment);
         emailService.sendAppointmentCancellation(appointmentResponseDto);
         return mapToResponseDto(updatedAppointment);
+    }
+
+    @Transactional
+    public void confirmAppointmentPayment(String orderId) {
+        // 1. Tìm lịch hẹn bằng orderId (chính là appointmentId)
+        Appointment appointment = appointmentRepository.findById(UUID.fromString(orderId))
+                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + orderId)); // Sau này có thể đổi thành AppException
+
+        // 2. Cập nhật trạng thái thành CONFIRMED
+        appointment.setStatus(AppointmentStatus.CONFIRMED);
+        appointmentRepository.save(appointment);
+
+        log.info("Đã xác nhận thanh toán và cập nhật trạng thái cho Lịch hẹn ID: {}", orderId);
+
+        // 3. Gửi email xác nhận lịch hẹn thành công
+        AppointmentResponseDto dto = mapToResponseDto(appointment);
+        emailService.sendAppointmentConfirmation(dto);
+    }
+
+    public Appointment findById(UUID id) {
+        return appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+    }
+
+    public BigDecimal getServicePrice(UUID serviceId) {
+        return serviceClient.getServicePrice(serviceId); // Gọi REST API
+    }
+
+    public Appointment save(Appointment appointment) {
+        return appointmentRepository.save(appointment);
     }
 }

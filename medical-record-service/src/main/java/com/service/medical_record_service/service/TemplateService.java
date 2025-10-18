@@ -1,6 +1,6 @@
 package com.service.medical_record_service.service;
 
-import com.service.medical_record_service.dto.TemplateRequest;
+import com.service.medical_record_service.dto.request.TemplateRequest;
 import com.service.medical_record_service.entity.DiagnosisTemplate;
 import com.service.medical_record_service.entity.PrescriptionTemplateItem;
 import com.service.medical_record_service.repository.DiagnosisTemplateRepository;

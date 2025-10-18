@@ -1,8 +1,8 @@
 package com.service.appointment_service.controller;
 
-import com.service.appointment_service.client.UserDto;
-import com.service.appointment_service.client.UserServiceClient;
-import com.service.appointment_service.dto.ReviewRequest;
+import com.service.appointment_service.client.dto.UserDto;
+import com.service.appointment_service.client.client.UserServiceClient;
+import com.service.appointment_service.dto.request.ReviewRequest;
 import com.service.appointment_service.entity.Review;
 import com.service.appointment_service.service.ReviewService;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.service.appointment_service.service;
 
-import com.service.appointment_service.dto.ReviewRequest;
+import com.service.appointment_service.dto.request.ReviewRequest;
 import com.service.appointment_service.entity.Appointment;
 import com.service.appointment_service.entity.Enum.AppointmentStatus;
 import com.service.appointment_service.entity.Review;

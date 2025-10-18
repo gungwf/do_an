@@ -1,8 +1,11 @@
 package com.service.medical_record_service.service;
 
-import com.service.medical_record_service.client.*;
-import com.service.medical_record_service.dto.MedicalRecordRequest;
-import com.service.medical_record_service.dto.PrescriptionItemRequest;
+import com.service.medical_record_service.client.client.AppointmentServiceClient;
+import com.service.medical_record_service.client.client.ProductInventoryClient;
+import com.service.medical_record_service.client.dto.AppointmentResponseDto;
+import com.service.medical_record_service.client.dto.DeductStockRequest;
+import com.service.medical_record_service.dto.request.MedicalRecordRequest;
+import com.service.medical_record_service.dto.request.PrescriptionItemRequest;
 import com.service.medical_record_service.entity.DiagnosisTemplate;
 import com.service.medical_record_service.entity.MedicalRecord;
 import com.service.medical_record_service.entity.PrescriptionItem;

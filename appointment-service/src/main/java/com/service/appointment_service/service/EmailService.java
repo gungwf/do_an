@@ -1,6 +1,6 @@
 package com.service.appointment_service.service;
 
-import com.service.appointment_service.dto.AppointmentResponseDto;
+import com.service.appointment_service.dto.response.AppointmentResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;

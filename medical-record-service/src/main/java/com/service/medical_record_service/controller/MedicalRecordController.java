@@ -1,7 +1,7 @@
 package com.service.medical_record_service.controller;
 
-import com.service.medical_record_service.dto.LockRequest;
-import com.service.medical_record_service.dto.MedicalRecordRequest;
+import com.service.medical_record_service.dto.request.LockRequest;
+import com.service.medical_record_service.dto.request.MedicalRecordRequest;
 import com.service.medical_record_service.entity.MedicalRecord;
 import com.service.medical_record_service.service.MedicalRecordService;
 import lombok.RequiredArgsConstructor;

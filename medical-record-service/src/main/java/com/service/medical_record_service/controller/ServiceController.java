@@ -1,6 +1,6 @@
 package com.service.medical_record_service.controller;
 
-import com.service.medical_record_service.dto.ServiceSimpleDto;
+import com.service.medical_record_service.dto.response.ServiceSimpleDto;
 import com.service.medical_record_service.entity.Service;
 import com.service.medical_record_service.service.ClinicService;
 import lombok.RequiredArgsConstructor;
