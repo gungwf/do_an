@@ -27,4 +27,10 @@ public class PatientProfile {
     private String allergies;
     private String contraindications;
     private String medicalHistory;
+
+    @Column(name = "membership_tier")
+    private String membershipTier = "STANDARD";
+
+    @Column
+    private Integer points = 0;
 }

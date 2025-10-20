@@ -1,5 +1,6 @@
 package com.service.sys_srv.controller;
 
+import com.service.sys_srv.dto.request.AddPointsRequest;
 import com.service.sys_srv.dto.request.UpdateProfileRequest;
 import com.service.sys_srv.dto.response.UserDto;
 import com.service.sys_srv.entity.PatientProfile;
@@ -40,5 +41,14 @@ public class PatientProfileController {
         PatientProfile updatedProfile = authService.updatePatientProfile(userDto.getId(), request);
 
         return ResponseEntity.ok(updatedProfile);
+    }
+
+    @PatchMapping("/{userId}/add-points")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<PatientProfile> addPoints(
+            @PathVariable UUID userId,
+            @RequestBody AddPointsRequest request
+    ) {
+        return ResponseEntity.ok(authService.addPointsToPatient(userId, request.getPointsToAdd()));
     }
 }

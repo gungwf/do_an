@@ -206,4 +206,18 @@ public class AuthService {
                 .map(user -> new UserSimpleDto(user.getId(), user.getFullName()))
                 .collect(Collectors.toList());
     }
+
+    @Transactional
+    public PatientProfile addPointsToPatient(UUID userId, int pointsToAdd) {
+        PatientProfile profile = getPatientProfileByUserId(userId);
+        profile.setPoints(profile.getPoints() + pointsToAdd);
+
+        if (profile.getPoints() >= 5000 && "SILVER".equals(profile.getMembershipTier())) {
+            profile.setMembershipTier("GOLD");
+        } else if (profile.getPoints() >= 1000 && "STANDARD".equals(profile.getMembershipTier())) {
+            profile.setMembershipTier("SILVER");
+        }
+
+        return patientProfileRepository.save(profile);
+    }
 }

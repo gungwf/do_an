@@ -118,4 +118,35 @@ public class EmailService {
 
         System.out.println("Đã gửi email thông báo hủy lịch đến: " + appointment.patient().email());
     }
+
+    public void sendAppointmentCompletedEmail(AppointmentResponseDto appointment) {
+        if (appointment.patient() == null || appointment.patient().email() == null) {
+            System.out.println("Không thể gửi email: thiếu thông tin bệnh nhân.");
+            return;
+        }
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(appointment.patient().email());
+        message.setSubject("Cảm ơn bạn đã sử dụng dịch vụ tại Phòng khám");
+
+        // Nội dung email
+        String text = String.format(
+                "Chào bạn %s,\n\n" +
+                        "Lịch hẹn của bạn cho dịch vụ '%s' đã được hoàn thành.\n\n" +
+                        "Chúng tôi rất mong nhận được đánh giá của bạn để cải thiện chất lượng dịch vụ. " +
+                        "Bạn có thể đăng nhập vào hệ thống để lại đánh giá cho lịch hẹn này.\n\n" +
+                        "Cảm ơn bạn đã tin tưởng!\n\n" +
+                        "Trân trọng,\n" +
+                        "Đội ngũ Phòng khám.",
+                appointment.patient().fullName(),
+                appointment.service().serviceName()
+        );
+
+        message.setText(text);
+
+        // Gửi email
+        mailSender.send(message);
+
+        System.out.println("Đã gửi email hoàn thành lịch hẹn đến: " + appointment.patient().email());
+    }
 }

@@ -111,76 +111,10 @@ public class AppointmentService {
         appointment.setNotes(notes);
 
         Appointment savedAppointment = appointmentRepository.save(appointment);
-        AppointmentResponseDto appointmentDto = mapToResponseDto(savedAppointment);
-        emailService.sendAppointmentConfirmation(appointmentDto);
-        return savedAppointment;
-    }
-
-    //có thanh toán
-//    public String createAppointment(String patientEmail, AppointmentRequest request, HttpServletRequest httpServletRequest) throws Exception {
-//        ServiceDto service = medicalServiceClient.getServiceById(request.getServiceId());
-//        UserDto patient = userServiceClient.getUserByEmail(patientEmail);
-//        UserDto doctor = userServiceClient.getUserById(request.getDoctorId());
-//
-//        OffsetDateTime newAppointmentStart = request.getAppointmentTime();
-//        OffsetDateTime newAppointmentEnd = newAppointmentStart.plusMinutes(service.durationMinutes());
-//
-//        // check lịch
-//        List<Appointment> doctorAppointments = appointmentRepository.findByDoctorIdAndAppointmentTimeBetween(
-//                doctor.id(),
-//                newAppointmentStart.withHour(0).withMinute(0),
-//                newAppointmentStart.withHour(23).withMinute(59)
-//        );
-//
-//        for (Appointment existingAppointment : doctorAppointments) {
-//            OffsetDateTime existingStart = existingAppointment.getAppointmentTime();
-//            OffsetDateTime existingEnd = existingStart.plusMinutes(existingAppointment.getDurationMinutes());
-//            if (newAppointmentStart.isBefore(existingEnd) && newAppointmentEnd.isAfter(existingStart)) {
-//                throw new AppException(ERROR_CODE.DOCTOR_BUSY);
-//            }
-//        }
-//
-//        List<Appointment> patientAppointments = appointmentRepository.findByPatientIdAndAppointmentTimeBetween(
-//                patient.id(),
-//                newAppointmentStart.withHour(0).withMinute(0),
-//                newAppointmentStart.withHour(23).withMinute(59)
-//        );
-//        for (Appointment existingAppointment : patientAppointments) {
-//            OffsetDateTime existingStart = existingAppointment.getAppointmentTime();
-//            OffsetDateTime existingEnd = existingStart.plusMinutes(existingAppointment.getDurationMinutes());
-//            if (newAppointmentStart.isBefore(existingEnd) && newAppointmentEnd.isAfter(existingStart)) {
-//                throw new AppException(ERROR_CODE.PATIENT_BUSY);
-//            }
-//        }
-//
-//        // check dị ứng
-//        String notes = request.getNotes() != null ? request.getNotes() : "";
-//        try {
-//            PatientProfileDto profile = userServiceClient.getPatientProfile(patient.id());
-//            String allergies = profile.allergies() != null ? profile.allergies().toLowerCase() : "";
-//
-//            if (!allergies.isEmpty() && allergies.contains(service.serviceName().toLowerCase())) {
-//                notes += " [CẢNH BÁO: Bệnh nhân có thể dị ứng với dịch vụ này!]";
-//            }
-//        } catch (Exception e) {
-//        }
-//
-//        Appointment appointment = new Appointment();
-//        appointment.setPatientId(patient.id());
-//        appointment.setServiceId(service.id());
-//        appointment.setBranchId(request.getBranchId());
-//        appointment.setDoctorId(doctor.id());
-//        appointment.setAppointmentTime(request.getAppointmentTime());
-//        appointment.setPriceAtBooking(service.price());
-//        appointment.setDurationMinutes(service.durationMinutes());
-//        appointment.setStatus(AppointmentStatus.PENDING_PAYMENT);
-//        appointment.setNotes(notes);
-//
-//        Appointment savedAppointment = appointmentRepository.save(appointment);
 //        AppointmentResponseDto appointmentDto = mapToResponseDto(savedAppointment);
 //        emailService.sendAppointmentConfirmation(appointmentDto);
-//        return paymentService.createVnpayPayment(savedAppointment, httpServletRequest);
-//    }
+        return savedAppointment;
+    }
 
     public AppointmentResponseDto getAppointmentById(UUID id) {
         Appointment appointment = appointmentRepository.findById(id)
@@ -263,11 +197,6 @@ public class AppointmentService {
             AppointmentStatus newStatus = AppointmentStatus.valueOf(newStatusStr.toUpperCase());
             appointment.setStatus(newStatus);
             if (newStatus == AppointmentStatus.COMPLETED) {
-//                System.out.println("--- DEBUG: BÊN GỌI (appointment-service) ---");
-//                System.out.println("Appointment ID: " + appointment.getId());
-//                System.out.println("Service ID từ Appointment: " + appointment.getServiceId());
-//                System.out.println("Branch ID từ Appointment: " + appointment.getBranchId());
-
                 List<ServiceMaterialDto> materials = medicalServiceClient.getMaterialsForService(appointment.getServiceId());
                 // trừ kho
                 for (ServiceMaterialDto material : materials) {
@@ -275,16 +204,12 @@ public class AppointmentService {
                     deductRequest.setBranchId(appointment.getBranchId());
                     deductRequest.setProductId(material.productId());
                     deductRequest.setQuantityToDeduct(material.quantityConsumed());
-//                    System.out.println("==> Sắp gọi trừ kho với Product ID: " + material.productId());
-//                    System.out.println("==> Sắp gọi trừ kho với Branch ID: " + appointment.getBranchId());
-
                     productInventoryClient.deductStock(deductRequest);
                 }
-
                 protocolTrackingRepository
                         .findByPatientIdAndProtocolServiceIdAndStatus(
                                 appointment.getPatientId(),
-                                appointment.getServiceId(), // Giả định serviceId này là một phần của liệu trình
+                                appointment.getServiceId(),
                                 ProtocolStatus.IN_PROGRESS)
                         .ifPresent(protocol -> { // ifPresent: Chỉ thực hiện nếu tìm thấy
 
@@ -301,11 +226,30 @@ public class AppointmentService {
                             protocolTrackingRepository.save(protocol);
                         });
             }
+            try {
+                AppointmentResponseDto dto = mapToResponseDto(appointment);
+                emailService.sendAppointmentCompletedEmail(dto);
+            } catch (Exception e) {
+                log.error("Lỗi khi gửi email hoàn thành lịch hẹn: {}", e.getMessage());
+            }
+
+            try {
+                // 10,000 VNĐ = 1 điểm
+                int pointsToAdd = appointment.getPriceAtBooking().intValue() / 10000;
+                if (pointsToAdd > 0) {
+                    AddPointsRequest pointsRequest = new AddPointsRequest();
+                    pointsRequest.setPointsToAdd(pointsToAdd);
+                    userServiceClient.addPointsToPatient(appointment.getPatientId(), pointsRequest);
+                    log.info("Đã cộng {} điểm cho bệnh nhân ID: {}", pointsToAdd, appointment.getPatientId());
+                }
+            } catch (Exception e) {
+                log.error("Lỗi khi cộng điểm cho bệnh nhân {}: {}", appointment.getPatientId(), e.getMessage());
+            }
+
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid status: " + newStatusStr);
         }
         Appointment updatedAppointment = appointmentRepository.save(appointment);
-
         return mapToResponseDto(updatedAppointment);
     }
 

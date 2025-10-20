@@ -1,9 +1,19 @@
 package com.service.appointment_service.service;
 
+import com.service.appointment_service.client.client.MedicalServiceClient;
+import com.service.appointment_service.client.client.UserServiceClient;
+import com.service.appointment_service.client.dto.ServiceDto;
+import com.service.appointment_service.client.dto.UserDto;
 import com.service.appointment_service.config.VnPayConfig;
+import com.service.appointment_service.dto.response.AppointmentResponseDto;
+import com.service.appointment_service.dto.response.BranchDto;
+import com.service.appointment_service.dto.response.DoctorDto;
+import com.service.appointment_service.dto.response.PatientDto;
 import com.service.appointment_service.entity.Appointment;
 import com.service.appointment_service.entity.Enum.AppointmentStatus;
 import com.service.appointment_service.entity.Payment;
+import com.service.appointment_service.exception.AppException;
+import com.service.appointment_service.exception.ERROR_CODE;
 import com.service.appointment_service.repository.AppointmentRepository;
 import com.service.appointment_service.repository.PaymentRepository;
 import com.service.appointment_service.util.VnPayUtil;
@@ -25,6 +35,9 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final AppointmentRepository appointmentRepository;
     private final VnPayConfig vnPayConfig;
+    private final EmailService emailService;
+    private final MedicalServiceClient medicalServiceClient;
+    private final UserServiceClient userServiceClient;
 
     @Transactional
     public String createVnPayPayment(UUID appointmentId, HttpServletRequest request) {
@@ -151,31 +164,22 @@ public class PaymentService {
     @Transactional
     public Map<String, String> handleVnPayReturn(Map<String, String> vnp_Params) {
         Map<String, String> response = new HashMap<>();
-
-        // Lấy vnp_SecureHash từ tham số
         String vnp_SecureHash = vnp_Params.get("vnp_SecureHash");
 
-        // Xóa vnp_SecureHash và vnp_SecureHashType (nếu có)
         vnp_Params.remove("vnp_SecureHash");
         if (vnp_Params.containsKey("vnp_SecureHashType")) {
             vnp_Params.remove("vnp_SecureHashType");
         }
 
-        // === LOGIC KIỂM TRA HASH ĐÃ SỬA LẠI ===
-        // 1. Dùng chung hàm để tạo lại chuỗi query string ĐÃ URL-ENCODE
         String queryStringToHash = VnPayUtil.buildQueryStringForHash(vnp_Params);
-
-        // 2. Tạo lại chữ ký từ chuỗi đó
         String calculatedHash = VnPayUtil.hmacSHA512(vnPayConfig.getHashSecret(), queryStringToHash);
 
-        // So sánh 2 chữ ký
         if (!calculatedHash.equals(vnp_SecureHash)) {
             response.put("status", "FAILED");
             response.put("message", "Invalid Checksum");
-            return response; // Trả về lỗi ngay lập tức nếu chữ ký không khớp
+            return response;
         }
 
-        // === LOGIC NGHIỆP VỤ (Giữ nguyên) ===
         String responseCode = vnp_Params.get("vnp_ResponseCode");
         String orderId = vnp_Params.get("vnp_TxnRef");
 
@@ -188,6 +192,8 @@ public class PaymentService {
                 appointment.setStatus(AppointmentStatus.CONFIRMED);
                 paymentRepository.save(payment);
                 appointmentRepository.save(appointment);
+                AppointmentResponseDto dto = mapToResponseDto(appointment);
+                emailService.sendAppointmentConfirmation(dto);
                 response.put("status", "SUCCESS");
                 response.put("message", "Payment successful!");
             } else if (payment != null && !"PENDING".equals(payment.getStatus())) {
@@ -202,5 +208,56 @@ public class PaymentService {
             response.put("message", "Payment failed or cancelled.");
         }
         return response;
+    }
+
+    public AppointmentResponseDto mapToResponseDto(Appointment appointment) {
+        UserDto patient = null;
+        UserDto doctor = null;
+        BranchDto branch = null;
+        ServiceDto service = null;
+
+        try {
+            patient = userServiceClient.getUserById(appointment.getPatientId());
+        } catch (Exception e) {
+            throw new AppException(ERROR_CODE.PATIENT_NOT_FOUND);
+        }
+
+        if (appointment.getDoctorId() != null) {
+            try {
+                doctor = userServiceClient.getUserById(appointment.getDoctorId());
+            } catch (Exception e) {
+                throw new AppException(ERROR_CODE.DOCTOR_NOT_FOUND);
+            }
+        }
+
+        try {
+            branch = userServiceClient.getBranchById(appointment.getBranchId());
+        } catch (Exception e) {
+            throw new AppException(ERROR_CODE.BRANCH_NOT_FOUND);
+        }
+
+        try {
+            service = medicalServiceClient.getServiceById(appointment.getServiceId());
+        } catch (Exception e) {
+            throw new AppException(ERROR_CODE.SERVICE_NOT_FOUND);
+        }
+
+        PatientDto patientDto = (patient != null) ? new PatientDto(patient.id(), patient.fullName(), patient.email()) : null;
+        DoctorDto doctorDto = (doctor != null) ? new DoctorDto(doctor.id(), doctor.fullName()) : null;
+        com.service.appointment_service.dto.response.ServiceDto serviceDto = (service != null) ? new com.service.appointment_service.dto.response.ServiceDto(service.id(), service.serviceName()) : null;
+        BranchDto branchDto = (branch != null) ? new BranchDto(branch.id(), branch.branchName(), branch.address()) : null;
+
+        return new AppointmentResponseDto(
+                appointment.getId(),
+                appointment.getAppointmentTime(),
+                appointment.getDurationMinutes(),
+                appointment.getStatus().toString(),
+                appointment.getNotes(),
+                appointment.getPriceAtBooking(),
+                patientDto,
+                doctorDto,
+                serviceDto,
+                branchDto
+        );
     }
 }
