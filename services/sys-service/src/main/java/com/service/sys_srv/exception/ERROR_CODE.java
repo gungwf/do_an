@@ -20,7 +20,7 @@ public enum ERROR_CODE {
     DUPLICATE_EMAIL(1005,"Email đã tồn tại!",HttpStatus.CONFLICT),
     PATIENT_PROFILE_NOT_FOUND(1003,"Không tìm hồ sơ bệnh nhân",HttpStatus.NOT_FOUND),
     ILLEGAL_ROLE(1004,"Vai trò không phù hợp",HttpStatus.BAD_REQUEST),
-    BRANCH_NOT_FOUND(1006,"Không tìm thấy Cơ sở",HttpStatus.NOT_FOUND);
+    BRANCH_NOT_FOUND(1006,"Không tìm thấy Cơ sở",HttpStatus.NOT_FOUND),
     PROFILE_NOT_FOUND(1007,"Không tìm thấy hồ sơ",HttpStatus.NOT_FOUND);
     
     private final int code;
