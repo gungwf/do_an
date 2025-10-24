@@ -1,12 +1,11 @@
 package com.service.appointment_service.client.client;
 
-import com.service.appointment_service.client.dto.AddPointsRequest;
-import com.service.appointment_service.client.dto.PatientProfileDto;
-import com.service.appointment_service.client.dto.UserDto;
+import com.service.appointment_service.client.dto.*;
 import com.service.appointment_service.dto.response.BranchDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -26,4 +25,5 @@ public interface UserServiceClient {
 
     @PatchMapping("/patient-profiles/{userId}/add-points")
     void addPointsToPatient(@PathVariable("userId") UUID userId, @RequestBody AddPointsRequest request);
+
 }

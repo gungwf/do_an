@@ -24,7 +24,6 @@ public class Appointment {
 
     private UUID doctorId;
 
-    @Column(nullable = false)
     private UUID serviceId;
 
     @Column(nullable = false)
@@ -32,9 +31,6 @@ public class Appointment {
 
     @Column(nullable = false)
     private OffsetDateTime appointmentTime;
-
-    @Column(nullable = false)
-    private Integer durationMinutes;
 
     @Enumerated(EnumType.STRING)
     private AppointmentStatus status = AppointmentStatus.PENDING;

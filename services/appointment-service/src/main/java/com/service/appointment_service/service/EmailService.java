@@ -31,7 +31,6 @@ public class EmailService {
                 "Chào bạn %s,\n\n" +
                         "Lịch hẹn của bạn đã được tạo thành công.\n\n" +
                         "Thông tin chi tiết:\n" +
-                        "- Dịch vụ: %s\n" +
                         "- Bác sĩ: %s\n" +
                         "- Thời gian: %s\n" +
                         "- Tại: %s\n\n" +
@@ -39,7 +38,6 @@ public class EmailService {
                         "Trân trọng,\n" +
                         "Đội ngũ Phòng khám.",
                 appointment.patient().fullName(),
-                appointment.service().serviceName(),
                 appointment.doctor().fullName(),
                 formattedTime,
                 appointment.branch().branchName()
@@ -66,14 +64,12 @@ public class EmailService {
                 "Chào bạn %s,\n\n" +
                         "Đây là email nhắc nhở về lịch hẹn sắp tới của bạn tại phòng khám của chúng tôi.\n\n" +
                         "Thông tin chi tiết:\n" +
-                        "- Dịch vụ: %s\n" +
                         "- Bác sĩ: %s\n" +
                         "- Thời gian: %s\n\n" +
                         "Rất mong được đón tiếp bạn!\n\n" +
                         "Trân trọng,\n" +
                         "Đội ngũ Phòng khám.",
                 appointment.patient().fullName(),
-                appointment.service().serviceName(),
                 appointment.doctor().fullName(),
                 formattedTime
         );
@@ -100,14 +96,12 @@ public class EmailService {
                 "Chào bạn %s,\n\n" +
                         "Chúng tôi rất tiếc phải thông báo rằng lịch hẹn của bạn đã được hủy.\n\n" +
                         "Thông tin lịch hẹn đã hủy:\n" +
-                        "- Dịch vụ: %s\n" +
                         "- Thời gian: %s\n\n" +
                         "Nếu bạn không phải là người yêu cầu hủy, vui lòng liên hệ với chúng tôi ngay lập tức. " +
                         "Nếu bạn muốn đặt lại lịch hẹn khác, vui lòng truy cập website của chúng tôi.\n\n" +
                         "Trân trọng,\n" +
                         "Đội ngũ Phòng khám.",
                 appointment.patient().fullName(),
-                appointment.service().serviceName(),
                 formattedTime
         );
 
@@ -132,14 +126,12 @@ public class EmailService {
         // Nội dung email
         String text = String.format(
                 "Chào bạn %s,\n\n" +
-                        "Lịch hẹn của bạn cho dịch vụ '%s' đã được hoàn thành.\n\n" +
                         "Chúng tôi rất mong nhận được đánh giá của bạn để cải thiện chất lượng dịch vụ. " +
                         "Bạn có thể đăng nhập vào hệ thống để lại đánh giá cho lịch hẹn này.\n\n" +
                         "Cảm ơn bạn đã tin tưởng!\n\n" +
                         "Trân trọng,\n" +
                         "Đội ngũ Phòng khám.",
-                appointment.patient().fullName(),
-                appointment.service().serviceName()
+                appointment.patient().fullName()
         );
 
         message.setText(text);

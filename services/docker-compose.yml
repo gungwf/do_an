@@ -1,0 +1,137 @@
+services:
+  # 1. Database
+  postgres-db:
+    image: postgres:17.5-alpine
+    container_name: postgres-db
+    ports:
+      - "5432:5432" # Mở cổng 5432 để bạn có thể dùng pgAdmin kết nối từ máy thật
+    environment:
+      - POSTGRES_DB=do_an
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=hocdinhea # Mật khẩu DB của bạn
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Lưu dữ liệu DB kể cả khi tắt container
+    networks:
+      - clinic-network
+
+  # 2. Eureka Server
+  eureka-server:
+    build: ./eureka-server # Đường dẫn đến thư mục chứa Dockerfile của eureka-server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker # Kích hoạt file application-docker.properties
+    networks:
+      - clinic-network
+
+  # 3. API Gateway
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on: # Khởi động sau khi eureka-server đã chạy
+      - eureka-server
+    networks:
+      - clinic-network
+
+  # 4. Auth Service
+  sys-service:
+    build: ./sys-service
+    container_name: sys-service
+    ports:
+      - "8081:8081" # Cổng này là tùy chọn, mở để bạn test trực tiếp
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - eureka-server
+      - postgres-db
+    networks:
+      - clinic-network
+
+  # 5. Medical Record Service
+  medical-record-service:
+    build: ./medical-record-service
+    container_name: medical-record-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - eureka-server
+      - postgres-db
+    networks:
+      - clinic-network
+
+  # 6. Appointment Service
+  appointment-service:
+    build: ./appointment-service
+    container_name: appointment-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - eureka-server
+      - postgres-db
+      - sys-service
+      - medical-record-service
+    networks:
+      - clinic-network
+
+  # 7. Product Inventory Service
+  product-inventory-service:
+    build: ./product-inventory-service
+    container_name: product-inventory-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - eureka-server
+      - postgres-db
+    networks:
+      - clinic-network
+
+  # 8. Reporting Service
+  reporting-service:
+    build: ./reporting-service
+    container_name: reporting-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - eureka-server
+      - appointment-service
+    networks:
+      - clinic-network
+
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - clinic-network
+
+  chatbot-ai:
+    build: ./chatbot-ai
+    container_name: chatbot-ai
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+    depends_on:
+      - mongodb
+    networks:
+      - clinic-network
+
+# Định nghĩa một mạng ảo chung cho tất cả các container
+networks:
+  clinic-network:
+    driver: bridge
+
+# Định nghĩa một ổ đĩa ảo để lưu dữ liệu database
+volumes:
+  postgres_data:
+  mongo_data:

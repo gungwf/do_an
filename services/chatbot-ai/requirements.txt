@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+motor
+pydantic
+sentence-transformers
+torch
+transformers
+python-multipart

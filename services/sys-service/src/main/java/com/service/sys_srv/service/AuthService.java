@@ -1,17 +1,17 @@
 package com.service.sys_srv.service;
 
-import com.service.sys_srv.dto.request.LoginRequest;
-import com.service.sys_srv.dto.request.RegisterRequest;
-import com.service.sys_srv.dto.request.UpdateProfileRequest;
-import com.service.sys_srv.dto.request.UpdateUserRequest;
+import com.service.sys_srv.dto.request.*;
+import com.service.sys_srv.dto.response.StaffDto;
 import com.service.sys_srv.dto.response.UserDto;
 import com.service.sys_srv.dto.response.UserSimpleDto;
+import com.service.sys_srv.entity.DoctorProfile;
 import com.service.sys_srv.entity.Enum.Gender;
 import com.service.sys_srv.entity.Enum.UserRole;
 import com.service.sys_srv.entity.PatientProfile;
 import com.service.sys_srv.entity.User;
 import com.service.sys_srv.exception.AppException;
 import com.service.sys_srv.exception.ERROR_CODE;
+import com.service.sys_srv.repository.DoctorProfileRepository;
 import com.service.sys_srv.repository.PatientProfileRepository;
 import com.service.sys_srv.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -35,6 +35,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final PatientProfileRepository patientProfileRepository;
+    private final DoctorProfileRepository doctorProfileRepository;
 
     public PatientProfile getPatientProfileByUserId(UUID userId) {
         return patientProfileRepository.findById(userId)
@@ -75,8 +76,31 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(role);
         user.setBranchId(request.getBranchId());
+        User savedUser = userRepository.save(user);
+        if (role == UserRole.doctor) {
+            DoctorProfile newDoctorProfile = new DoctorProfile();
+            newDoctorProfile.setUser(savedUser);
+            doctorProfileRepository.save(newDoctorProfile);
+        }
 
-        return userRepository.save(user);
+        return savedUser;
+    }
+
+    public DoctorProfile getDoctorProfile(UUID userId) {
+        return doctorProfileRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ERROR_CODE.PROFILE_NOT_FOUND)); // Có thể tạo mã lỗi riêng
+    }
+
+    @Transactional
+    public DoctorProfile updateDoctorProfile(UUID userId, UpdateDoctorProfileRequest request) {
+        DoctorProfile profile = getDoctorProfile(userId);
+
+        // Cập nhật các trường
+        if (request.getSpecialty() != null) profile.setSpecialty(request.getSpecialty());
+        if (request.getDegree() != null) profile.setDegree(request.getDegree());
+
+
+        return doctorProfileRepository.save(profile);
     }
 
     public String login(LoginRequest request) {
@@ -167,11 +191,23 @@ public class AuthService {
         return userDto;
     }
 
-    public List<UserDto> getDoctors() {
+    private StaffDto convertToStaffDto(User user) {
+        StaffDto userDto = new StaffDto();
+        userDto.setId(user.getId());
+        userDto.setFullName(user.getFullName());
+        userDto.setEmail(user.getEmail());
+        userDto.setPhoneNumber(user.getPhoneNumber());
+        userDto.setRole(user.getRole());
+        userDto.setActive(user.isActive());
+        userDto.setBranchId(user.getBranchId());
+        return userDto;
+    }
+
+    public List<StaffDto> getDoctors() {
         List<User> doctors = userRepository.findByRole(UserRole.doctor);
 
         return doctors.stream()
-                .map(this::convertToDto)
+                .map(this::convertToStaffDto)
                 .toList();
     }
 

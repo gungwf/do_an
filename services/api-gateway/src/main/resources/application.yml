@@ -87,6 +87,16 @@ spring:
           predicates:
             - Path=/api/**
 
+        - id: appointment-service-available-slots
+          uri: lb://appointment-service
+          predicates:
+            - Path=/slots/**
+
+        - id: auth-service-doctor-profiles-route
+          uri: lb://sys-srv
+          predicates:
+            - Path=/doctor-profiles/**
+
 springdoc:
   api-docs:
     enabled: true

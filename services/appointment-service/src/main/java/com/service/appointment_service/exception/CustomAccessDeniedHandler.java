@@ -1,7 +1,7 @@
 package com.service.appointment_service.exception;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.service.medical_record_service.dto.response.ApiResponse;
+import com.service.appointment_service.dto.response.ApiResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

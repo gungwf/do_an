@@ -24,8 +24,6 @@ public class Service {
     @Column(nullable = false)
     private BigDecimal price;
 
-    private Integer durationMinutes;
-
     private boolean isActive = true;
 
     @CreationTimestamp

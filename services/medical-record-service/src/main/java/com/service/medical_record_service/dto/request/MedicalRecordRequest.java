@@ -12,4 +12,5 @@ public class MedicalRecordRequest {
     private List<PrescriptionItemRequest> prescriptionItems;
     private String icd10Code;
     private UUID templateId;
+    private List<UUID> serviceIds;
 }

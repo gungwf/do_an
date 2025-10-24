@@ -18,4 +18,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
             OffsetDateTime start,
             OffsetDateTime end
     );
+
+    boolean existsByDoctorIdAndAppointmentTime(UUID doctorId, OffsetDateTime appointmentTime);
 }

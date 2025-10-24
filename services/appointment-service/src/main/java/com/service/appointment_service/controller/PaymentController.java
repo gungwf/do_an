@@ -4,6 +4,7 @@ import com.service.appointment_service.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.UUID;
@@ -23,16 +24,27 @@ public class PaymentController {
         return ResponseEntity.ok(paymentUrl);
     }
 
-    @GetMapping("/vnpay-ipn")
-    public ResponseEntity<Map<String, String>> handleVnPayIpn(
-            @RequestParam Map<String, String> allParams) {
-        Map<String, String> response = paymentService.handleVnPayIpn(allParams);
-        return ResponseEntity.ok(response);
-    }
 
     @GetMapping("/vnpay-return")
     public ResponseEntity<Map<String, String>> handleVnPayReturn(@RequestParam Map<String, String> allParams) {
         Map<String, String> result = paymentService.handleVnPayReturn(allParams);
+        return ResponseEntity.ok(result);
+    }
+
+    //Thanh toán hoá đơn
+    @PostMapping("/{id}/generate-bill-payment")
+    @PreAuthorize("hasAnyAuthority('admin', 'staff')")
+    public ResponseEntity<?> generateBillPayment(
+            @PathVariable UUID id,
+            HttpServletRequest httpServletRequest
+    ) {
+        String payUrl = paymentService.createVnPayPaymentMedicalRecord(id, httpServletRequest);
+        return ResponseEntity.ok(Map.of("payUrl", payUrl));
+    }
+
+    @GetMapping("/vnpay-return-medical-record")
+    public ResponseEntity<Map<String, String>> handleVnPayReturnMedicalRecord(@RequestParam Map<String, String> allParams) {
+        Map<String, String> result = paymentService.handleVnPayReturnMedicalRecord(allParams);
         return ResponseEntity.ok(result);
     }
 }

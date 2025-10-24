@@ -2,6 +2,7 @@ package com.service.medical_record_service.controller;
 
 import com.service.medical_record_service.dto.request.LockRequest;
 import com.service.medical_record_service.dto.request.MedicalRecordRequest;
+import com.service.medical_record_service.dto.request.UpdateMedicalRecordRequest;
 import com.service.medical_record_service.entity.MedicalRecord;
 import com.service.medical_record_service.service.MedicalRecordService;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -19,12 +22,9 @@ public class MedicalRecordController {
     private final MedicalRecordService medicalRecordService;
 
     @PostMapping
-    public ResponseEntity<?> createMedicalRecord(@RequestBody MedicalRecordRequest request) {
-        try {
-            return ResponseEntity.ok(medicalRecordService.createMedicalRecord(request));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<MedicalRecord> createMedicalRecord(@RequestBody MedicalRecordRequest request) {
+        MedicalRecord newRecord = medicalRecordService.createMedicalRecord(request);
+        return ResponseEntity.ok(newRecord);
     }
 
     @GetMapping("/appointment/{appointmentId}")
@@ -47,5 +47,30 @@ public class MedicalRecordController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @GetMapping("/{id}/calculate-total")
+    @PreAuthorize("isAuthenticated()") // Bảo vệ, chỉ service nội bộ (có token) mới được gọi
+    public ResponseEntity<Map<String, BigDecimal>> getBillTotal(@PathVariable UUID id) {
+        BigDecimal total = medicalRecordService.calculateBillTotal(id);
+        return ResponseEntity.ok(Map.of("totalAmount", total));
+    }
+
+    @PostMapping("/{id}/trigger-deduct-stock")
+    @PreAuthorize("isAuthenticated()") // Chỉ service nội bộ
+    public ResponseEntity<Void> confirmPaymentAndDeductStock(@PathVariable UUID id) {
+        medicalRecordService.triggerDeductStock(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('doctor')") // Chỉ bác sĩ mới có quyền sửa
+    public ResponseEntity<MedicalRecord> updateMedicalRecord(
+            @PathVariable UUID id,
+            @RequestBody UpdateMedicalRecordRequest request
+    ) {
+        // (AppExceptionHandler sẽ bắt lỗi nếu có)
+        MedicalRecord updatedRecord = medicalRecordService.updateMedicalRecord(id, request);
+        return ResponseEntity.ok(updatedRecord);
     }
 }

@@ -40,7 +40,6 @@ public class ClinicService {
         existingService.setServiceName(serviceDetails.getServiceName());
         existingService.setDescription(serviceDetails.getDescription());
         existingService.setPrice(serviceDetails.getPrice());
-        existingService.setDurationMinutes(serviceDetails.getDurationMinutes());
         existingService.setActive(serviceDetails.isActive());
 
         return serviceRepository.save(existingService);

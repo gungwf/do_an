@@ -1,8 +1,6 @@
 package com.service.appointment_service.exception;
 
-import com.service.medical_record_service.dto.response.ApiResponse;
-import com.service.medical_record_service.exception.AppException;
-import com.service.medical_record_service.exception.ERROR_CODE;
+import com.service.appointment_service.dto.response.ApiResponse;
 import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

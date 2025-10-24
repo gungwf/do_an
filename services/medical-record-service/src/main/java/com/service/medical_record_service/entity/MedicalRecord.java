@@ -40,4 +40,9 @@ public class MedicalRecord {
 
     @UpdateTimestamp
     private Instant updatedAt;
+
+    // --- THÊM QUAN HỆ MỚI ---
+    @OneToMany(mappedBy = "medicalRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference(value="record-service-link") // Đặt tên riêng
+    private List<MedicalRecordServiceLink> performedServices; // Các dịch vụ đã thực hiện
 }

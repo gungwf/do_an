@@ -42,77 +42,32 @@ public class AppointmentService {
     private final EmailService emailService;
     private final ProtocolTrackingRepository protocolTrackingRepository;
     private final PaymentService paymentService;
-    private ServiceClient serviceClient;
+    private final ServiceClient serviceClient;
 
 // ko thanh toán
     public Appointment createAppointment(String patientEmail, AppointmentRequest request) {
-        ServiceDto service = medicalServiceClient.getServiceById(request.getServiceId());
         UserDto patient = userServiceClient.getUserByEmail(patientEmail);
         UserDto doctor = userServiceClient.getUserById(request.getDoctorId());
 
-//        if (!"patient".equalsIgnoreCase(patient.role().toString())) {
-//            throw new IllegalArgumentException("User with ID " + patient.id() + " is not a patient.");
-//        }
-//        if (!"doctor".equalsIgnoreCase(doctor.role().toString())) {
-//            throw new IllegalArgumentException("User with ID " + doctor.id() + " is not a doctor.");
-//        }
-
-        OffsetDateTime newAppointmentStart = request.getAppointmentTime();
-        OffsetDateTime newAppointmentEnd = newAppointmentStart.plusMinutes(service.durationMinutes());
-
         // check lịch
-        List<Appointment> doctorAppointments = appointmentRepository.findByDoctorIdAndAppointmentTimeBetween(
-                doctor.id(),
-                newAppointmentStart.withHour(0).withMinute(0),
-                newAppointmentStart.withHour(23).withMinute(59)
-        );
+        boolean isSlotBooked = appointmentRepository
+                .existsByDoctorIdAndAppointmentTime(request.getDoctorId(), request.getAppointmentTime());
 
-        for (Appointment existingAppointment : doctorAppointments) {
-            OffsetDateTime existingStart = existingAppointment.getAppointmentTime();
-            OffsetDateTime existingEnd = existingStart.plusMinutes(existingAppointment.getDurationMinutes());
-            if (newAppointmentStart.isBefore(existingEnd) && newAppointmentEnd.isAfter(existingStart)) {
-                throw new AppException(ERROR_CODE.DOCTOR_BUSY);
-            }
-        }
-
-        List<Appointment> patientAppointments = appointmentRepository.findByPatientIdAndAppointmentTimeBetween(
-                patient.id(),
-                newAppointmentStart.withHour(0).withMinute(0),
-                newAppointmentStart.withHour(23).withMinute(59)
-        );
-        for (Appointment existingAppointment : patientAppointments) {
-            OffsetDateTime existingStart = existingAppointment.getAppointmentTime();
-            OffsetDateTime existingEnd = existingStart.plusMinutes(existingAppointment.getDurationMinutes());
-            if (newAppointmentStart.isBefore(existingEnd) && newAppointmentEnd.isAfter(existingStart)) {
-                throw new AppException(ERROR_CODE.PATIENT_BUSY);
-            }
-        }
-
-        // check dị ứng
-        String notes = request.getNotes() != null ? request.getNotes() : "";
-        try {
-            PatientProfileDto profile = userServiceClient.getPatientProfile(patient.id());
-            String allergies = profile.allergies() != null ? profile.allergies().toLowerCase() : "";
-
-            if (!allergies.isEmpty() && allergies.contains(service.serviceName().toLowerCase())) {
-                notes += " [CẢNH BÁO: Bệnh nhân có thể dị ứng với dịch vụ này!]";
-            }
-        } catch (Exception e) {
+        if (isSlotBooked) {
+            throw new IllegalStateException("Lịch hẹn này đã có người đặt. Vui lòng chọn thời gian khác.");
         }
 
         Appointment appointment = new Appointment();
         appointment.setPatientId(patient.id());
-        appointment.setServiceId(service.id());
         appointment.setBranchId(request.getBranchId());
         appointment.setDoctorId(doctor.id());
         appointment.setAppointmentTime(request.getAppointmentTime());
-        appointment.setPriceAtBooking(service.price());
-        appointment.setDurationMinutes(service.durationMinutes());
-        appointment.setNotes(notes);
+        appointment.setServiceId(null);
+        appointment.setPriceAtBooking(new BigDecimal("150000"));
+        appointment.setStatus(AppointmentStatus.PENDING);
+        appointment.setNotes(request.getNotes());
 
         Appointment savedAppointment = appointmentRepository.save(appointment);
-//        AppointmentResponseDto appointmentDto = mapToResponseDto(savedAppointment);
-//        emailService.sendAppointmentConfirmation(appointmentDto);
         return savedAppointment;
     }
 
@@ -148,27 +103,19 @@ public class AppointmentService {
             throw new AppException(ERROR_CODE.BRANCH_NOT_FOUND);
         }
 
-        try {
-            service = medicalServiceClient.getServiceById(appointment.getServiceId());
-        } catch (Exception e) {
-            throw new AppException(ERROR_CODE.SERVICE_NOT_FOUND);
-        }
 
         PatientDto patientDto = (patient != null) ? new PatientDto(patient.id(), patient.fullName(), patient.email()) : null;
         DoctorDto doctorDto = (doctor != null) ? new DoctorDto(doctor.id(), doctor.fullName()) : null;
-        com.service.appointment_service.dto.response.ServiceDto serviceDto = (service != null) ? new com.service.appointment_service.dto.response.ServiceDto(service.id(), service.serviceName()) : null;
         BranchDto branchDto = (branch != null) ? new BranchDto(branch.id(), branch.branchName(), branch.address()) : null;
 
         return new AppointmentResponseDto(
                 appointment.getId(),
                 appointment.getAppointmentTime(),
-                appointment.getDurationMinutes(),
                 appointment.getStatus().toString(),
                 appointment.getNotes(),
                 appointment.getPriceAtBooking(),
                 patientDto,
                 doctorDto,
-                serviceDto,
                 branchDto
         );
     }
@@ -188,7 +135,7 @@ public class AppointmentService {
                 .collect(Collectors.toList());
     }
 
-    //  CẬP NHẬT TRẠNG THÁI
+    // Confirm lịch
     @Transactional
     public AppointmentResponseDto updateAppointmentStatus(UUID appointmentId, String newStatusStr) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
@@ -262,12 +209,7 @@ public class AppointmentService {
         if (request.getDoctorId() != null) {
             existingAppointment.setDoctorId(request.getDoctorId());
         }
-        if (request.getServiceId() != null) {
-            ServiceDto newService = medicalServiceClient.getServiceById(request.getServiceId());
-            existingAppointment.setServiceId(newService.id());
-            existingAppointment.setPriceAtBooking(newService.price());
-            existingAppointment.setDurationMinutes(newService.durationMinutes());
-        }
+
         if (request.getAppointmentTime() != null) {
             existingAppointment.setAppointmentTime(request.getAppointmentTime());
         }

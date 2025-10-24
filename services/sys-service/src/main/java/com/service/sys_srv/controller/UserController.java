@@ -1,6 +1,7 @@
 package com.service.sys_srv.controller;
 
 import com.service.sys_srv.dto.request.UpdateUserRequest;
+import com.service.sys_srv.dto.response.StaffDto;
 import com.service.sys_srv.dto.response.UserDto;
 import com.service.sys_srv.dto.response.UserSimpleDto;
 import com.service.sys_srv.entity.User;
@@ -38,7 +39,7 @@ public class UserController {
     // Chỉ admin hoặc staff mới được xem danh sách bác sĩ
     @GetMapping("/doctors")
     @PreAuthorize("hasAnyAuthority('admin', 'staff')")
-    public ResponseEntity<List<UserDto>> getDoctors() {
+    public ResponseEntity<List<StaffDto>> getDoctors() {
         return ResponseEntity.ok(authService.getDoctors());
     }
 

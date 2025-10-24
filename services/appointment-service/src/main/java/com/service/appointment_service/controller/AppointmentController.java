@@ -36,9 +36,7 @@ public class AppointmentController {
     ) {
         try {
             String patientEmail = authentication.getName();
-//            String payUrl = appointmentService.createAppointment(patientEmail, request);
             Appointment newAppointment = appointmentService.createAppointment(patientEmail, request);
-//            return ResponseEntity.ok(Map.of("payUrl"));
             return ResponseEntity.ok(appointmentService.mapToResponseDto(newAppointment));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

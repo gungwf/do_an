@@ -2,6 +2,7 @@ package com.service.appointment_service.service;
 
 import com.service.appointment_service.client.client.MedicalServiceClient;
 import com.service.appointment_service.client.client.UserServiceClient;
+import com.service.appointment_service.client.dto.MedicalRecordDto;
 import com.service.appointment_service.client.dto.ServiceDto;
 import com.service.appointment_service.client.dto.UserDto;
 import com.service.appointment_service.config.VnPayConfig;
@@ -46,7 +47,7 @@ public class PaymentService {
         if (appointment.getStatus() != AppointmentStatus.PENDING) {
             throw new IllegalStateException("Only PENDING appointments can be paid.");
         }
-        String orderId = "ORD" + System.currentTimeMillis();
+        String orderId = "ORD" + appointmentId;
         Payment payment = new Payment();
         payment.setAppointment(appointment);
         payment.setAmount(appointment.getPriceAtBooking());
@@ -55,7 +56,6 @@ public class PaymentService {
         payment.setOrderId(orderId);
         paymentRepository.save(payment);
 
-        // Map này không cần sắp xếp vì hàm buildQueryStringForHash sẽ tự sắp xếp
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", "2.1.0");
         vnp_Params.put("vnp_Command", "pay");
@@ -64,7 +64,7 @@ public class PaymentService {
         vnp_Params.put("vnp_CurrCode", "VND");
         vnp_Params.put("vnp_TxnRef", orderId);
         vnp_Params.put("vnp_OrderInfo", "Thanh toan lich hen ma: " + appointmentId);
-        vnp_Params.put("vnp_OrderType", "other");
+        vnp_Params.put("vnp_OrderType", "Đặt cọc");
         vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_ReturnUrl", vnPayConfig.getReturnUrl());
         vnp_Params.put("vnp_IpAddr", VnPayUtil.getIpAddress(request));
@@ -75,8 +75,6 @@ public class PaymentService {
         cld.add(Calendar.MINUTE, 15);
         vnp_Params.put("vnp_ExpireDate", formatter.format(cld.getTime()));
 
-        // === LOGIC TẠO LINK (ĐÃ ĐÚNG) ===
-        // 1. Tạo chuỗi query string ĐÃ URL-ENCODE
         String queryString = VnPayUtil.buildQueryStringForHash(vnp_Params);
 
         // 2. Tạo chữ ký từ chuỗi query string đó
@@ -86,79 +84,48 @@ public class PaymentService {
     }
 
     @Transactional
-    public Map<String, String> handleVnPayIpn(Map<String, String> vnp_Params) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            // Sắp xếp các tham số nhận về để tạo lại hash
-            Map<String, String> sortedParams = new TreeMap<>(vnp_Params);
-            String vnp_SecureHash = (String) sortedParams.remove("vnp_SecureHash");
+    public String createVnPayPaymentMedicalRecord (UUID appointmentId, HttpServletRequest request) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + appointmentId));
 
-            StringBuilder hashData = new StringBuilder();
-            for (Map.Entry<String, String> entry : sortedParams.entrySet()) {
-                if (entry.getValue() != null && !entry.getValue().isEmpty()) {
-                    hashData.append(entry.getKey());
-                    hashData.append('=');
-                    hashData.append(entry.getValue());
-                    hashData.append('&');
-                }
-            }
-            String hashString = hashData.substring(0, hashData.length() - 1);
-            String calculatedHash = VnPayUtil.hmacSHA512(vnPayConfig.getHashSecret(), hashString);
+        MedicalRecordDto medicalRecord = medicalServiceClient.getRecordByAppointmentId(appointmentId);
+        UUID medicalRecordId = medicalRecord.id();
+        BigDecimal totalAmount = medicalServiceClient.getBillTotal(medicalRecordId).get("totalAmount");
 
-            if (!calculatedHash.equals(vnp_SecureHash)) {
-                response.put("RspCode", "97");
-                response.put("Message", "Invalid Checksum");
-                return response;
-            }
+        String orderId = "" + medicalRecordId;
+        Payment payment = new Payment();
+        payment.setAppointment(appointment);
+        payment.setAmount(totalAmount);
+        payment.setPaymentMethod("VNPAY");
+        payment.setStatus("PENDING");
+        payment.setOrderId(orderId);
+        paymentRepository.save(payment);
 
-            String orderId = vnp_Params.get("vnp_TxnRef");
-            String responseCode = vnp_Params.get("vnp_ResponseCode");
+        Map<String, String> vnp_Params = new HashMap<>();
+        vnp_Params.put("vnp_Version", "2.1.0");
+        vnp_Params.put("vnp_Command", "pay");
+        vnp_Params.put("vnp_TmnCode", vnPayConfig.getTmnCode());
+        vnp_Params.put("vnp_Amount", String.valueOf(totalAmount.multiply(new BigDecimal(100)).longValue()));
+        vnp_Params.put("vnp_CurrCode", "VND");
+        vnp_Params.put("vnp_TxnRef", orderId);
+        vnp_Params.put("vnp_OrderInfo", "Thanh toan hoa don ma: " + medicalRecordId);
+        vnp_Params.put("vnp_OrderType", "Hoá đơn");
+        vnp_Params.put("vnp_Locale", "vn");
+        vnp_Params.put("vnp_ReturnUrl", vnPayConfig.getReturnUrl());
+        vnp_Params.put("vnp_IpAddr", VnPayUtil.getIpAddress(request));
 
-            String amountStr = vnp_Params.get("vnp_Amount");
-            if (amountStr == null || amountStr.isEmpty()) {
-                response.put("RspCode", "98");
-                response.put("Message", "Amount parameter is missing");
-                return response;
-            }
-            long amountFromVnPay = Long.parseLong(amountStr) / 100;
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        vnp_Params.put("vnp_CreateDate", formatter.format(cld.getTime()));
+        cld.add(Calendar.MINUTE, 15);
+        vnp_Params.put("vnp_ExpireDate", formatter.format(cld.getTime()));
 
-            Payment payment = paymentRepository.findByOrderId(orderId).orElse(null);
-            if (payment == null) {
-                response.put("RspCode", "01");
-                response.put("Message", "Order not found");
-                return response;
-            }
-            if (payment.getAmount().compareTo(BigDecimal.valueOf(amountFromVnPay)) != 0) {
-                response.put("RspCode", "04");
-                response.put("Message", "Invalid Amount");
-                return response;
-            }
-            if (!"PENDING".equals(payment.getStatus())) {
-                response.put("RspCode", "02");
-                response.put("Message", "Order already confirmed");
-                return response;
-            }
+        String queryString = VnPayUtil.buildQueryStringForHash(vnp_Params);
 
-            if ("00".equals(responseCode)) {
-                payment.setStatus("PAID");
-                payment.setTransactionId(vnp_Params.get("vnp_TransactionNo"));
-                Appointment appointment = payment.getAppointment();
-                appointment.setStatus(AppointmentStatus.CONFIRMED);
-                paymentRepository.save(payment);
-                appointmentRepository.save(appointment);
-            } else {
-                payment.setStatus("FAILED");
-                paymentRepository.save(payment);
-            }
+        // 2. Tạo chữ ký từ chuỗi query string đó
+        String secureHash = VnPayUtil.hmacSHA512(vnPayConfig.getHashSecret(), queryString);
 
-            response.put("RspCode", "00");
-            response.put("Message", "Confirm Success");
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.put("RspCode", "99");
-            response.put("Message", "Unknown error");
-        }
-        return response;
+        return vnPayConfig.getUrl() + "?" + queryString + "&vnp_SecureHash=" + secureHash;
     }
 
     @Transactional
@@ -210,6 +177,56 @@ public class PaymentService {
         return response;
     }
 
+    @Transactional
+    public Map<String, String> handleVnPayReturnMedicalRecord(Map<String, String> vnp_Params) {
+        Map<String, String> response = new HashMap<>();
+        String vnp_SecureHash = vnp_Params.get("vnp_SecureHash");
+
+        vnp_Params.remove("vnp_SecureHash");
+        if (vnp_Params.containsKey("vnp_SecureHashType")) {
+            vnp_Params.remove("vnp_SecureHashType");
+        }
+
+        String queryStringToHash = VnPayUtil.buildQueryStringForHash(vnp_Params);
+        String calculatedHash = VnPayUtil.hmacSHA512(vnPayConfig.getHashSecret(), queryStringToHash);
+
+        if (!calculatedHash.equals(vnp_SecureHash)) {
+            response.put("status", "FAILED");
+            response.put("message", "Invalid Checksum");
+            return response;
+        }
+
+        String responseCode = vnp_Params.get("vnp_ResponseCode");
+        String orderId = vnp_Params.get("vnp_TxnRef");
+
+        if ("00".equals(responseCode)) {
+            Payment payment = paymentRepository.findByOrderId(orderId).orElse(null);
+            if (payment != null && "PENDING".equals(payment.getStatus())) {
+                payment.setStatus("PAID");
+                payment.setTransactionId(vnp_Params.get("vnp_TransactionNo"));
+                Appointment appointment = payment.getAppointment();
+                MedicalRecordDto medicalRecord = medicalServiceClient.getRecordByAppointmentId(appointment.getId());
+                UUID medicalRecordId = medicalRecord.id();
+                medicalServiceClient.triggerDeductStock(UUID.fromString(orderId));
+                paymentRepository.save(payment);
+//                AppointmentResponseDto dto = mapToResponseDto(appointment);
+//                emailService.sendAppointmentConfirmation(dto);
+                response.put("status", "SUCCESS");
+                response.put("message", "Payment successful!");
+            } else if (payment != null && !"PENDING".equals(payment.getStatus())) {
+                response.put("status", "ALREADY_CONFIRMED");
+                response.put("message", "This order has already been confirmed.");
+            } else {
+                response.put("status", "FAILED");
+                response.put("message", "Order not found.");
+            }
+        } else {
+            response.put("status", "FAILED");
+            response.put("message", "Payment failed or cancelled.");
+        }
+        return response;
+    }
+
     public AppointmentResponseDto mapToResponseDto(Appointment appointment) {
         UserDto patient = null;
         UserDto doctor = null;
@@ -236,27 +253,18 @@ public class PaymentService {
             throw new AppException(ERROR_CODE.BRANCH_NOT_FOUND);
         }
 
-        try {
-            service = medicalServiceClient.getServiceById(appointment.getServiceId());
-        } catch (Exception e) {
-            throw new AppException(ERROR_CODE.SERVICE_NOT_FOUND);
-        }
-
         PatientDto patientDto = (patient != null) ? new PatientDto(patient.id(), patient.fullName(), patient.email()) : null;
         DoctorDto doctorDto = (doctor != null) ? new DoctorDto(doctor.id(), doctor.fullName()) : null;
-        com.service.appointment_service.dto.response.ServiceDto serviceDto = (service != null) ? new com.service.appointment_service.dto.response.ServiceDto(service.id(), service.serviceName()) : null;
         BranchDto branchDto = (branch != null) ? new BranchDto(branch.id(), branch.branchName(), branch.address()) : null;
 
         return new AppointmentResponseDto(
                 appointment.getId(),
                 appointment.getAppointmentTime(),
-                appointment.getDurationMinutes(),
                 appointment.getStatus().toString(),
                 appointment.getNotes(),
                 appointment.getPriceAtBooking(),
                 patientDto,
                 doctorDto,
-                serviceDto,
                 branchDto
         );
     }

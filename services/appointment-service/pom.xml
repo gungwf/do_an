@@ -108,12 +108,6 @@
 			<groupId>org.apache.httpcomponents.client5</groupId>
 			<artifactId>httpclient5</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>com.service</groupId>
-			<artifactId>medical-record-service</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-			<scope>compile</scope>
-		</dependency>
 
 		<dependency>
 			<groupId>org.springdoc</groupId>

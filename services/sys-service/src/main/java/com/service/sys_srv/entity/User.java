@@ -42,4 +42,7 @@ public class User {
 
     @UpdateTimestamp
     private Instant updatedAt;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private DoctorProfile doctorProfile;
 }
