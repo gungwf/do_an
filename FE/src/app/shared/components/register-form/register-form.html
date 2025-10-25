@@ -1,0 +1,60 @@
+<form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+  <!-- Họ và Tên -->
+  <div class="mb-3">
+    <label for="fullName" class="form-label">Họ và Tên</label>
+    <input type="text" class="form-control" id="fullName" formControlName="fullName" placeholder="Nguyễn Văn An" [class.is-invalid]="fullName?.invalid && (fullName?.dirty || fullName?.touched)">
+    <div *ngIf="fullName?.invalid && (fullName?.dirty || fullName?.touched)" class="invalid-feedback">
+      <div *ngIf="fullName?.errors?.['required']">Vui lòng nhập họ và tên.</div>
+    </div>
+  </div>
+
+  <!-- Email -->
+  <div class="mb-3">
+    <label for="emailRegister" class="form-label">Email</label>
+    <input type="email" class="form-control" id="emailRegister" formControlName="email" placeholder="ten@email.com" [class.is-invalid]="email?.invalid && (email?.dirty || email?.touched)">
+    <div *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="invalid-feedback">
+      <div *ngIf="email?.errors?.['required']">Vui lòng nhập email.</div>
+      <div *ngIf="email?.errors?.['email']">Email không đúng định dạng.</div>
+    </div>
+  </div>
+
+  <!-- Số điện thoại -->
+  <div class="mb-3">
+    <label for="phone" class="form-label">Số điện thoại</label>
+    <input type="tel" class="form-control" id="phone" formControlName="phone" placeholder="09xxxxxxxx" [class.is-invalid]="phone?.invalid && (phone?.dirty || phone?.touched)">
+    <div *ngIf="phone?.invalid && (phone?.dirty || phone?.touched)" class="invalid-feedback">
+      <div *ngIf="phone?.errors?.['required']">Vui lòng nhập số điện thoại.</div>
+      <div *ngIf="phone?.errors?.['pattern']">Số điện thoại không hợp lệ.</div>
+    </div>
+  </div>
+
+  <!-- === CÁC TRƯỜNG NGÀY SINH, GIỚI TÍNH, ĐỊA CHỈ ĐÃ ĐƯỢC XÓA === -->
+
+  <!-- Mật khẩu -->
+  <div class="mb-3">
+    <label for="passwordRegister" class="form-label">Mật khẩu</label>
+    <input type="password" class="form-control" id="passwordRegister" formControlName="password" placeholder="••••••••" [class.is-invalid]="password?.invalid && (password?.dirty || password?.touched)">
+    <div *ngIf="password?.invalid && (password?.dirty || password?.touched)" class="invalid-feedback">
+      <div *ngIf="password?.errors?.['required']">Vui lòng nhập mật khẩu.</div>
+      <div *ngIf="password?.errors?.['minlength']">Mật khẩu phải có ít nhất 6 ký tự.</div>
+    </div>
+  </div>
+  <!-- Nhập lại Mật khẩu -->
+  <div class="mb-3">
+    <label for="confirmPassword" class="form-label">Nhập lại Mật khẩu</label>
+    <input type="password" class="form-control" id="confirmPassword" formControlName="confirmPassword" placeholder="••••••••" [class.is-invalid]="(confirmPassword?.invalid || registerForm.errors?.['passwordMismatch']) && (confirmPassword?.dirty || confirmPassword?.touched)">
+    <div *ngIf="(confirmPassword?.invalid || registerForm.errors?.['passwordMismatch']) && (confirmPassword?.dirty || confirmPassword?.touched)" class="invalid-feedback">
+      <div *ngIf="confirmPassword?.errors?.['required']">Vui lòng nhập lại mật khẩu.</div>
+      <div *ngIf="registerForm.errors?.['passwordMismatch']">Mật khẩu không khớp.</div>
+    </div>
+  </div>
+  <div class="d-grid mt-4">
+    <button type="submit" class="btn btn-primary btn-lg" [disabled]="registerForm.invalid">Đăng ký</button>
+  </div>
+</form>
+
+<div class="text-center mt-4">
+  <span class="text-muted">Đã có tài khoản? </span>
+  <a href="#" (click)="$event.preventDefault(); showLogin.emit()" class="text-decoration-none fw-medium">Đăng nhập ngay</a>
+</div>
+
