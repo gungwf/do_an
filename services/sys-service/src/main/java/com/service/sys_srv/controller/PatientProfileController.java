@@ -51,4 +51,20 @@ public class PatientProfileController {
     ) {
         return ResponseEntity.ok(authService.addPointsToPatient(userId, request.getPointsToAdd()));
     }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasAuthority('patient')") // Đảm bảo chỉ bệnh nhân mới gọi được
+    public ResponseEntity<PatientProfile> getMyProfile(Authentication authentication) {
+
+        // 1. Lấy email của bệnh nhân từ token
+        String userEmail = authentication.getName();
+
+        // 2. Lấy UserDto để có được userId
+        UserDto userDto = authService.getUserByEmail(userEmail);
+
+        // 3. Dùng userId để lấy PatientProfile
+        PatientProfile profile = authService.getPatientProfileByUserId(userDto.getId());
+
+        return ResponseEntity.ok(profile);
+    }
 }
