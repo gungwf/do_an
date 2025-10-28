@@ -35,7 +35,11 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
                                 "/webjars/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/doctor-profiles/**", "/slots/**", "/services/simple").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/doctor-profiles/**",
+                                "/slots/**",
+                                "/services/simple",
+                                "/doctor-profiles/specialties").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

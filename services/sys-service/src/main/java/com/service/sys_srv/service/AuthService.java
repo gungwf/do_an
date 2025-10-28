@@ -1,6 +1,7 @@
 package com.service.sys_srv.service;
 
 import com.service.sys_srv.dto.request.*;
+import com.service.sys_srv.dto.response.SpecialtySimpleDto;
 import com.service.sys_srv.dto.response.StaffDto;
 import com.service.sys_srv.dto.response.UserDto;
 import com.service.sys_srv.dto.response.UserSimpleDto;
@@ -101,6 +102,14 @@ public class AuthService {
 
 
         return doctorProfileRepository.save(profile);
+    }
+
+    public List<SpecialtySimpleDto> getUniqueSpecialties() {
+        List<String> specialtyNames = doctorProfileRepository.findDistinctSpecialties();
+
+        return specialtyNames.stream()
+                .map(name -> new SpecialtySimpleDto(name, name))
+                .collect(Collectors.toList());
     }
 
     public String login(LoginRequest request) {

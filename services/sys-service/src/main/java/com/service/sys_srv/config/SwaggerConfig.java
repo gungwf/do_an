@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @OpenAPIDefinition(
-        info = @Info(title = "Appointment Service API", version = "1.0"),
+        info = @Info(title = "Sys Service API", version = "1.0"),
         security = @SecurityRequirement(name = "bearerAuth") // có thể bỏ nếu không muốn mặc định bắt buộc
 )
 @SecurityScheme(

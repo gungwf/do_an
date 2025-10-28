@@ -3,10 +3,10 @@ springdoc:
     persist-authorization: false
   api-docs:
     path: /v3/api-docs/sys
-spring:
-  web:
-    cors:
-      allowed-origins: "http://localhost:8080"
-      allowed-methods: "*"
-      allowed-headers: "*"
-      allow-credentials: true
+#spring:
+#  web:
+#    cors:
+#      allowed-origins: "http://localhost:8080"
+#      allowed-methods: "*"
+#      allowed-headers: "*"
+#      allow-credentials: true

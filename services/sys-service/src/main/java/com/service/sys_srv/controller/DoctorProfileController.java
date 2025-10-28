@@ -1,6 +1,7 @@
 package com.service.sys_srv.controller;
 
 import com.service.sys_srv.dto.request.UpdateDoctorProfileRequest;
+import com.service.sys_srv.dto.response.SpecialtySimpleDto;
 import com.service.sys_srv.dto.response.UserDto;
 import com.service.sys_srv.entity.DoctorProfile;
 import com.service.sys_srv.service.AuthService;
@@ -9,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -35,5 +38,11 @@ public class DoctorProfileController {
         UserDto user = authService.getUserByEmail(email);
         DoctorProfile updatedProfile = authService.updateDoctorProfile(user.getId(), request);
         return ResponseEntity.ok(updatedProfile);
+    }
+
+    @GetMapping("/specialties")
+    public ResponseEntity<List<SpecialtySimpleDto>> getSpecialties() {
+        // API này nên công khai để ai cũng xem được
+        return ResponseEntity.ok(authService.getUniqueSpecialties());
     }
 }

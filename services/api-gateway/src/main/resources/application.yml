@@ -6,6 +6,23 @@ spring:
     name: api-gateway
   cloud:
     gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:4200"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+
       routes:
         - id: auth-service-auth-route
           uri: lb://sys-srv
@@ -96,24 +113,6 @@ spring:
           uri: lb://sys-srv
           predicates:
             - Path=/doctor-profiles/**
-
-springdoc:
-  api-docs:
-    enabled: true
-  swagger-ui:
-    enabled: true
-    path: /swagger-ui.html
-    urls:
-      - name: SYS Service
-        url: http://localhost:8081/v3/api-docs/sys
-      - name: Medical Record Service
-        url: http://localhost:8082/v3/api-docs/medical
-      - name: Appointment Service
-        url: http://localhost:8083/v3/api-docs/appointment
-      - name: Product & Inventory Service
-        url: http://localhost:8084/v3/api-docs/product
-      - name: Reporting Service
-        url: http://localhost:8085/v3/api-docs/report
 
 eureka:
   client:
