@@ -9,7 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,4 +55,17 @@ public class ProductController {
         return ResponseEntity.ok(productService.getAllProductsSimple());
     }
 
+    @PostMapping("/{id}/image")
+    @PreAuthorize("hasAuthority('admin')")
+    public ResponseEntity<Product> uploadProductImage(
+            @PathVariable UUID id,
+            @RequestParam("file") MultipartFile file // Nhận file từ form-data
+    ) {
+        try {
+            Product updatedProduct = productService.updateProductImage(id, file);
+            return ResponseEntity.ok(updatedProduct);
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body(null); // (Nên dùng AppExceptionHandler)
+        }
+    }
 }

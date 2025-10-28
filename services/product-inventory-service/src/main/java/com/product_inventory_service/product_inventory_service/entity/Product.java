@@ -36,4 +36,10 @@ public class Product {
     @Enumerated(EnumType.STRING)
     @Column(name = "product_type")
     private ProductType productType;
+
+    @Column(name = "category")
+    private String category;
+
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private String imageUrl;
 }
