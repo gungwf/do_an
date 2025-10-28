@@ -1,10 +1,7 @@
 package com.service.sys_srv.service;
 
 import com.service.sys_srv.dto.request.*;
-import com.service.sys_srv.dto.response.SpecialtySimpleDto;
-import com.service.sys_srv.dto.response.StaffDto;
-import com.service.sys_srv.dto.response.UserDto;
-import com.service.sys_srv.dto.response.UserSimpleDto;
+import com.service.sys_srv.dto.response.*;
 import com.service.sys_srv.entity.DoctorProfile;
 import com.service.sys_srv.entity.Enum.Gender;
 import com.service.sys_srv.entity.Enum.UserRole;
@@ -17,6 +14,10 @@ import com.service.sys_srv.repository.PatientProfileRepository;
 import com.service.sys_srv.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -147,15 +148,6 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
 
-        // 2. Chuyển đổi (map) từ User entity sang UserDto
-//        UserDto userDto = new UserDto();
-//        userDto.setId(user.getId());
-//        userDto.setFullName(user.getFullName());
-//        userDto.setEmail(user.getEmail());
-//        userDto.setPhoneNumber(user.getPhoneNumber());
-//        userDto.setRole(user.getRole());
-//        userDto.setActive(user.isActive());
-
         return convertToDto(user);
     }
 
@@ -181,13 +173,6 @@ public class AuthService {
 
         return convertToDto(user);
     }
-
-//    public UserDto getUserById(UUID userId) {
-//        User user = userRepository.findById(userId)
-//                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
-//
-//        return convertToDto(user);
-//    }
 
     private UserDto convertToDto(User user) {
         UserDto userDto = new UserDto();
@@ -218,6 +203,26 @@ public class AuthService {
         return doctors.stream()
                 .map(this::convertToStaffDto)
                 .toList();
+    }
+
+    public Page<DoctorSearchResponseDto> searchDoctors(DoctorSearchRequest request) {
+
+        // 1. Tạo đối tượng Phân trang (Pageable)
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+
+        // 2. Tạo đối tượng Lọc (Specification)
+        Specification<User> spec = DoctorSpecification.filterDoctors(request);
+
+        // 3. Gọi Repository
+        Page<User> userPage = userRepository.findAll(spec, pageable);
+
+        // 4. Chuyển đổi (Map) Page<User> sang Page<DoctorSearchResponseDto>
+        return userPage.map(user -> new DoctorSearchResponseDto(
+                user.getId(),
+                user.getFullName(),
+                user.getDoctorProfile() != null ? user.getDoctorProfile().getSpecialty() : null,
+                user.getDoctorProfile() != null ? user.getDoctorProfile().getDegree() : null
+        ));
     }
 
     public UserDto updateUser(UUID userId, UpdateUserRequest request) {
