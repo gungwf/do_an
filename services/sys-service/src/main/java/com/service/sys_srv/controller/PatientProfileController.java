@@ -53,7 +53,6 @@ public class PatientProfileController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasAuthority('patient')") // Đảm bảo chỉ bệnh nhân mới gọi được
     public ResponseEntity<PatientProfile> getMyProfile(Authentication authentication) {
 
         // 1. Lấy email của bệnh nhân từ token

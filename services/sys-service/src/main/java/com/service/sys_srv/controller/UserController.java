@@ -41,7 +41,6 @@ public class UserController {
 
     // Chỉ admin hoặc staff mới được xem danh sách bác sĩ
     @GetMapping("/doctors")
-    @PreAuthorize("hasAnyAuthority('admin', 'staff')")
     public ResponseEntity<List<StaffDto>> getDoctors() {
         return ResponseEntity.ok(authService.getDoctors());
     }
