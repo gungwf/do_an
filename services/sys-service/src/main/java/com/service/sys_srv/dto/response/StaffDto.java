@@ -14,4 +14,6 @@ public class StaffDto {
     private UserRole role;
     private UUID branchId;
     private boolean isActive;
+    private String specialty;
+    private String degree;
 }

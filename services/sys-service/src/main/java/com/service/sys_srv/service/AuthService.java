@@ -194,6 +194,8 @@ public class AuthService {
         userDto.setRole(user.getRole());
         userDto.setActive(user.isActive());
         userDto.setBranchId(user.getBranchId());
+        userDto.setSpecialty(user.getDoctorProfile().getSpecialty());
+        userDto.setDegree(user.getDoctorProfile().getDegree());
         return userDto;
     }
 
