@@ -17,7 +17,7 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        String adminEmail = "admin.com";
+        String adminEmail = "admin@gmail.com";
 
         // Chỉ tạo nếu tài khoản admin với email này chưa tồn tại
         if (userRepository.findByEmail(adminEmail).isEmpty()) {
