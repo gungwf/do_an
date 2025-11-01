@@ -1,0 +1,45 @@
+<div class="card h-100 product-card-custom shadow-sm border-0 overflow-hidden">
+
+  <a routerLink="/product/{{ product.id }}" class="d-block text-center p-3">
+    <img
+      [src]="product.imageUrl"
+      [alt]="product.name"
+      class="product-card-img img-fluid"
+      loading="lazy"
+    />
+  </a>
+
+  <div class="card-body d-flex flex-column pt-0">
+
+    <a routerLink="/product/{{ product.id }}" class="text-decoration-none mb-2">
+      <h3 class="product-card-title fs-6 fw-semibold text-dark">
+        {{ product.name }}
+      </h3>
+    </a>
+
+    <p class="product-card-packaging text-muted small mb-2">
+       {{ product.packaging }}
+    </p>
+
+    <div class="mt-auto mb-2 flex-grow-1 d-flex align-items-end">
+      <div class="product-card-price text-primary fw-bold fs-5">
+        {{ product.price | currency:'VND':'symbol':'1.0-0' }}
+        <span class="text-muted small"> / Hộp</span>
+      </div>
+    </div>
+
+    <div class="card-text text-muted small mt-auto" style="font-size: 0.85rem;">
+      <div class="mb-1">
+        <strong>Đóng gói:</strong> {{ product.packaging }}
+      </div>
+      <div>
+        <strong>Dạng:</strong> {{ product.dosageForm }}
+      </div>
+    </div>
+
+    <div class="d-grid mt-2"> <button class="btn btn-primary btn-sm rounded-pill" (click)="onAddToCartClick()">
+        <i class="bi bi-cart-plus me-1"></i> Chọn mua
+      </button>
+    </div>
+  </div>
+</div>
