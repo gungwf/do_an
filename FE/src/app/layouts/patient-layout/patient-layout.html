@@ -1,0 +1,205 @@
+<!-- === HEADER (Đã thêm class 'sticky-top') === -->
+<header class="p-3 mb-3 border-bottom bg-white shadow-sm sticky-top">
+  <div class="container">
+    <div
+      class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start"
+    >
+      <!-- Logo -->
+      <a
+        routerLink="/"
+        class="d-flex align-items-center mb-2 mb-lg-0 link-body-emphasis text-decoration-none me-3"
+      >
+        <i class="bi bi-heart-pulse-fill fs-4 text-primary"></i>
+        <span class="fs-4 ms-2 fw-bold">Healthcare</span>
+      </a>
+
+      <!-- Links -->
+      <ul
+        class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0"
+      >
+        <li>
+          <a
+            routerLink="/"
+            class="nav-link px-2"
+            routerLinkActive="link-primary fw-medium"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            Nhà thuốc
+          </a>
+        </li>
+        <li>
+          <a
+            (click)="handleProtectedLink('/appointments')"
+            routerLinkActive="link-primary fw-medium"
+            class="nav-link px-2 link-body-emphasis"
+            style="cursor: pointer"
+          >
+            Đặt lịch hẹn
+          </a>
+        </li>
+        <li>
+          <a
+            (click)="handleProtectedLink('/records')"
+            routerLinkActive="link-primary fw-medium"
+            class="nav-link px-2 link-body-emphasis"
+            style="cursor: pointer"
+          >
+            Hồ sơ bệnh án
+          </a>
+        </li>
+      </ul>
+
+      <!-- Search -->
+      <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
+        <input
+          type="search"
+          class="form-control"
+          placeholder="Tìm kiếm thuốc..."
+          aria-label="Search"
+        />
+      </form>
+
+      <!-- Auth Logic (Sử dụng button để mở Modal) -->
+      <div *ngIf="!authService.isAuthenticated()" class="text-end">
+        <button type="button" class="btn btn-primary" (click)="isAuthModalOpen = true">
+          Đăng nhập / Đăng ký
+        </button>
+      </div>
+      <div *ngIf="authService.isAuthenticated()" class="dropdown text-end">
+        <a
+          href="#"
+          class="d-block link-body-emphasis text-decoration-none dropdown-toggle"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+        >
+          <i class="bi bi-person-circle fs-2"></i>
+        </a>
+        <ul class="dropdown-menu text-small">
+          <li>
+            <a class="dropdown-item" href="#">
+              <i class="bi bi-person-fill me-2"></i> Hồ sơ của tôi
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="#">
+              <i class="bi bi-card-list me-2"></i> Đơn hàng của tôi
+            </a>
+          </li>
+          <li><hr class="dropdown-divider" /></li>
+          <li>
+            <a
+              class="dropdown-item text-danger"
+              (click)="logout()"
+              style="cursor: pointer"
+            >
+              <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</header>
+<!-- === HẾT HEADER === -->
+
+<!-- === NỘI DUNG TRANG === -->
+<main>
+  <router-outlet></router-outlet>
+</main>
+
+<!-- === FOOTER === -->
+<div class="container-fluid bg-light border-top mt-5">
+  <div class="container">
+    <footer
+      class="row row-cols-1 row-cols-sm-2 row-cols-md-5 py-5"
+    >
+      <!-- Cột 1: Logo và Copyright -->
+      <div class="col mb-3">
+        <a
+          routerLink="/"
+          class="d-flex align-items-center mb-3 link-body-emphasis text-decoration-none"
+        >
+          <i class="bi bi-heart-pulse-fill fs-4 text-primary me-2"></i>
+          <span class="fs-4 fw-bold">Healthcare</span>
+        </a>
+        <p class="text-body-secondary">© 2025 Healthcare</p>
+      </div>
+
+      <!-- Cột 2: Cột trống -->
+      <div class="col mb-3"></div>
+
+      <!-- Cột 3: Chức năng -->
+      <div class="col mb-3">
+        <h5>Chức năng</h5>
+        <ul class="nav flex-column">
+          <li class="nav-item mb-2">
+            <a
+              routerLink="/"
+              class="nav-link p-0 text-body-secondary"
+              >Nhà thuốc</a
+            >
+          </li>
+          <li class="nav-item mb-2">
+            <a
+              (click)="handleProtectedLink('/appointments')"
+              style="cursor: pointer"
+              class="nav-link p-0 text-body-secondary"
+              >Đặt lịch hẹn</a
+            >
+          </li>
+          <li class="nav-item mb-2">
+            <a
+              (click)="handleProtectedLink('/records')"
+              style="cursor: pointer"
+              class="nav-link p-0 text-body-secondary"
+              >Hồ sơ bệnh án</a
+            >
+          </li>
+        </ul>
+      </div>
+
+      <!-- Cột 4: Hỗ trợ -->
+      <div class="col mb-3">
+        <h5>Hỗ trợ</h5>
+        <ul class="nav flex-column">
+          <li class="nav-item mb-2">
+            <a href="#" class="nav-link p-0 text-body-secondary">Liên hệ</a>
+          </li>
+          <li class="nav-item mb-2">
+            <a href="#" class="nav-link p-0 text-body-secondary">Câu hỏi (FAQs)</a>
+          </li>
+          <li class="nav-item mb-2">
+            <a href="#" class="nav-link p-0 text-body-secondary">Về chúng tôi</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Cột 5: Chính sách -->
+      <div class="col mb-3">
+        <h5>Chính sách</h5>
+        <ul class="nav flex-column">
+          <li class="nav-item mb-2">
+            <a href="#" class="nav-link p-0 text-body-secondary"
+              >Chính sách bảo mật</a
+            >
+          </li>
+          <li class="nav-item mb-2">
+            <a href="#" class="nav-link p-0 text-body-secondary"
+              >Điều khoản sử dụng</a
+            >
+          </li>
+          <li class="nav-item mb-2">
+            <a href="#" class="nav-link p-0 text-body-secondary"
+              >Chính sách đổi trả</a
+            >
+          </li>
+        </ul>
+      </div>
+    </footer>
+  </div>
+</div>
+<!-- === HẾT FOOTER === -->
+
+<!-- Hiển thị Modal khi isAuthModalOpen là true -->
+<app-auth-modal *ngIf="isAuthModalOpen" (closeModal)="isAuthModalOpen = false"></app-auth-modal>
+

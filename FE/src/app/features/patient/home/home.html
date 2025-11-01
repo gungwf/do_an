@@ -1,0 +1,307 @@
+<div id="myCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+  <div class="carousel-indicators">
+    <button
+      type="button"
+      data-bs-target="#myCarousel"
+      data-bs-slide-to="0"
+      class="active"
+      aria-label="Slide 1"
+      aria-current="true"
+    ></button>
+    <button
+      type="button"
+      data-bs-target="#myCarousel"
+      data-bs-slide-to="1"
+      aria-label="Slide 2"
+      class=""
+    ></button>
+    <button
+      type="button"
+      data-bs-target="#myCarousel"
+      data-bs-slide-to="2"
+      aria-label="Slide 3"
+      class=""
+    ></button>
+  </div>
+  <div class="carousel-inner">
+    <div class="carousel-item active">
+      <img src="assets/images/slide1.jpg" alt="Nhà thuốc online" />
+      <div class="container">
+        <div class="carousel-caption text-start">
+          <h1 class="display-4 fw-bold">Nhà thuốc Online Toàn diện</h1>
+          <p class="fs-4">
+            An toàn - Tiện lợi - Nhanh chóng. Mua thuốc, đặt lịch hẹn và xem
+            bệnh án.
+          </p>
+          <p>
+            <button class="btn btn-lg btn-light" (click)="scrollToProducts()">
+              Khám phá sản phẩm
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="carousel-item">
+      <img src="assets/images/slide2.jpeg" alt="Đặt lịch hẹn" />
+      <div class="container">
+        <div class="carousel-caption">
+          <h1 class="display-4 fw-bold">Đặt lịch hẹn với Bác sĩ</h1>
+          <p class="fs-4">Nhanh chóng, chủ động, không cần chờ đợi.</p>
+          <p>
+            <a routerLink="/auth/login" class="btn btn-lg btn-primary"
+              >Đặt lịch ngay</a
+            >
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="carousel-item">
+      <img src="assets/images/slide3.png" alt="Xem hồ sơ bệnh án" />
+      <div class="container">
+        <div class="carousel-caption text-end">
+          <h1 class="display-4 fw-bold">Truy cập Hồ sơ Bệnh án</h1>
+          <p class="fs-4">
+            Xem lại đơn thuốc và lịch sử khám bệnh mọi lúc, mọi nơi.
+          </p>
+          <p>
+            <a routerLink="/auth/login" class="btn btn-lg btn-primary"
+              >Xem hồ sơ ngay</a
+            >
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button
+    class="carousel-control-prev"
+    type="button"
+    data-bs-target="#myCarousel"
+    data-bs-slide="prev"
+  >
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Previous</span>
+  </button>
+  <button
+    class="carousel-control-next"
+    type="button"
+    data-bs-target="#myCarousel"
+    data-bs-slide="next"
+  >
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Next</span>
+  </button>
+</div>
+<div class="container-fluid py-5 bg-light">
+  <div class="container">
+    <div class="row text-center">
+      <div class="col-lg-4">
+        <i class="bi bi-patch-check-fill fs-1 text-success"></i>
+        <h2 class="fw-normal mt-3">Sản phẩm chính hãng</h2>
+        <p>
+          Trung tâm Thuốc đảm bảo cung cấp sản phẩm chính hãng, chất lượng và an
+          toàn cho khách hàng.
+        </p>
+      </div>
+      <div class="col-lg-4">
+        <i class="bi bi-headset fs-1 text-primary"></i>
+        <h2 class="fw-normal mt-3">Phục vụ tận tâm</h2>
+        <p>
+          Dịch vụ chăm sóc tận tâm, luôn sẵn sàng giải đáp mọi thắc mắc, băn
+          khoăn trong việc sử dụng sản phẩm.
+        </p>
+      </div>
+      <div class="col-lg-4">
+        <i class="bi bi-tags-fill fs-1 text-warning"></i>
+        <h2 class="fw-normal mt-3">Giá tốt nhất</h2>
+        <p>
+          Giá cả luôn cạnh tranh nhất - Tốt nhất giúp khách hàng tiết kiệm chi
+          phí khi mua hàng.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container col-xxl-8 px-4 py-5">
+  <div class="row flex-lg-row-reverse align-items-center g-5 py-5">
+    <div class="col-10 col-sm-8 col-lg-6">
+      <img
+        src="assets/images/about.jpg"
+        class="d-block mx-lg-auto img-fluid rounded shadow"
+        alt="Về nhà thuốc Healthcare"
+        width="700"
+        height="500"
+        loading="lazy"
+      />
+    </div>
+    <div class="col-lg-6">
+      <h1 class="display-5 fw-bold text-body-emphasis lh-1 mb-3">
+        Về Nhà thuốc Healthcare
+      </h1>
+      <p class="lead">
+        Với đội ngũ dược sĩ giàu kinh nghiệm và tận tâm, Healthcare Pharmacy cam kết mang đến những sản phẩm chính hãng, chất lượng cao cùng dịch vụ tư vấn chuyên nghiệp. Sức khỏe của bạn và gia đình là ưu tiên hàng đầu của chúng tôi.
+      </p>
+      <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+        <button type="button" class="btn btn-primary btn-lg px-4 me-md-2">
+          Về chúng tôi
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-lg px-4">
+          Liên hệ
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container-fluid py-5 bg-light">
+    <div class="container">
+        <div class="text-center mx-auto mb-5" style="max-width: 600px;">
+            <p class="d-inline-block border rounded-pill py-1 px-4 text-primary">Đội ngũ</p>
+            <h1 class="mw-bold">Đội ngũ Bác sĩ giàu kinh nghiệm</h1>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="team-item position-relative rounded overflow-hidden shadow-sm">
+                    <div class="overflow-hidden">
+                        <img class="img-fluid" src="assets/images/doc1.jpg" alt="Bác sĩ">
+                    </div>
+                    <div class="team-text bg-white text-center p-4">
+                        <h5>BS. Nguyễn Văn An</h5>
+                        <p class="text-primary">Chuyên khoa Tim mạch</p>
+                        <div class="team-social text-center">
+                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-facebook"></i></a>
+                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-twitter"></i></a>
+                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-instagram"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="team-item position-relative rounded overflow-hidden shadow-sm">
+                    <div class="overflow-hidden">
+                        <img class="img-fluid" src="assets/images/doc2.jpg" alt="Bác sĩ">
+                    </div>
+                    <div class="team-text bg-white text-center p-4">
+                        <h5>BS. Trần Văn Bình</h5>
+                        <p class="text-primary">Chuyên khoa Hô hấp</p>
+                        <div class="team-social text-center">
+                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-facebook"></i></a>
+                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-twitter"></i></a>
+                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-instagram"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="team-item position-relative rounded overflow-hidden shadow-sm">
+                    <div class="overflow-hidden">
+                        <img class="img-fluid" src="assets/images/doc3.jpg" alt="Bác sĩ">
+                    </div>
+                    <div class="team-text bg-white text-center p-4">
+                        <h5>BS. Lê Thị Hương</h5>
+                        <p class="text-primary">Chuyên khoa Tiêu hóa</p>
+                        <div class="team-social text-center">
+                           <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-facebook"></i></a>
+                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-twitter"></i></a>
+                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-instagram"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="team-item position-relative rounded overflow-hidden shadow-sm">
+                    <div class="overflow-hidden">
+                        <img class="img-fluid" src="assets/images/doc4.webp" alt="Bác sĩ">
+                    </div>
+                    <div class="team-text bg-white text-center p-4">
+                        <h5>BS. Phạm Thị Dương</h5>
+                        <p class="text-primary">Chuyên khoa Da liễu</p>
+                        <div class="team-social text-center">
+                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-facebook"></i></a>
+                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-twitter"></i></a>
+                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-instagram"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container mt-5 mb-5">
+  <div class="text-center mb-4">
+    <h2 class="fw-bold text-success d-inline-block">Sản phẩm</h2>
+  </div>
+
+  <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+    <button
+      *ngFor="let category of categories"
+      class="btn rounded-pill"
+      [class.btn-success]="category === selectedCategory"
+      [class.btn-outline-success]="category !== selectedCategory"
+      (click)="filterByCategory(category)"
+    >
+      {{ category }}
+    </button>
+  </div>
+
+  <div
+    *ngIf="!isLoading && displayedProducts.length > 0; else noProductsOrLoading"
+    class="product-slider-wrapper"
+  >
+    <button class="slider-arrow left" (click)="scroll('left')">
+      <i class="bi bi-chevron-left"></i>
+    </button>
+    <div class="product-scroller" #productScroller>
+      <div *ngFor="let product of displayedProducts" class="product-slide">
+        <app-product-card
+          [product]="product"
+          (addToCart)="addToCart($event)"
+        >
+        </app-product-card>
+      </div>
+    </div>
+    <button class="slider-arrow right" (click)="scroll('right')">
+      <i class="bi bi-chevron-right"></i>
+    </button>
+  </div>
+</div>
+<div class="container-fluid py-5 bg-light">
+    <div class="container">
+        <div class="text-center mx-auto mb-5" style="max-width: 600px;">
+            <h1 class="fw-bold mb-5">Khách hàng của chúng tôi </h1>
+        </div>
+
+        <div *ngIf="displayedTestimonials.length > 0" class="row g-4">
+            <div *ngFor="let testimonial of displayedTestimonials" class="col-lg-4">
+                <div class="testimonial-item text-center">
+                    <img class="bg-white rounded-circle p-2 mx-auto mb-3" [src]="testimonial.image" style="width: 80px; height: 80px;">
+                    <h5 class="mb-0">{{ testimonial.name }}</h5>
+                    <p class="text-muted">{{ testimonial.profession }}</p>
+                    <div class="testimonial-text bg-white text-center p-4 mt-3 rounded shadow-sm">
+                        <p class="mb-0 fst-italic">"{{ testimonial.quote }}"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="testimonial-indicators d-flex justify-content-center gap-2 mt-4">
+          <button
+              *ngFor="let item of allTestimonials; let i = index"
+              type="button"
+              (click)="goToTestimonial(i)"
+              [class.active]="i === currentTestimonialIndex">
+          </button>
+        </div>
+        </div>
+</div>
+<ng-template #noProductsOrLoading>
+  <div *ngIf="isLoading; else noProducts" class="text-center p-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Đang tải sản phẩm...</p>
+  </div>
+  <ng-template #noProducts>
+    <div class="text-center p-5 text-muted">
+      <p>Không tìm thấy sản phẩm nào cho danh mục này.</p>
+    </div>
+  </ng-template>
+</ng-template>
