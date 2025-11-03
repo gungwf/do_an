@@ -1,24 +1,25 @@
 <div class="card h-100 product-card-custom shadow-sm border-0 overflow-hidden">
-
+  <!-- Ảnh sản phẩm -->
   <a routerLink="/product/{{ product.id }}" class="d-block text-center p-3">
     <img
-      [src]="product.imageUrl"
-      [alt]="product.name"
+      [src]="product.imageUrl || 'https://via.placeholder.com/200x200?text=No+Image'"
+      [alt]="product.productName"
       class="product-card-img img-fluid"
       loading="lazy"
     />
   </a>
 
+  <!-- Nội dung -->
   <div class="card-body d-flex flex-column pt-0">
 
     <a routerLink="/product/{{ product.id }}" class="text-decoration-none mb-2">
       <h3 class="product-card-title fs-6 fw-semibold text-dark">
-        {{ product.name }}
+        {{ product.productName }}
       </h3>
     </a>
 
-    <p class="product-card-packaging text-muted small mb-2">
-       {{ product.packaging }}
+    <p class="product-card-description text-muted small mb-3">
+      {{ product.description }}
     </p>
 
     <div class="mt-auto mb-2 flex-grow-1 d-flex align-items-end">
@@ -30,14 +31,18 @@
 
     <div class="card-text text-muted small mt-auto" style="font-size: 0.85rem;">
       <div class="mb-1">
-        <strong>Đóng gói:</strong> {{ product.packaging }}
+        <strong>Sản phẩm:</strong> {{ product.productName }}
       </div>
       <div>
-        <strong>Dạng:</strong> {{ product.dosageForm }}
+        <strong>Mô tả:</strong> {{ product.description }}
       </div>
     </div>
 
-    <div class="d-grid mt-2"> <button class="btn btn-primary btn-sm rounded-pill" (click)="onAddToCartClick()">
+    <div class="d-grid mt-2">
+      <button
+        class="btn btn-primary btn-sm rounded-pill"
+        (click)="onAddToCartClick()"
+      >
         <i class="bi bi-cart-plus me-1"></i> Chọn mua
       </button>
     </div>

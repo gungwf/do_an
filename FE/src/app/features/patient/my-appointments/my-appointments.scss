@@ -1,0 +1,30 @@
+// CSS cho các trạng thái (badge)
+.badge.status-pending { 
+  background-color: #ffc107; // Vàng
+  color: #000; 
+}
+.badge.status-confirmed { 
+  background-color: #198754; // Xanh lá
+  color: #fff;
+}
+.badge.status-completed { 
+  background-color: #0dcaf0; // Xanh lơ
+  color: #000; 
+}
+.badge.status-canceled { 
+  background-color: #6c757d; // Xám
+  color: #fff;
+}
+
+// Kiểu cho tab filter
+.nav-pills .nav-link {
+  cursor: pointer;
+  color: #0d6efd;
+}
+.nav-pills .nav-link:not(.active):hover {
+  background-color: #f8f9fa; // Hover xám nhạt
+}
+.nav-pills .nav-link.active {
+  background-color: #0d6efd;
+  color: #fff;
+}

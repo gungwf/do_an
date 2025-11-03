@@ -1,0 +1,41 @@
+<div class="container mt-4">
+  <h2 class="mb-4">🗓️ Lịch hẹn của tôi</h2>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="text-center py-4">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p class="mt-2">Đang tải dữ liệu...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="loadError && !isLoading" class="alert alert-danger">
+    Không thể tải danh sách lịch hẹn. Vui lòng thử lại sau.
+  </div>
+
+  <!-- No data -->
+  <div *ngIf="!isLoading && appointments.length === 0 && !loadError" class="alert alert-warning">
+    Bạn chưa có lịch hẹn nào.
+  </div>
+
+  <!-- Data -->
+  <table *ngIf="!isLoading && appointments.length > 0" class="table table-hover table-bordered mt-3">
+    <thead class="table-primary">
+      <tr>
+        <th>Bác sĩ</th>
+        <th>Chi nhánh</th>
+        <th>Ngày & Giờ</th>
+        <th>Ghi chú</th>
+        <th>Trạng thái</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let a of appointments">
+        <td>{{ a.doctor?.fullName }}</td>
+        <td>{{ a.branch?.branchName }}</td>
+        <td>{{ a.appointmentTime | date:'dd/MM/yyyy, HH:mm' }}</td>
+        <td>{{ a.notes || '-' }}</td>
+        <td><span [ngClass]="getStatusClass(a.status)">{{ getStatusText(a.status) }}</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>

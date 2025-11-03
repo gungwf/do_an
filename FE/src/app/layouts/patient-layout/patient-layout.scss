@@ -1,0 +1,18 @@
+.cart-container {
+  position: relative;
+  display: inline-block;
+
+  .cart-dropdown {
+    display: none;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.2s ease;
+  }
+
+  &:hover .cart-dropdown,
+  .cart-dropdown.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

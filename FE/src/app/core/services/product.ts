@@ -4,15 +4,19 @@ import { Observable } from 'rxjs';
 
 // (Optional) Định nghĩa một Interface (kiểu dữ liệu) cho Product
 export interface Product {
-  id: number;
-  name: string;
-  // description: string; // <-- Bỏ dòng này đi
+  
+  id: string;
+  productName: string;
+  description: string;
   price: number;
-  imageUrl: string;
-  dosageForm: string; // <-- Thêm dòng này
-  packaging: string;  // <-- Thêm dòng này
-  category: string;
+  createdAt: string;
+  updatedAt: string;
+  productType: string;
+  category?: string | null;
+  imageUrl?: string | null;
+  active: boolean;
 }
+
 
 @Injectable({
   providedIn: 'root'
@@ -27,4 +31,5 @@ export class ProductService {
   getProducts(): Observable<Product[]> {
     return this.http.get<Product[]>(this.productsUrl);
   }
+  
 }

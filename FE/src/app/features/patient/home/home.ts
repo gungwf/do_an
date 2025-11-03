@@ -119,7 +119,7 @@ export class Home implements OnInit, OnDestroy {
   }
 
   addToCart(product: Product): void {
-    this.toastr.success(`Đã thêm "${product.name}" vào giỏ hàng!`);
+    this.toastr.success(`Đã thêm "${product.productName}" vào giỏ hàng!`);
   }
 
   scrollToProducts(): void {
