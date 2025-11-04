@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth';
 import { ToastrService } from 'ngx-toastr';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login-form',
@@ -26,7 +27,8 @@ export class LoginForm {
 
   constructor(
     private authService: AuthService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private router: Router
   ) {}
 
   get email() { return this.loginForm.get('email'); }
@@ -39,7 +41,13 @@ export class LoginForm {
         next: (response) => {
           this.toastr.success('Đăng nhập thành công!');
           this.loginSuccess.emit();
-          window.location.reload();
+          
+          // Kiểm tra role và điều hướng
+          if (this.authService.isAdmin()) {
+            this.router.navigate(['/admin/dashboard']);
+          } else {
+            window.location.reload();
+          }
         },
         error: (err) => {
           this.errorMessage = err.message;

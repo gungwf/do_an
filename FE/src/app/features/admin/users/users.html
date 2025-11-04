@@ -1,0 +1,796 @@
+<div class="admin-page">
+  <div class="page-header mb-4">
+    <h2 class="page-title">Quản lý Người dùng</h2>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link"
+        [class.active]="activeTab === 'patients'"
+        (click)="onTabChange('patients')"
+        type="button"
+      >
+        Bệnh nhân
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link"
+        [class.active]="activeTab === 'staff'"
+        (click)="onTabChange('staff')"
+        type="button"
+      >
+        Nhân viên
+      </button>
+    </li>
+  </ul>
+
+  <!-- Staff Type Dropdown (chỉ hiển thị khi tab Nhân viên được chọn) -->
+  <div *ngIf="activeTab === 'staff'" class="mb-3">
+    <div class="btn-group" role="group">
+      <button
+        type="button"
+        class="btn btn-outline-primary"
+        [class.active]="activeStaffType === 'doctors'"
+        (click)="onStaffTypeChange('doctors')"
+      >
+        Bác sĩ
+      </button>
+      <button
+        type="button"
+        class="btn btn-outline-primary"
+        [class.active]="activeStaffType === 'clinic-staff'"
+        (click)="onStaffTypeChange('clinic-staff')"
+      >
+        Nhân viên phòng khám
+      </button>
+    </div>
+  </div>
+
+  <!-- Search Form -->
+  <div class="card mb-3" *ngIf="activeTab === 'patients' || (activeTab === 'staff' && activeStaffType)">
+    <div class="card-body">
+      <h5 class="card-title mb-3">Tìm kiếm</h5>
+      <form [formGroup]="searchForm">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Họ tên</label>
+            <input
+              type="text"
+              class="form-control"
+              formControlName="fullName"
+              placeholder="Nhập họ tên"
+            />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Email</label>
+            <input
+              type="text"
+              class="form-control"
+              formControlName="email"
+              placeholder="Nhập email"
+            />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Số điện thoại</label>
+            <input
+              type="text"
+              class="form-control"
+              formControlName="phoneNumber"
+              placeholder="Nhập số điện thoại"
+            />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Trạng thái</label>
+            <select class="form-select" formControlName="active">
+              <option value="">Tất cả</option>
+              <option value="true">Hoạt động</option>
+              <option value="false">Không hoạt động</option>
+            </select>
+          </div>
+          <div *ngIf="activeTab === 'staff'" class="col-md-3">
+            <label class="form-label">Chi nhánh</label>
+            <select class="form-select" formControlName="branchId">
+              <option value="">Tất cả</option>
+              <option *ngFor="let branch of branches" [value]="branch.id">
+                {{ branch.branchName || branch.name }}
+              </option>
+            </select>
+          </div>
+          <div
+            *ngIf="activeTab === 'staff' && activeStaffType === 'doctors'"
+            class="col-md-3"
+          >
+            <label class="form-label">Chuyên khoa</label>
+            <input
+              type="text"
+              class="form-control"
+              formControlName="specialty"
+              placeholder="Nhập chuyên khoa"
+            />
+          </div>
+        </div>
+        <div class="mt-3">
+          <button type="button" class="btn btn-secondary" (click)="resetSearch()">
+            <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="mb-3">
+    <button
+      *ngIf="activeTab === 'patients'"
+      class="btn btn-primary"
+      (click)="openPatientModal()"
+    >
+      <i class="bi bi-plus-circle me-2"></i>Thêm bệnh nhân
+    </button>
+    <button
+      *ngIf="activeTab === 'staff' && activeStaffType === 'doctors'"
+      class="btn btn-primary"
+      (click)="openStaffModal('doctors')"
+    >
+      <i class="bi bi-plus-circle me-2"></i>Thêm bác sĩ
+    </button>
+    <button
+      *ngIf="activeTab === 'staff' && activeStaffType === 'clinic-staff'"
+      class="btn btn-primary"
+      (click)="openStaffModal('clinic-staff')"
+    >
+      <i class="bi bi-plus-circle me-2"></i>Thêm nhân viên phòng khám
+    </button>
+  </div>
+
+  <!-- Table -->
+  <div class="card">
+    <div class="card-body">
+      <div *ngIf="isLoading" class="text-center p-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <!-- Patients Table -->
+      <div
+        *ngIf="!isLoading && activeTab === 'patients'"
+        class="table-responsive"
+      >
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th class="col-id">ID</th>
+              <th>Họ tên</th>
+              <th>Email</th>
+              <th>Số điện thoại</th>
+              <th>Trạng thái</th>
+              <th class="col-actions">Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of patients">
+              <td class="col-id text-truncate">{{ user.id }}</td>
+              <td>{{ user.fullName }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.phoneNumber }}</td>
+              <td class="col-actions text-nowrap">
+                <span
+                  class="status-icon"
+                  [class.active]="user.active === true"
+                  [class.inactive]="user.active === false"
+                  (click)="toggleUserStatus(user)"
+                  style="cursor: pointer"
+                  title="Click để đổi trạng thái"
+                >
+                  <i
+                    *ngIf="user.active === true"
+                    class="bi bi-check-circle-fill text-success"
+                  ></i>
+                  <i
+                    *ngIf="user.active === false"
+                    class="bi bi-x-circle-fill text-danger"
+                  ></i>
+                </span>
+              </td>
+              <td>
+                <button
+                  class="btn btn-sm btn-outline-info me-2"
+                  (click)="openDetailModal(user.id)"
+                  title="Xem chi tiết"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-primary me-2" title="Sửa">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  (click)="deleteUser(user.id)"
+                  title="Xóa"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="patients.length === 0">
+              <td colspan="6" class="text-center text-muted py-4">
+                Chưa có dữ liệu
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <!-- Pagination for Patients -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <div>
+            Hiển thị {{ patients.length }} / {{ totalElements }} kết quả
+          </div>
+          <nav *ngIf="totalPages > 1">
+            <ul class="pagination mb-0">
+              <li class="page-item" [class.disabled]="currentPage === 0">
+                <a class="page-link" (click)="onPageChange(currentPage - 1)" style="cursor: pointer">
+                  <i class="bi bi-chevron-left"></i>
+                </a>
+              </li>
+              <li
+                *ngFor="let page of getPageNumbers()"
+                class="page-item"
+                [class.active]="page === currentPage"
+              >
+                <a class="page-link" (click)="onPageChange(page)" style="cursor: pointer">
+                  {{ page + 1 }}
+                </a>
+              </li>
+              <li class="page-item" [class.disabled]="currentPage >= totalPages - 1">
+                <a class="page-link" (click)="onPageChange(currentPage + 1)" style="cursor: pointer">
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Doctors Table -->
+      <div
+        *ngIf="!isLoading && activeTab === 'staff' && activeStaffType === 'doctors'"
+        class="table-responsive"
+      >
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th class="col-id">ID</th>
+              <th>Họ tên</th>
+              <th>Email</th>
+              <th>Số điện thoại</th>
+              <th>Chi nhánh</th>
+              <th>Chuyên khoa</th>
+              <th>Chứng chỉ</th>
+              <th>Trạng thái</th>
+              <th class="col-actions">Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of doctors">
+              <td class="col-id text-truncate">{{ user.id }}</td>
+              <td>{{ user.fullName }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.phoneNumber }}</td>
+              <td>{{ getBranchName(user.branchId) }}</td>
+              <td>{{ user.specialty || 'N/A' }}</td>
+              <td>{{ user.certificate || 'N/A' }}</td>
+              <td class="col-actions text-nowrap">
+                <span
+                  class="status-icon"
+                  [class.active]="user.active === true"
+                  [class.inactive]="user.active === false"
+                  (click)="toggleUserStatus(user)"
+                  style="cursor: pointer"
+                  title="Click để đổi trạng thái"
+                >
+                  <i
+                    *ngIf="user.active === true"
+                    class="bi bi-check-circle-fill text-success"
+                  ></i>
+                  <i
+                    *ngIf="user.active === false"
+                    class="bi bi-x-circle-fill text-danger"
+                  ></i>
+                </span>
+              </td>
+              <td>
+                <button
+                  class="btn btn-sm btn-outline-info me-2"
+                  (click)="openDetailModal(user.id)"
+                  title="Xem chi tiết"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-primary me-2" title="Sửa">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  (click)="deleteUser(user.id)"
+                  title="Xóa"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="doctors.length === 0">
+              <td colspan="9" class="text-center text-muted py-4">
+                Chưa có dữ liệu
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <!-- Pagination for Doctors -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <div>
+            Hiển thị {{ doctors.length }} / {{ totalElements }} kết quả
+          </div>
+          <nav *ngIf="totalPages > 1">
+            <ul class="pagination mb-0">
+              <li class="page-item" [class.disabled]="currentPage === 0">
+                <a class="page-link" (click)="onPageChange(currentPage - 1)" style="cursor: pointer">
+                  <i class="bi bi-chevron-left"></i>
+                </a>
+              </li>
+              <li
+                *ngFor="let page of getPageNumbers()"
+                class="page-item"
+                [class.active]="page === currentPage"
+              >
+                <a class="page-link" (click)="onPageChange(page)" style="cursor: pointer">
+                  {{ page + 1 }}
+                </a>
+              </li>
+              <li class="page-item" [class.disabled]="currentPage >= totalPages - 1">
+                <a class="page-link" (click)="onPageChange(currentPage + 1)" style="cursor: pointer">
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Clinic Staff Table -->
+      <div
+        *ngIf="!isLoading && activeTab === 'staff' && activeStaffType === 'clinic-staff'"
+        class="table-responsive"
+      >
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th class="col-id">ID</th>
+              <th>Họ tên</th>
+              <th>Email</th>
+              <th>Số điện thoại</th>
+              <th>Chi nhánh</th>
+              <th>Trạng thái</th>
+              <th class="col-actions">Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of clinicStaff">
+              <td class="col-id text-truncate">{{ user.id }}</td>
+              <td>{{ user.fullName }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.phoneNumber }}</td>
+              <td>{{ getBranchName(user.branchId) }}</td>
+              <td class="col-actions text-nowrap">
+                <span
+                  class="status-icon"
+                  [class.active]="user.active === true"
+                  [class.inactive]="user.active === false"
+                  (click)="toggleUserStatus(user)"
+                  style="cursor: pointer"
+                  title="Click để đổi trạng thái"
+                >
+                  <i
+                    *ngIf="user.active === true"
+                    class="bi bi-check-circle-fill text-success"
+                  ></i>
+                  <i
+                    *ngIf="user.active === false"
+                    class="bi bi-x-circle-fill text-danger"
+                  ></i>
+                </span>
+              </td>
+              <td>
+                <button
+                  class="btn btn-sm btn-outline-info me-2"
+                  (click)="openDetailModal(user.id)"
+                  title="Xem chi tiết"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-primary me-2" title="Sửa">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  (click)="deleteUser(user.id)"
+                  title="Xóa"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="clinicStaff.length === 0">
+              <td colspan="7" class="text-center text-muted py-4">
+                Chưa có dữ liệu
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <!-- Pagination for Clinic Staff -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <div>
+            Hiển thị {{ clinicStaff.length }} / {{ totalElements }} kết quả
+          </div>
+          <nav *ngIf="totalPages > 1">
+            <ul class="pagination mb-0">
+              <li class="page-item" [class.disabled]="currentPage === 0">
+                <a class="page-link" (click)="onPageChange(currentPage - 1)" style="cursor: pointer">
+                  <i class="bi bi-chevron-left"></i>
+                </a>
+              </li>
+              <li
+                *ngFor="let page of getPageNumbers()"
+                class="page-item"
+                [class.active]="page === currentPage"
+              >
+                <a class="page-link" (click)="onPageChange(page)" style="cursor: pointer">
+                  {{ page + 1 }}
+                </a>
+              </li>
+              <li class="page-item" [class.disabled]="currentPage >= totalPages - 1">
+                <a class="page-link" (click)="onPageChange(currentPage + 1)" style="cursor: pointer">
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Patient Modal -->
+<div
+  *ngIf="showPatientModal"
+  class="modal fade show"
+  style="display: block"
+  tabindex="-1"
+  role="dialog"
+>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Thêm Bệnh nhân</h5>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="closePatientModal()"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="patientForm" (ngSubmit)="onSubmitPatient()">
+          <div class="mb-3">
+            <label class="form-label">Họ tên *</label>
+            <input
+              type="text"
+              class="form-control"
+              formControlName="fullName"
+              [class.is-invalid]="patientForm.get('fullName')?.invalid && patientForm.get('fullName')?.touched"
+            />
+            <div
+              *ngIf="patientForm.get('fullName')?.invalid && patientForm.get('fullName')?.touched"
+              class="invalid-feedback"
+            >
+              Vui lòng nhập họ tên
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email *</label>
+            <input
+              type="email"
+              class="form-control"
+              formControlName="email"
+              [class.is-invalid]="patientForm.get('email')?.invalid && patientForm.get('email')?.touched"
+            />
+            <div
+              *ngIf="patientForm.get('email')?.invalid && patientForm.get('email')?.touched"
+              class="invalid-feedback"
+            >
+              Vui lòng nhập email hợp lệ
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Mật khẩu *</label>
+            <input
+              type="password"
+              class="form-control"
+              formControlName="password"
+              [class.is-invalid]="patientForm.get('password')?.invalid && patientForm.get('password')?.touched"
+            />
+            <div
+              *ngIf="patientForm.get('password')?.invalid && patientForm.get('password')?.touched"
+              class="invalid-feedback"
+            >
+              Mật khẩu phải có ít nhất 6 ký tự
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Số điện thoại *</label>
+            <input
+              type="text"
+              class="form-control"
+              formControlName="phoneNumber"
+              [class.is-invalid]="patientForm.get('phoneNumber')?.invalid && patientForm.get('phoneNumber')?.touched"
+            />
+            <div
+              *ngIf="patientForm.get('phoneNumber')?.invalid && patientForm.get('phoneNumber')?.touched"
+              class="invalid-feedback"
+            >
+              Vui lòng nhập số điện thoại
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closePatientModal()">
+          Đóng
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="onSubmitPatient()"
+          [disabled]="patientForm.invalid"
+        >
+          Lưu
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div *ngIf="showPatientModal" class="modal-backdrop fade show"></div>
+
+<!-- Staff Modal -->
+<div
+  *ngIf="showStaffModal"
+  class="modal fade show"
+  style="display: block"
+  tabindex="-1"
+  role="dialog"
+>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          {{ staffForm.get('role')?.value === 'DOCTOR' ? 'Thêm Bác sĩ' : 'Thêm Nhân viên phòng khám' }}
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="closeStaffModal()"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="staffForm" (ngSubmit)="onSubmitStaff()">
+          <div class="mb-3">
+            <label class="form-label">Họ tên *</label>
+            <input
+              type="text"
+              class="form-control"
+              formControlName="fullName"
+              [class.is-invalid]="staffForm.get('fullName')?.invalid && staffForm.get('fullName')?.touched"
+            />
+            <div
+              *ngIf="staffForm.get('fullName')?.invalid && staffForm.get('fullName')?.touched"
+              class="invalid-feedback"
+            >
+              Vui lòng nhập họ tên
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email *</label>
+            <input
+              type="email"
+              class="form-control"
+              formControlName="email"
+              [class.is-invalid]="staffForm.get('email')?.invalid && staffForm.get('email')?.touched"
+            />
+            <div
+              *ngIf="staffForm.get('email')?.invalid && staffForm.get('email')?.touched"
+              class="invalid-feedback"
+            >
+              Vui lòng nhập email hợp lệ
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Mật khẩu *</label>
+            <input
+              type="password"
+              class="form-control"
+              formControlName="password"
+              [class.is-invalid]="staffForm.get('password')?.invalid && staffForm.get('password')?.touched"
+            />
+            <div
+              *ngIf="staffForm.get('password')?.invalid && staffForm.get('password')?.touched"
+              class="invalid-feedback"
+            >
+              Mật khẩu phải có ít nhất 6 ký tự
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Số điện thoại *</label>
+            <input
+              type="text"
+              class="form-control"
+              formControlName="phoneNumber"
+              [class.is-invalid]="staffForm.get('phoneNumber')?.invalid && staffForm.get('phoneNumber')?.touched"
+            />
+            <div
+              *ngIf="staffForm.get('phoneNumber')?.invalid && staffForm.get('phoneNumber')?.touched"
+              class="invalid-feedback"
+            >
+              Vui lòng nhập số điện thoại
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Chi nhánh *</label>
+            <select
+              class="form-select"
+              formControlName="branchId"
+              [class.is-invalid]="staffForm.get('branchId')?.invalid && staffForm.get('branchId')?.touched"
+            >
+              <option value="">Chọn chi nhánh</option>
+              <option *ngFor="let branch of branches" [value]="branch.id">
+                {{ branch.branchName || branch.name }}
+              </option>
+            </select>
+            <div
+              *ngIf="staffForm.get('branchId')?.invalid && staffForm.get('branchId')?.touched"
+              class="invalid-feedback"
+            >
+              Vui lòng chọn chi nhánh
+            </div>
+          </div>
+          <div *ngIf="staffForm.get('role')?.value === 'DOCTOR'" class="mb-3">
+            <label class="form-label">Chuyên khoa</label>
+            <input
+              type="text"
+              class="form-control"
+              formControlName="specialty"
+              placeholder="Vd: Tim mạch, Hô hấp..."
+            />
+          </div>
+          <div *ngIf="staffForm.get('role')?.value === 'DOCTOR'" class="mb-3">
+            <label class="form-label">Chứng chỉ</label>
+            <input
+              type="text"
+              class="form-control"
+              formControlName="certificate"
+              placeholder="Vd: BS-12345..."
+            />
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeStaffModal()">
+          Đóng
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="onSubmitStaff()"
+          [disabled]="staffForm.invalid"
+        >
+          Lưu
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div *ngIf="showStaffModal" class="modal-backdrop fade show"></div>
+
+<!-- Detail Modal -->
+<div
+  *ngIf="showDetailModal"
+  class="modal fade show"
+  style="display: block"
+  tabindex="-1"
+  role="dialog"
+>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Chi tiết người dùng</h5>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="closeDetailModal()"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="isLoadingDetail" class="text-center p-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+        <div *ngIf="!isLoadingDetail && selectedUser">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <strong>ID:</strong>
+              <p>{{ selectedUser.id }}</p>
+            </div>
+            <div class="col-md-6">
+              <strong>Họ tên:</strong>
+              <p>{{ selectedUser.fullName }}</p>
+            </div>
+            <div class="col-md-6">
+              <strong>Email:</strong>
+              <p>{{ selectedUser.email }}</p>
+            </div>
+            <div class="col-md-6">
+              <strong>Số điện thoại:</strong>
+              <p>{{ selectedUser.phoneNumber || 'N/A' }}</p>
+            </div>
+            <div class="col-md-6">
+              <strong>Trạng thái:</strong>
+              <p>
+                <span
+                  *ngIf="selectedUser.isActive === true"
+                  class="badge bg-success"
+                >
+                  Hoạt động
+                </span>
+                <span
+                  *ngIf="selectedUser.isActive === false"
+                  class="badge bg-danger"
+                >
+                  Không hoạt động
+                </span>
+              </p>
+            </div>
+            <div *ngIf="activeTab === 'staff'" class="col-md-6">
+              <strong>Chi nhánh:</strong>
+              <p>{{ getBranchName(selectedUser.branchId) }}</p>
+            </div>
+            <div
+              *ngIf="activeTab === 'staff' && activeStaffType === 'doctors'"
+              class="col-md-6"
+            >
+              <strong>Chuyên khoa:</strong>
+              <p>{{ selectedUser.specialty || 'N/A' }}</p>
+            </div>
+            <div
+              *ngIf="activeTab === 'staff' && activeStaffType === 'doctors'"
+              class="col-md-6"
+            >
+              <strong>Chứng chỉ:</strong>
+              <p>{{ selectedUser.certificate || selectedUser.degree || 'N/A' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeDetailModal()">
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div *ngIf="showDetailModal" class="modal-backdrop fade show"></div>

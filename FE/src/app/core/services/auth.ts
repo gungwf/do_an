@@ -153,5 +153,56 @@ export class AuthService {
   getUserId(): string | null {
     return localStorage.getItem(this.USER_ID_KEY);
   }
+
+  /**
+   * Decode JWT token và trả về payload
+   */
+  private decodeToken(token: string): any {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      console.error('Lỗi decode token:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Lấy role từ token (authorities)
+   */
+  getUserRole(): string | null {
+    const token = this.getToken();
+    if (!token) {
+      return null;
+    }
+
+    const decoded = this.decodeToken(token);
+    if (!decoded || !decoded.authorities) {
+      return null;
+    }
+
+    // authorities là một mảng, lấy role đầu tiên
+    const authorities = decoded.authorities;
+    if (Array.isArray(authorities) && authorities.length > 0) {
+      return authorities[0].toLowerCase();
+    }
+
+    return null;
+  }
+
+  /**
+   * Kiểm tra xem user có phải admin không
+   */
+  isAdmin(): boolean {
+    const role = this.getUserRole();
+    return role === 'admin' || role === 'role_admin';
+  }
 }
 

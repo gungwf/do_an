@@ -2,10 +2,11 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { Product, ProductService } from '../../../core/services/product';
 import { ToastrService } from 'ngx-toastr';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { ProductCard } from '../../../shared/components/product-card/product-card';
 // Import Interface và Dữ liệu từ file mới
 import { Testimonial, ALL_TESTIMONIALS } from '../../../core/data/testimonials.data';
+import { AuthService } from '../../../core/services/auth';
 
 @Component({
   selector: 'app-home',
@@ -32,10 +33,18 @@ export class Home implements OnInit, OnDestroy {
 
   constructor(
     private productService: ProductService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
+    // Kiểm tra role admin và điều hướng
+    if (this.authService.isAuthenticated() && this.authService.isAdmin()) {
+      this.router.navigate(['/admin/dashboard']);
+      return;
+    }
+
     // Logic tải sản phẩm
     this.productService.getProducts().subscribe({
       next: (products) => {
