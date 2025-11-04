@@ -5,12 +5,12 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
-public class StaffDto {
+public class StaffSearchResponseDto {
     private UUID id;
     private String fullName;
     private String email;
     private String phoneNumber;
     private UUID branchId;
     private boolean isActive;
-    private UserRole role; // Thêm cả role để biết là staff, admin...
+    private UserRole role;
 }

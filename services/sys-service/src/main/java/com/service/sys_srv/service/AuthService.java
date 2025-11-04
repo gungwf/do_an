@@ -12,6 +12,7 @@ import com.service.sys_srv.exception.ERROR_CODE;
 import com.service.sys_srv.repository.DoctorProfileRepository;
 import com.service.sys_srv.repository.PatientProfileRepository;
 import com.service.sys_srv.repository.UserRepository;
+import jakarta.persistence.criteria.Join;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,8 +25,12 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,6 +43,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final PatientProfileRepository patientProfileRepository;
     private final DoctorProfileRepository doctorProfileRepository;
+
 
     public PatientProfile getPatientProfileByUserId(UUID userId) {
         return patientProfileRepository.findById(userId)
@@ -156,7 +162,7 @@ public class AuthService {
 
         // Cập nhật các trường có trong request
         profile.setDateOfBirth(request.getDateOfBirth());
-        if(request.getGender() != null) {
+        if (request.getGender() != null) {
             profile.setGender(Gender.valueOf(request.getGender().toLowerCase()));
         }
         profile.setAddress(request.getAddress());
@@ -185,8 +191,8 @@ public class AuthService {
         return userDto;
     }
 
-    private StaffDto convertToStaffDto(User user) {
-        StaffDto userDto = new StaffDto();
+    private DoctorDto convertToDoctorDto(User user) {
+        DoctorDto userDto = new DoctorDto();
         userDto.setId(user.getId());
         userDto.setFullName(user.getFullName());
         userDto.setEmail(user.getEmail());
@@ -199,32 +205,234 @@ public class AuthService {
         return userDto;
     }
 
-    public List<StaffDto> getDoctors() {
+    public List<DoctorDto> getDoctors() {
         List<User> doctors = userRepository.findByRole(UserRole.doctor);
 
         return doctors.stream()
-                .map(this::convertToStaffDto)
+                .map(this::convertToDoctorDto)
                 .toList();
     }
 
-    public Page<DoctorSearchResponseDto> searchDoctors(DoctorSearchRequest request) {
+    public Page<StaffSearchResponseDto> searchStaffs(StaffSearchRequest request) {
 
         // 1. Tạo đối tượng Phân trang (Pageable)
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
 
-        // 2. Tạo đối tượng Lọc (Specification)
-        Specification<User> spec = DoctorSpecification.filterDoctors(request);
+        // 2. Tạo đối tượng Lọc (Specification) TRỰC TIẾP TRONG SERVICE
 
-        // 3. Gọi Repository
+        // Điều kiện cơ bản: Luôn luôn lọc các vai trò là 'staff' hoặc 'admin'
+        Specification<User> spec = (root, query, cb) ->
+                root.get("role").in(UserRole.staff, UserRole.admin);
+
+        // Lọc theo tên (fullName) nếu có
+        if (StringUtils.hasText(request.getFullName())) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("fullName")), "%" + request.getFullName().toLowerCase() + "%")
+            );
+        }
+
+        // Lọc theo email nếu có
+        if (StringUtils.hasText(request.getEmail())) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("email")), "%" + request.getEmail().toLowerCase() + "%")
+            );
+        }
+
+        // Lọc theo số điện thoại nếu có
+        if (StringUtils.hasText(request.getPhoneNumber())) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(root.get("phoneNumber"), "%" + request.getPhoneNumber() + "%")
+            );
+        }
+
+        // Lọc theo chi nhánh (branchId) nếu có
+        if (request.getBranchId() != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("branchId"), request.getBranchId())
+            );
+        }
+
+        // Lọc theo vai trò cụ thể (staff hoặc admin) nếu được chỉ định
+        if (request.getRole() != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("role"), request.getRole())
+            );
+        }
+
+        if (request.getActive() != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("isActive"), request.getActive())
+            );
+        }
+        // --- Kết thúc logic Specification ---
+
+        // 3. Gọi Repository (UserRepository phải extends JpaSpecificationExecutor)
         Page<User> userPage = userRepository.findAll(spec, pageable);
 
-        // 4. Chuyển đổi (Map) Page<User> sang Page<DoctorSearchResponseDto>
-        return userPage.map(user -> new DoctorSearchResponseDto(
-                user.getId(),
-                user.getFullName(),
-                user.getDoctorProfile() != null ? user.getDoctorProfile().getSpecialty() : null,
-                user.getDoctorProfile() != null ? user.getDoctorProfile().getDegree() : null
-        ));
+        // 4. Chuyển đổi (Map) Page<User> sang Page<StaffSearchResponseDto>
+        return userPage.map(this::convertToStaffSearchResponseDto);
+    }
+
+    /**
+     * Hàm helper để chuyển đổi User sang DTO Response cho Staff
+     */
+    private StaffSearchResponseDto convertToStaffSearchResponseDto(User user) {
+        StaffSearchResponseDto dto = new StaffSearchResponseDto();
+        dto.setId(user.getId());
+        dto.setFullName(user.getFullName());
+        dto.setEmail(user.getEmail());
+        dto.setPhoneNumber(user.getPhoneNumber());
+        dto.setBranchId(user.getBranchId());
+        dto.setActive(user.isActive());
+        dto.setRole(user.getRole());
+        return dto;
+    }
+
+    public Page<DoctorSearchResponseDto> searchDoctors(DoctorSearchRequest request) {
+
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+
+        // --- CẬP NHẬT LOGIC SPECIFICATION ---
+        Specification<User> spec = (root, query, cb) ->
+                cb.equal(root.get("role"), UserRole.doctor);
+
+        if (StringUtils.hasText(request.getFullName())) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("fullName")), "%" + request.getFullName().toLowerCase() + "%")
+            );
+        }
+
+        // Lọc thêm theo email (mới)
+        if (StringUtils.hasText(request.getEmail())) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("email")), "%" + request.getEmail().toLowerCase() + "%")
+            );
+        }
+
+        // Lọc thêm theo SĐT (mới)
+        if (StringUtils.hasText(request.getPhoneNumber())) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(root.get("phoneNumber"), "%" + request.getPhoneNumber() + "%")
+            );
+        }
+
+        if (request.getBranchId() != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("branchId"), request.getBranchId())
+            );
+        }
+
+        if (StringUtils.hasText(request.getSpecialty())) {
+            spec = spec.and((root, query, cb) -> {
+                Join<User, DoctorProfile> profileJoin = root.join("doctorProfile");
+                return cb.like(cb.lower(profileJoin.get("specialty")), "%" + request.getSpecialty().toLowerCase() + "%");
+            });
+        }
+
+        if (request.getActive() != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("isActive"), request.getActive())
+            );
+        }
+
+        // --- Kết thúc logic Specification ---
+
+        Page<User> userPage = userRepository.findAll(spec, pageable);
+
+        // Map sang DTO mới
+        return userPage.map(this::convertToDoctorSearchResponseDto);
+    }
+
+    /**
+     * Sửa lại Hàm helper: Chuyển đổi User sang DTO Response mới
+     */
+    private DoctorSearchResponseDto convertToDoctorSearchResponseDto(User user) {
+        DoctorSearchResponseDto dto = new DoctorSearchResponseDto();
+
+        // Các trường từ User (giống Staff)
+        dto.setId(user.getId());
+        dto.setFullName(user.getFullName());
+        dto.setEmail(user.getEmail());
+        dto.setPhoneNumber(user.getPhoneNumber());
+        dto.setBranchId(user.getBranchId());
+        dto.setActive(user.isActive());
+        dto.setRole(user.getRole());
+
+        // Các trường từ DoctorProfile
+        DoctorProfile profile = user.getDoctorProfile();
+        if (profile != null) {
+            dto.setSpecialty(profile.getSpecialty());
+            dto.setDegree(profile.getDegree());
+        }
+
+        return dto;
+    }
+
+    public Page<PatientSearchResponseDto> searchPatients(PatientSearchRequest request) {
+
+        // 1. Tạo đối tượng Phân trang (Pageable)
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+
+        Specification<User> spec = (root, query, cb) ->
+                cb.equal(root.get("role"), UserRole.patient);
+
+        // Lọc theo tên (fullName) nếu có
+        if (StringUtils.hasText(request.getFullName())) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("fullName")), "%" + request.getFullName().toLowerCase() + "%")
+            );
+        }
+
+        // Lọc theo email nếu có
+        if (StringUtils.hasText(request.getEmail())) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("email")), "%" + request.getEmail().toLowerCase() + "%")
+            );
+        }
+
+        // Lọc theo số điện thoại nếu có
+        if (StringUtils.hasText(request.getPhoneNumber())) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(root.get("phoneNumber"), "%" + request.getPhoneNumber() + "%")
+            );
+        }
+
+        // Lọc theo hạng thành viên (yêu cầu JOIN)
+        if (StringUtils.hasText(request.getMembershipTier())) {
+            spec = spec.and((root, query, cb) -> {
+                Join<User, PatientProfile> profileJoin = root.join("patientProfile");
+                return cb.equal(profileJoin.get("membershipTier"), request.getMembershipTier());
+            });
+        }
+
+        if (request.getActive() != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("isActive"), request.getActive())
+            );
+        }
+
+        Page<User> userPage = userRepository.findAll(spec, pageable);
+
+        return userPage.map(this::convertToPatientSearchResponseDto);
+    }
+
+    private PatientSearchResponseDto convertToPatientSearchResponseDto(User user) {
+        PatientSearchResponseDto dto = new PatientSearchResponseDto();
+        dto.setId(user.getId());
+        dto.setFullName(user.getFullName());
+        dto.setEmail(user.getEmail());
+        dto.setPhoneNumber(user.getPhoneNumber());
+        dto.setActive(user.isActive());
+
+        PatientProfile profile = user.getPatientProfile();
+        if (profile != null) {
+            dto.setMembershipTier(profile.getMembershipTier());
+            dto.setPoints(profile.getPoints());
+        } else {
+            dto.setMembershipTier("STANDARD");
+            dto.setPoints(0);
+        }
+        return dto;
     }
 
     public UserDto updateUser(UUID userId, UpdateUserRequest request) {
@@ -271,5 +479,19 @@ public class AuthService {
         }
 
         return patientProfileRepository.save(profile);
+    }
+
+    @Transactional
+    public UserDto toggleUserActiveStatus(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ERROR_CODE.USER_NOT_FOUND));
+
+        boolean currentStatus = user.isActive();
+        user.setActive(!currentStatus);
+
+        User updatedUser = userRepository.save(user);
+
+
+        return convertToDto(updatedUser);
     }
 }

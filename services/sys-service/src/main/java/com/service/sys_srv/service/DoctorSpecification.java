@@ -15,9 +15,9 @@ public class DoctorSpecification {
         Specification<User> spec = (root, query, cb) ->
                 cb.equal(root.get("role"), UserRole.doctor);
 
-        if (StringUtils.hasText(request.getName())) {
+        if (StringUtils.hasText(request.getFullName())) {
             spec = spec.and((root, query, cb) ->
-                    cb.like(cb.lower(root.get("fullName")), "%" + request.getName().toLowerCase() + "%")
+                    cb.like(cb.lower(root.get("fullName")), "%" + request.getFullName().toLowerCase() + "%")
             );
         }
 
