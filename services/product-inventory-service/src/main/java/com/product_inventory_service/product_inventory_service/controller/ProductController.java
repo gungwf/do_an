@@ -1,11 +1,14 @@
 package com.product_inventory_service.product_inventory_service.controller;
 
+import com.product_inventory_service.product_inventory_service.dto.request.ProductSearchRequest;
+import com.product_inventory_service.product_inventory_service.dto.response.ProductSearchResponseDto;
 import com.product_inventory_service.product_inventory_service.dto.response.ProductSimpleDto;
 import com.product_inventory_service.product_inventory_service.entity.Product;
 import com.product_inventory_service.product_inventory_service.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -67,5 +70,13 @@ public class ProductController {
         } catch (IOException e) {
             return ResponseEntity.internalServerError().body(null); // (Nên dùng AppExceptionHandler)
         }
+    }
+
+    @PostMapping("/search")
+    public ResponseEntity<Page<ProductSearchResponseDto>> searchProducts(
+            @RequestBody ProductSearchRequest request
+    ) {
+        Page<ProductSearchResponseDto> resultPage = productService.searchProducts(request);
+        return ResponseEntity.ok(resultPage);
     }
 }
