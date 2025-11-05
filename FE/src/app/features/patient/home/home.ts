@@ -37,20 +37,20 @@ export class Home implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Logic tải sản phẩm
-    this.productService.getProducts().subscribe({
-      next: (products) => {
-        this.allProducts = products;
-        if (this.categories.length > 0) {
-          this.filterByCategory(this.categories[0]);
-        }
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Lỗi tải sản phẩm:', err);
-        this.toastr.error('Không thể tải danh sách sản phẩm.');
-        this.isLoading = false;
-      },
-    });
+    // this.productService.getProducts().subscribe({
+    //   next: (products) => {
+    //     this.allProducts = products;
+    //     if (this.categories.length > 0) {
+    //       this.filterByCategory(this.categories[0]);
+    //     }
+    //     this.isLoading = false;
+    //   },
+    //   error: (err) => {
+    //     console.error('Lỗi tải sản phẩm:', err);
+    //     this.toastr.error('Không thể tải danh sách sản phẩm.');
+    //     this.isLoading = false;
+    //   },
+    // });
 
     // Khởi tạo testimonial slider
     this.updateDisplayedTestimonials();

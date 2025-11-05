@@ -1,56 +1,105 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { ProductCard } from '../../../shared/components/product-card/product-card';
-import { Product } from '../../../core/services/product';
-import { CartService } from '../../../core/services/cartService';
+import { ProductService, Product, ProductSearchResponse } from '../../../core/services/product';
 import { ToastrService } from 'ngx-toastr';
-
+import { ProductCard } from '../../../shared/components/product-card/product-card';
+import { CartService } from '../../../core/services/cartService'; // ✅ 1. IMPORT CART SERVICE
+interface Category {
+  id: string;
+  name: string;
+}
 
 @Component({
   selector: 'app-products',
   standalone: true,
-  imports: [CommonModule, ProductCard],
   templateUrl: './products.html',
-  styleUrls: ['./products.scss']
+  styleUrls: ['./products.scss'],
+  imports: [CommonModule, ProductCard],
 })
-export class Products implements OnInit {
+export class ProductsComponent implements OnInit {
   products: Product[] = [];
-  readonly apiUrl = 'http://localhost:8080/products';
+  categories: Category[] = [];
+  selectedCategory: string = '';
+  sortOrder: string = 'asc';
+  page = 0;
+  size = 8;
+  totalPages = 0;
 
-  constructor(
-    private http: HttpClient,
-    private cartService: CartService,
-    private toastr: ToastrService // ✅ Inject ToastrService
-  ) {}
+  constructor(private productService: ProductService, private toastr: ToastrService, private cartService: CartService) {}
 
   ngOnInit(): void {
+    this.loadCategories();
     this.loadProducts();
   }
 
-  loadProducts(): void {
-    this.http.get<Product[]>(this.apiUrl).subscribe({
-      next: (data) => {
-        console.log('✅ Dữ liệu sản phẩm:', data);
-        this.products = data;
+  loadCategories(): void {
+    this.productService.getCategories().subscribe({
+      next: (data: Category[]) => {
+        console.log('Categories API:', data);
+        this.categories = data;
       },
       error: (err) => {
-        console.error('❌ Lỗi khi gọi API sản phẩm:', err);
-        this.toastr.error('Không thể tải danh sách sản phẩm', 'Lỗi');
-      }
+        console.error('Lỗi khi lấy categories:', err);
+        this.toastr.error('Không thể tải danh mục sản phẩm', 'Lỗi');
+      },
     });
   }
 
-  onAddToCart(product: Product): void {
-    console.log('🛒 Sản phẩm được thêm vào giỏ:', product);
+  loadProducts(): void {
+    const body = {
+      search: '',
+      category: this.selectedCategory || null,
+      sort: `price,${this.sortOrder}`,
+      page: this.page,
+      size: this.size,
+    };
 
-    // Gọi service để thêm sản phẩm vào giỏ
-    this.cartService.addToCart(product);
-
-    // Hiển thị toastr khi thêm thành công
-    this.toastr.success(`${product.productName} đã được thêm vào giỏ hàng!`, 'Thành công'); // ✅
-
-    // In giỏ hàng hiện tại ra console (để kiểm tra)
-    // console.log('🧺 Giỏ hàng hiện tại:', this.cartService.getCartItems());
+    this.productService.searchProducts(body).subscribe({
+      next: (res: ProductSearchResponse) => {
+        this.products = res.content;
+        this.totalPages = res.totalPages;
+      },
+      error: (err) => {
+        console.error('Lỗi khi lấy products:', err);
+        this.toastr.error('Không thể tải danh sách sản phẩm', 'Lỗi');
+      },
+    });
   }
+
+  onCategoryChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.selectedCategory = value;
+    this.page = 0;
+    this.loadProducts();
+  }
+
+  onSortChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.sortOrder = value;
+    this.page = 0;
+    this.loadProducts();
+  }
+
+  nextPage(): void {
+    if (this.page < this.totalPages - 1) {
+      this.page++;
+      this.loadProducts();
+    }
+  }
+
+  prevPage(): void {
+    if (this.page > 0) {
+      this.page--;
+      this.loadProducts();
+    }
+  }
+
+  onAddToCart(product: Product): void {
+    console.log('Thêm vào giỏ hàng:', product);
+    
+    // Gọi service để thêm sản phẩm
+    this.cartService.addToCart(product); 
+
+    this.toastr.success(`${product.productName} đã được thêm vào giỏ!`);
+  }
 }

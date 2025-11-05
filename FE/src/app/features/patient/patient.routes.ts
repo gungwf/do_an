@@ -34,11 +34,13 @@ export const PATIENT_ROUTES: Routes = [
   path: 'cart',
   loadComponent: () =>
     import('./cart/cart').then((m) => m.CartComponent),
+    canActivate: [authGuard]
+
   },
   {
   path: 'products',
   loadComponent: () =>
-    import('./products/products').then(m => m.Products),
+    import('./products/products').then(m => m.ProductsComponent),
   },
   {
     path: 'payment-return',

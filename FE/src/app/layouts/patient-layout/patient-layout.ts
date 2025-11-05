@@ -25,15 +25,15 @@ import { CartService } from '../../core/services/cartService';
   styleUrls: ['./patient-layout.scss'],
 })
 export class PatientLayout {
-  isAuthModalOpen = false;
-  showCartPreview = false;
+  isAuthModalOpen = false;
+  showCartPreview = false;
 
-  constructor(
-    public authService: AuthService,
-    private toastr: ToastrService,
-    public router: Router,
-    public cartService: CartService
-  ) {}
+  constructor(
+    public authService: AuthService,
+    private toastr: ToastrService,
+    public router: Router,
+    public cartService: CartService
+  ) {}
 
   handleProtectedLink(url: string) {
     if (this.authService.isAuthenticated()) {
@@ -53,8 +53,12 @@ export class PatientLayout {
   }
 
   logout(): void {
-    this.authService.logout();
-    this.toastr.success('Đăng xuất thành công!');
-    setTimeout(() => window.location.reload(), 500);
-  }
+    this.authService.logout(); // 1. Đăng xuất khỏi auth service
+    this.cartService.clearStorage(); // 2. Dọn dẹp giỏ hàng
+    this.toastr.success('Đăng xuất thành công!');
+    this.router.navigate(['/']); // 3. Chuyển hướng về trang chủ
+    
+    // ⛔️ BỎ DÒNG RELOAD NÀY ĐI
+    // setTimeout(() => window.location.reload(), 500);
+  }
 }
