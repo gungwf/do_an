@@ -1,5 +1,6 @@
 package com.service.sys_srv.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.service.sys_srv.entity.Enum.UserRole;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -47,5 +48,6 @@ public class User {
     private DoctorProfile doctorProfile;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonBackReference
     private PatientProfile patientProfile;
 }
