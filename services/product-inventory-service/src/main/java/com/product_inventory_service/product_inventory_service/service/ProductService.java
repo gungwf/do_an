@@ -1,6 +1,7 @@
 package com.product_inventory_service.product_inventory_service.service;
 
 import com.product_inventory_service.product_inventory_service.dto.request.ProductSearchRequest;
+import com.product_inventory_service.product_inventory_service.dto.response.CategorySimpleDto;
 import com.product_inventory_service.product_inventory_service.dto.response.ProductSearchResponseDto;
 import com.product_inventory_service.product_inventory_service.dto.response.ProductSimpleDto;
 import com.product_inventory_service.product_inventory_service.entity.Product;
@@ -135,5 +136,13 @@ public class ProductService {
         dto.setImageUrl(product.getImageUrl());
         dto.setActive(product.isActive());
         return dto;
+    }
+
+    public List<CategorySimpleDto> getUniqueCategories() {
+        List<String> categoryNames = productRepository.findDistinctCategories();
+
+        return categoryNames.stream()
+                .map(name -> new CategorySimpleDto(name, name))
+                .collect(Collectors.toList());
     }
 }

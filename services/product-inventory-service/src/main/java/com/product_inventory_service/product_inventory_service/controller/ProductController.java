@@ -1,6 +1,7 @@
 package com.product_inventory_service.product_inventory_service.controller;
 
 import com.product_inventory_service.product_inventory_service.dto.request.ProductSearchRequest;
+import com.product_inventory_service.product_inventory_service.dto.response.CategorySimpleDto;
 import com.product_inventory_service.product_inventory_service.dto.response.ProductSearchResponseDto;
 import com.product_inventory_service.product_inventory_service.dto.response.ProductSimpleDto;
 import com.product_inventory_service.product_inventory_service.entity.Product;
@@ -78,5 +79,10 @@ public class ProductController {
     ) {
         Page<ProductSearchResponseDto> resultPage = productService.searchProducts(request);
         return ResponseEntity.ok(resultPage);
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<List<CategorySimpleDto>> getCategories() {
+        return ResponseEntity.ok(productService.getUniqueCategories());
     }
 }
