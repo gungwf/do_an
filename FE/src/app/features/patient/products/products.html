@@ -3,11 +3,9 @@
     Danh sách sản phẩm
   </h2>
 
-  <!-- 🔹 Bộ lọc & Sắp xếp -->
   <div
     class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3"
   >
-    <!-- Lọc theo danh mục -->
     <div class="d-flex align-items-center gap-2 flex-wrap">
       <label class="fw-semibold">Danh mục:</label>
       <select
@@ -21,7 +19,6 @@
         </option>
       </select>
 
-      <!-- Sắp xếp -->
       <label class="fw-semibold ms-3">Sắp xếp theo giá:</label>
       <select
         class="form-select"
@@ -33,7 +30,28 @@
       </select>
     </div>
 
-    <!-- Nút phân trang -->
+    </div>
+
+  <div class="row g-4" *ngIf="products.length > 0; else noProducts">
+    <div
+      class="col-12 col-sm-6 col-md-4 col-lg-3"
+      *ngFor="let product of products"
+    >
+      <app-product-card
+        [product]="product"
+        (addToCart)="onAddToCart($event)"
+      ></app-product-card>
+    </div>
+  </div>
+
+  <ng-template #noProducts>
+    <div class="text-center text-muted py-5">
+      <i class="bi bi-box-seam display-6 d-block mb-3"></i>
+      Không có sản phẩm nào trong danh mục này.
+    </div>
+  </ng-template>
+
+  <div class="d-flex justify-content-end mt-4">
     <div class="d-flex align-items-center gap-2">
       <button
         class="btn btn-outline-primary"
@@ -54,25 +72,5 @@
       </button>
     </div>
   </div>
-
-  <!-- 🔹 Danh sách sản phẩm -->
-  <div class="row g-4" *ngIf="products.length > 0; else noProducts">
-    <div
-      class="col-12 col-sm-6 col-md-4 col-lg-3"
-      *ngFor="let product of products"
-    >
-      <app-product-card
-        [product]="product"
-        (addToCart)="onAddToCart($event)"
-      ></app-product-card>
-    </div>
-  </div>
-
-  <!-- 🔹 Khi không có sản phẩm -->
-  <ng-template #noProducts>
-    <div class="text-center text-muted py-5">
-      <i class="bi bi-box-seam display-6 d-block mb-3"></i>
-      Không có sản phẩm nào trong danh mục này.
-    </div>
-  </ng-template>
+  
 </div>
