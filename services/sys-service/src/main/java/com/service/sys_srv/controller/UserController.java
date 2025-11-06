@@ -1,17 +1,15 @@
 package com.service.sys_srv.controller;
 
 import com.service.sys_srv.dto.request.DoctorSearchRequest;
+import com.service.sys_srv.dto.request.PatientSearchRequest;
+import com.service.sys_srv.dto.request.StaffSearchRequest;
 import com.service.sys_srv.dto.request.UpdateUserRequest;
-import com.service.sys_srv.dto.response.DoctorSearchResponseDto;
-import com.service.sys_srv.dto.response.StaffDto;
-import com.service.sys_srv.dto.response.UserDto;
-import com.service.sys_srv.dto.response.UserSimpleDto;
+import com.service.sys_srv.dto.response.*;
 import com.service.sys_srv.entity.User;
 import com.service.sys_srv.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,7 +18,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
-@PreAuthorize("isAuthenticated()")
+//@PreAuthorize("isAuthenticated()")
 public class UserController {
     private final AuthService authService;
 
@@ -39,10 +37,25 @@ public class UserController {
         return ResponseEntity.ok(authService.getAllUser());
     }
 
-    // Chỉ admin hoặc staff mới được xem danh sách bác sĩ
     @GetMapping("/doctors")
-    public ResponseEntity<List<StaffDto>> getDoctors() {
+    public ResponseEntity<List<DoctorDto>> getDoctors() {
         return ResponseEntity.ok(authService.getDoctors());
+    }
+
+    @PostMapping("/staffs/search")
+    public ResponseEntity<Page<StaffSearchResponseDto>> searchStaffs(
+            @RequestBody StaffSearchRequest request
+    ) {
+        Page<StaffSearchResponseDto> resultPage = authService.searchStaffs(request);
+        return ResponseEntity.ok(resultPage);
+    }
+
+    @PostMapping("/patients/search")
+    public ResponseEntity<Page<PatientSearchResponseDto>> searchPatients(
+            @RequestBody PatientSearchRequest request
+    ) {
+        Page<PatientSearchResponseDto> resultPage = authService.searchPatients(request);
+        return ResponseEntity.ok(resultPage);
     }
 
     @GetMapping("/by-email")
@@ -63,10 +76,17 @@ public class UserController {
         return ResponseEntity.ok(authService.getDoctorsSimple());
     }
 
-    @PostMapping("/doctors-search")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Page<DoctorSearchResponseDto>> searchDoctors(@RequestBody DoctorSearchRequest request) {
+    @PostMapping("/doctors/search")
+    public ResponseEntity<Page<DoctorSearchResponseDto>> searchDoctors(
+            @RequestBody DoctorSearchRequest request // Nhận DTO request mới
+    ) {
         Page<DoctorSearchResponseDto> resultPage = authService.searchDoctors(request);
         return ResponseEntity.ok(resultPage);
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<UserDto> toggleUserStatus(@PathVariable UUID id) {
+        UserDto updatedUser = authService.toggleUserActiveStatus(id);
+        return ResponseEntity.ok(updatedUser);
     }
 }

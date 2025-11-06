@@ -1,0 +1,131 @@
+<div class="admin-dashboard">
+  <h2 class="page-title mb-4">Bảng điều khiển</h2>
+
+  <!-- Statistics Cards -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-3">
+      <div class="stat-card stat-card-blue">
+        <div class="stat-icon">
+          <i class="bi bi-people"></i>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-number">{{ stats.doctors }}</h3>
+          <p class="stat-label">Bác sĩ</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card stat-card-red">
+        <div class="stat-icon">
+          <i class="bi bi-briefcase"></i>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-number">{{ stats.nurses }}</h3>
+          <p class="stat-label">Y tá</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card stat-card-orange">
+        <div class="stat-icon">
+          <i class="bi bi-person-wheelchair"></i>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-number">{{ stats.patients }}</h3>
+          <p class="stat-label">Bệnh nhân</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card stat-card-cyan">
+        <div class="stat-icon">
+          <i class="bi bi-person-plus"></i>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-number">{{ stats.pharmacists }}</h3>
+          <p class="stat-label">Dược sĩ</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hospital Survey Section -->
+  <div class="survey-section">
+    <h3 class="section-title mb-4">Khảo sát bệnh viện</h3>
+
+    <div class="row g-4">
+      <!-- Income Cards -->
+      <div class="col-md-8">
+        <div class="income-cards mb-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="income-card">
+                <div class="income-amount">$ {{ income.today }}</div>
+                <div class="income-label">Thu nhập hôm nay</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="income-card">
+                <div class="income-amount">$ {{ income.week }}</div>
+                <div class="income-label">Thu nhập tuần này</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="income-card">
+                <div class="income-amount">$ {{ income.month }}</div>
+                <div class="income-label">Thu nhập tháng này</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="income-card">
+                <div class="income-amount">$ {{ income.year }}</div>
+                <div class="income-label">Thu nhập năm nay</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chart Placeholder -->
+        <div class="chart-container">
+          <div class="chart-header">
+            <h4 class="chart-title">Tăng trưởng</h4>
+            <div class="chart-actions">
+              <button class="btn-icon"><i class="bi bi-search"></i></button>
+              <button class="btn-icon"><i class="bi bi-circle"></i></button>
+              <button class="btn-icon"><i class="bi bi-square"></i></button>
+              <button class="btn-icon"><i class="bi bi-house"></i></button>
+              <button class="btn-icon"><i class="bi bi-list"></i></button>
+            </div>
+          </div>
+          <div class="chart-content">
+            <canvas id="growthChart" width="400" height="200"></canvas>
+            <div class="chart-legend">
+              <span class="legend-item">
+                <span class="legend-color" style="background-color: #3498db;"></span>
+                Tăng trưởng
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Info -->
+      <div class="col-md-4">
+        <div class="info-card">
+          <h5 class="info-title">Thông tin bổ sung</h5>
+          <div class="info-content">
+            <p>Nội dung thông tin sẽ được thêm vào đây.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+

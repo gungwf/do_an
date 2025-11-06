@@ -1,5 +1,6 @@
 package com.service.sys_srv.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.service.sys_srv.entity.Enum.Gender;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -16,6 +17,7 @@ public class PatientProfile {
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "user_id")
+    @JsonManagedReference
     private User user;
 
     private LocalDate dateOfBirth;

@@ -1,16 +1,16 @@
 package com.service.sys_srv.dto.response;
 
-import com.service.sys_srv.entity.Enum.UserRole;
 import lombok.Data;
 import java.util.UUID;
 
 @Data
-public class StaffDto {
+public class PatientDto {
     private UUID id;
     private String fullName;
     private String email;
     private String phoneNumber;
-    private UUID branchId;
     private boolean isActive;
-    private UserRole role; // Thêm cả role để biết là staff, admin...
+    // Thông tin thêm từ profile
+    private String membershipTier;
+    private Integer points;
 }
