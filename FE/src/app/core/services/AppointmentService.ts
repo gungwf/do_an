@@ -2,13 +2,17 @@ import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
-// --- CÁC INTERFACE DTO (Giữ nguyên) ---
+// ------------------------------------
+// --- CÁC INTERFACE DTO (DATA TRANSFER OBJECTS) ---
+// ------------------------------------
+
 export interface BranchSimpleDto {
   id: string;
   branchName: string;
   address: string;
   phoneNumber?: string;
 }
+
 export interface DoctorDto {
   id: string;
   fullName: string;
@@ -20,10 +24,34 @@ export interface DoctorDto {
   specialty?: string;
   price?: number;
 }
+
 export interface SpecialtyDto {
   id: string;
   name: string;
 }
+
+export interface PaymentResponse {
+  paymentUrl: string;
+}
+
+/**
+ * DTO cho một lịch hẹn (được trả về từ API /appointments/patient/{patientId})
+ */
+export interface AppointmentResponseDto {
+  id: string;
+  appointmentTime: string; // "2025-10-10T03:00:00Z"
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELED' | 'COMPLETED';
+  notes: string;
+  priceAtBooking: number;
+  patient: { id: string; fullName: string; email: string; };
+  doctor: { id: string; fullName: string; };
+  branch: { id: string; branchName: string; address: string; };
+}
+
+
+// ------------------------------------
+// --- SERVICE CHÍNH ---
+// ------------------------------------
 
 @Injectable({
   providedIn: 'root'
@@ -35,16 +63,22 @@ export class AppointmentService {
 
   constructor(private http: HttpClient) { }
 
-  // --- CÁC HÀM GET (Giữ nguyên) ---
+  // ------------------------------------
+  // --- CÁC HÀM GET DỮ LIỆU CHUNG ---
+  // ------------------------------------
+
   getBranchesSimple(): Observable<BranchSimpleDto[]> {
     return this.http.get<BranchSimpleDto[]>(`${this.BASE_URL}/branches`);
   }
+
   getDoctors(): Observable<DoctorDto[]> {
     return this.http.get<DoctorDto[]>(`${this.BASE_URL}/users/doctors`);
   }
+
   getSpecialties(): Observable<SpecialtyDto[]> {
     return this.http.get<SpecialtyDto[]>(`${this.BASE_URL}/doctor-profiles/specialties`);
   }
+
   getAvailableSlots(doctorId: string, date: string): Observable<string[]> {
     let params = new HttpParams()
       .set('doctorId', doctorId)
@@ -52,43 +86,55 @@ export class AppointmentService {
     return this.http.get<string[]>(`${this.BASE_URL}/slots/available`, { params });
   }
 
-  // --- CÁC HÀM POST/GET CHO LUỒNG ĐẶT LỊCH ---
+  // ------------------------------------
+  // --- CÁC HÀM XỬ LÝ LỊCH HẸN VÀ THANH TOÁN ---
+  // ------------------------------------
 
-  /**
-   * (Bước 1) API TẠO LỊCH HẸN MỚI
-   */
   bookAppointment(payload: any): Observable<any> { 
     return this.http.post(`${this.BASE_URL}/appointments`, payload);
   }
 
-  /**
-   * (ĐÃ SỬA) (Bước 2) Tạo link thanh toán (mong đợi TEXT)
-   */
-  createPayment(appointmentId: string): Observable<string> { // <-- SỬA 1: Kiểu trả về là string
+  createPayment(appointmentId: string): Observable<string> { 
     return this.http.post(
       `${this.BASE_URL}/api/v1/payment/create-payment/${appointmentId}`,
       {},
-      { responseType: 'text' } // <-- SỬA 2: Báo cho Angular biết đây là text
+      { responseType: 'text' }
     );
   }
 
-  /**
-   * (MỚI - Bước 4) Gửi tham số VNPay về backend để xác thực
-   * @param allParams Tất cả tham số từ URL VNPay trả về
-   */
   confirmVnPayReturn(allParams: any): Observable<any> {
-    // Chuyển object params thành HttpParams
     let params = new HttpParams();
     for (const key in allParams) {
       if (allParams.hasOwnProperty(key)) {
         params = params.set(key, allParams[key]);
       }
     }
-    
-    // Gọi GET /api/v1/payment/vnpay-return với các tham số
-    // (Interceptor sẽ tự đính kèm token)
-    // (API này trả về JSON, không phải text)
     return this.http.get(`${this.BASE_URL}/api/v1/payment/vnpay-return`, { params });
-    
   }
+
+  // ------------------------------------
+  // --- HÀM MỚI: LẤY LỊCH HẸN CỦA TÔI ---
+  // ------------------------------------
+
+  /**
+   * Lấy danh sách lịch hẹn của bệnh nhân dựa trên ID.
+   * API: /appointments/patient/{patientId}
+   * @param patientId ID của bệnh nhân
+   */
+  getMyAppointments(patientId: string): Observable<AppointmentResponseDto[]> {
+    // Gọi API bạn đã cung cấp (qua Gateway)
+    return this.http.get<AppointmentResponseDto[]>(`${this.BASE_URL}/appointments/patient/${patientId}`);
+  }
+  
+  // ------------------------------------
+  // --- HÀM TODO: HỦY LỊCH HẸN ---
+  // ------------------------------------
+  
+  /**
+   * TODO: Triển khai API hủy lịch hẹn nếu có
+   * Ví dụ: return this.http.delete(`${this.BASE_URL}/appointments/${appointmentId}`);
+   */
+  // cancelAppointment(appointmentId: string): Observable<any> {
+  //   // return this.http.post(`${this.BASE_URL}/appointments/${appointmentId}/cancel`, {});
+  // }
 }

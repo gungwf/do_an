@@ -1,0 +1,67 @@
+<div class="container py-4">
+  <h4 class="fw-bold mb-4">🛒 Giỏ hàng của bạn</h4>
+
+  <div *ngIf="cartItems.length === 0" class="alert alert-warning">
+    Giỏ hàng trống. Hãy quay lại chọn sản phẩm nhé!
+  </div>
+
+  <div *ngIf="cartItems.length > 0" class="table-responsive">
+    <table class="table align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Sản phẩm</th>
+          <th class="text-center">Giá</th>
+          <th class="text-center">Số lượng</th>
+          <th class="text-center">Thành tiền</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of cartItems; let i = index">
+          <td>{{ item.productName }}</td>
+          <td class="text-center">
+            {{ item.price | currency:'VND':'symbol':'1.0-0' }}
+          </td>
+          <td class="text-center">
+            <div class="d-inline-flex align-items-center border rounded px-2">
+              <button
+                class="btn btn-sm btn-link text-decoration-none"
+                (click)="updateQuantity(item.id, item.quantity - 1)"
+                [disabled]="item.quantity <= 1"
+              >
+                −
+              </button>
+              <input
+                type="number"
+                [(ngModel)]="item.quantity"
+                (change)="updateQuantity(item.id, item.quantity)"
+                min="1"
+                class="form-control text-center border-0 shadow-none p-0"
+                style="width: 50px;"
+              />
+              <button
+                class="btn btn-sm btn-link text-decoration-none"
+                (click)="updateQuantity(item.id, item.quantity + 1)"
+              >
+                +
+              </button>
+            </div>
+          </td>
+          <td class="text-center fw-semibold">
+            {{ (item.price * item.quantity) | currency:'VND':'symbol':'1.0-0' }}
+          </td>
+          <td class="text-end">
+            <button class="btn btn-outline-danger btn-sm" (click)="removeItem(item.id)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="text-end mt-3">
+      <h5 class="fw-bold">Tổng cộng: {{ getTotal() | currency:'VND':'symbol':'1.0-0' }}</h5>
+      <button class="btn btn-primary mt-2">Tiến hành thanh toán</button>
+    </div>
+  </div>
+</div>

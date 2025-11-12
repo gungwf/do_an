@@ -1,9 +1,15 @@
 import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router'; // Import Router
+import {
+  RouterOutlet,
+  RouterLink,
+  RouterLinkActive,
+  Router,
+} from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../core/services/auth'; // Đường dẫn service auth
 import { ToastrService } from 'ngx-toastr';
-import { AuthModal } from '../../shared/components/auth-modal/auth-modal'; // Import Modal
+import { AuthService } from '../../core/services/auth';
+import { AuthModal } from '../../shared/components/auth-modal/auth-modal';
+import { CartService } from '../../core/services/cartService';
 
 @Component({
   selector: 'app-patient-layout',
@@ -13,34 +19,46 @@ import { AuthModal } from '../../shared/components/auth-modal/auth-modal'; // Im
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
-    AuthModal // Thêm Modal vào imports
+    AuthModal,
   ],
-  templateUrl: './patient-layout.html', // Đảm bảo tên file HTML đúng
-  styleUrl: './patient-layout.scss', // Đảm bảo tên file SCSS đúng (nếu có)
+  templateUrl: './patient-layout.html',
+  styleUrls: ['./patient-layout.scss'],
 })
 export class PatientLayout {
-  isAuthModalOpen = false; // Biến quản lý trạng thái mở/đóng modal
+  isAuthModalOpen = false;
+  showCartPreview = false;
 
-  constructor(
-    public authService: AuthService, // public để HTML dùng được
-    private toastr: ToastrService,
-    private router: Router // Cần Router để điều hướng
-  ) {}
+  constructor(
+    public authService: AuthService,
+    private toastr: ToastrService,
+    public router: Router,
+    public cartService: CartService
+  ) {}
 
-  // Hàm xử lý link cần bảo vệ
   handleProtectedLink(url: string) {
     if (this.authService.isAuthenticated()) {
-      this.router.navigate([url]); // Điều hướng nếu đã đăng nhập
+      this.router.navigate([url]);
     } else {
       this.toastr.info('Vui lòng đăng nhập để sử dụng chức năng này!');
-      this.isAuthModalOpen = true; // Mở modal nếu chưa đăng nhập
+      this.isAuthModalOpen = true;
     }
   }
 
-  // Hàm đăng xuất
-  logout(): void {
-    this.authService.logout();
-    this.toastr.success('Đăng xuất thành công!');
-    window.location.reload(); // Tải lại trang
+  toggleCartPreview(show: boolean): void {
+    this.showCartPreview = show;
   }
+
+  goToCart(): void {
+    this.router.navigate(['/cart']);
+  }
+
+  logout(): void {
+    this.authService.logout(); // 1. Đăng xuất khỏi auth service
+    this.cartService.clearStorage(); // 2. Dọn dẹp giỏ hàng
+    this.toastr.success('Đăng xuất thành công!');
+    this.router.navigate(['/']); // 3. Chuyển hướng về trang chủ
+    
+    // ⛔️ BỎ DÒNG RELOAD NÀY ĐI
+    // setTimeout(() => window.location.reload(), 500);
+  }
 }

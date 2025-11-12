@@ -2,17 +2,14 @@ import { Routes } from '@angular/router';
 import { Home } from './home/home';
 import { MedicalRecords } from './medical-records/medical-records';
 import { AppointmentBooking } from './appointment-booking/appointment-booking';
-import { authGuard } from '../../core/guards/auth-guard'; 
 import { PaymentSuccess } from './payment-success/payment-success';
 import { PaymentFailed } from './payment-failed/payment-failed';
-
-// --- (MỚI) Import component trung gian ---
 import { PaymentReturnHandler } from './payment-return-handler/payment-return-handler';
-
+import { authGuard } from '../../core/guards/auth-guard';
 
 export const PATIENT_ROUTES: Routes = [
   {
-    path: '', 
+    path: '',
     component: Home,
   },
   {
@@ -21,27 +18,43 @@ export const PATIENT_ROUTES: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'appointments', 
+    path: 'appointments',
     component: AppointmentBooking,
     canActivate: [authGuard],
   },
-  
-  // --- (MỚI) Route trung gian để "bắt" redirect từ VNPay ---
   {
-    path: 'payment-return', // VNPay sẽ redirect về đây
+    path: 'my-appointments',
+    loadComponent: () =>
+      import('./my-appointments/my-appointments').then(
+        (m) => m.MyAppointmentsComponent
+      ),
+    canActivate: [authGuard],
+  },
+  {
+  path: 'cart',
+  loadComponent: () =>
+    import('./cart/cart').then((m) => m.CartComponent),
+    canActivate: [authGuard]
+
+  },
+  {
+  path: 'products',
+  loadComponent: () =>
+    import('./products/products').then(m => m.ProductsComponent),
+  },
+  {
+    path: 'payment-return',
     component: PaymentReturnHandler,
-    canActivate: [authGuard] // Cần auth để gọi API confirm
+    canActivate: [authGuard],
   },
-  
-  // --- (GIỮ NGUYÊN) 2 route kết quả cuối cùng ---
   {
-    path: 'payment-success', // Handler sẽ chuyển đến đây
+    path: 'payment-success',
     component: PaymentSuccess,
-    canActivate: [authGuard] 
+    canActivate: [authGuard],
   },
   {
-    path: 'payment-failed', // Handler sẽ chuyển đến đây
+    path: 'payment-failed',
     component: PaymentFailed,
-    canActivate: [authGuard] 
-  }
+    canActivate: [authGuard],
+  },
 ];

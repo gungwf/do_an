@@ -46,20 +46,20 @@ export class Home implements OnInit, OnDestroy {
     }
 
     // Logic tải sản phẩm
-    this.productService.getProducts().subscribe({
-      next: (products) => {
-        this.allProducts = products;
-        if (this.categories.length > 0) {
-          this.filterByCategory(this.categories[0]);
-        }
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Lỗi tải sản phẩm:', err);
-        this.toastr.error('Không thể tải danh sách sản phẩm.');
-        this.isLoading = false;
-      },
-    });
+    // this.productService.getProducts().subscribe({
+    //   next: (products) => {
+    //     this.allProducts = products;
+    //     if (this.categories.length > 0) {
+    //       this.filterByCategory(this.categories[0]);
+    //     }
+    //     this.isLoading = false;
+    //   },
+    //   error: (err) => {
+    //     console.error('Lỗi tải sản phẩm:', err);
+    //     this.toastr.error('Không thể tải danh sách sản phẩm.');
+    //     this.isLoading = false;
+    //   },
+    // });
 
     // Khởi tạo testimonial slider
     this.updateDisplayedTestimonials();
@@ -128,7 +128,7 @@ export class Home implements OnInit, OnDestroy {
   }
 
   addToCart(product: Product): void {
-    this.toastr.success(`Đã thêm "${product.name}" vào giỏ hàng!`);
+    this.toastr.success(`Đã thêm "${product.productName}" vào giỏ hàng!`);
   }
 
   scrollToProducts(): void {
