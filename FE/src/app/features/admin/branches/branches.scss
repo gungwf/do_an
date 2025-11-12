@@ -1,47 +1,27 @@
-.admin-page {
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+// src/app/pages/admin/branch-management/branch-management.scss
 
-    .page-title {
-      font-size: 1.8rem;
-      font-weight: 600;
-      color: #2c3e50;
-      margin: 0;
-    }
-  }
+// Style cho cột ID và cột Hành động
+.col-id {
+  width: 120px; // Hoặc %
+  max-width: 120px;
+}
 
-  .card {
-    border: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
+.col-actions {
+  width: 150px; // Tùy chỉnh
+  text-align: center;
+}
 
-    .table {
-      thead {
-        background-color: #f8f9fa;
-        th {
-          font-weight: 600;
-          color: #2c3e50;
-          border-bottom: 2px solid #dee2e6;
-        }
-      }
-
-      tbody {
-        tr {
-          &:hover {
-            background-color: #f8f9fa;
-          }
-        }
-      }
+// Style cho icon status
+.status-icon {
+  font-size: 1.25rem; // Làm icon to hơn
+  
+  // Chỉ cho phép click khi có class 'clickable'
+  &.clickable {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    
+    &:hover {
+      transform: scale(1.15);
     }
   }
 }
-
-
-
-
-
-
-
-

@@ -41,10 +41,10 @@ export class LoginForm {
         next: (response) => {
           this.toastr.success('Đăng nhập thành công!');
           this.loginSuccess.emit();
-          
-          // Kiểm tra role và điều hướng
+    
           if (this.authService.isAdmin()) {
             this.router.navigate(['/admin/dashboard']);
+
           } else {
             window.location.reload();
           }

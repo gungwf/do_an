@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { AdminDashboard } from './dashboard/dashboard';
 import { AdminUsers } from './users/users';
-import { AdminBranches } from './branches/branches';
+import { BranchesComponent } from './branches/branches';
 import { AdminProducts } from './products/products';
 import { AdminAppointments } from './appointments/appointments';
 
@@ -21,7 +21,7 @@ export const ADMIN_ROUTES: Routes = [
   },
   {
     path: 'branches',
-    component: AdminBranches,
+    component: BranchesComponent,
   },
   {
     path: 'products',
