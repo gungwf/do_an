@@ -1,20 +1,11 @@
 package com.service.sys_srv.service;
 
-import com.service.sys_srv.dto.request.*;
-import com.service.sys_srv.dto.response.*;
-import com.service.sys_srv.entity.DoctorProfile;
-import com.service.sys_srv.entity.Enum.Gender;
-import com.service.sys_srv.entity.Enum.UserRole;
-import com.service.sys_srv.entity.PatientProfile;
-import com.service.sys_srv.entity.User;
-import com.service.sys_srv.exception.AppException;
-import com.service.sys_srv.exception.ERROR_CODE;
-import com.service.sys_srv.repository.DoctorProfileRepository;
-import com.service.sys_srv.repository.PatientProfileRepository;
-import com.service.sys_srv.repository.UserRepository;
-import jakarta.persistence.criteria.Join;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,11 +18,35 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import com.service.sys_srv.dto.request.DoctorSearchRequest;
+import com.service.sys_srv.dto.request.LoginRequest;
+import com.service.sys_srv.dto.request.PatientSearchRequest;
+import com.service.sys_srv.dto.request.RegisterRequest;
+import com.service.sys_srv.dto.request.StaffSearchRequest;
+import com.service.sys_srv.dto.request.UpdateDoctorProfileRequest;
+import com.service.sys_srv.dto.request.UpdateProfileRequest;
+import com.service.sys_srv.dto.request.UpdateUserRequest;
+import com.service.sys_srv.dto.response.DoctorDto;
+import com.service.sys_srv.dto.response.DoctorSearchResponseDto;
+import com.service.sys_srv.dto.response.PatientSearchResponseDto;
+import com.service.sys_srv.dto.response.SpecialtySimpleDto;
+import com.service.sys_srv.dto.response.StaffSearchResponseDto;
+import com.service.sys_srv.dto.response.UserDto;
+import com.service.sys_srv.dto.response.UserSimpleDto;
+import com.service.sys_srv.entity.DoctorProfile;
+import com.service.sys_srv.entity.Enum.Gender;
+import com.service.sys_srv.entity.Enum.UserRole;
+import com.service.sys_srv.entity.PatientProfile;
+import com.service.sys_srv.entity.User;
+import com.service.sys_srv.exception.AppException;
+import com.service.sys_srv.exception.ERROR_CODE;
+import com.service.sys_srv.repository.DoctorProfileRepository;
+import com.service.sys_srv.repository.PatientProfileRepository;
+import com.service.sys_srv.repository.UserRepository;
+
+import jakarta.persistence.criteria.Join;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -493,5 +508,20 @@ public class AuthService {
 
 
         return convertToDto(updatedUser);
+    }
+
+    public List<UUID> searchUserIdsByNameAndRole(String name, String roleStr) {
+        if (!StringUtils.hasText(name) || !StringUtils.hasText(roleStr)) return List.of();
+
+        try {
+            // Convert role string to lowercase to match database values (patient, doctor, etc.)
+            String normalizedRole = roleStr.toLowerCase();
+            UserRole role = UserRole.valueOf(normalizedRole);
+            List<User> users = userRepository.findByRoleAndFullNameIgnoreCaseContaining(role, name);
+            return users.stream().map(User::getId).collect(Collectors.toList());
+        } catch (IllegalArgumentException e) {
+            // If role doesn't match, return empty list
+            return List.of();
+        }
     }
 }

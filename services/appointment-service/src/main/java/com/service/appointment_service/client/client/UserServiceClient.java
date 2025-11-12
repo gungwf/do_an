@@ -26,4 +26,9 @@ public interface UserServiceClient {
     @PatchMapping("/patient-profiles/{userId}/add-points")
     void addPointsToPatient(@PathVariable("userId") UUID userId, @RequestBody AddPointsRequest request);
 
+    @GetMapping("/users/search-by-name")
+    List<UUID> searchUsersByNameAndRole(
+            @RequestParam("name") String name,
+            @RequestParam("role") String role
+    );
 }

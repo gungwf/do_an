@@ -1,12 +1,31 @@
 package com.service.appointment_service.service;
 
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
 import com.service.appointment_service.client.client.MedicalServiceClient;
 import com.service.appointment_service.client.client.ProductInventoryClient;
 import com.service.appointment_service.client.client.ServiceClient;
 import com.service.appointment_service.client.client.UserServiceClient;
-import com.service.appointment_service.client.dto.*;
+import com.service.appointment_service.client.dto.AddPointsRequest;
+import com.service.appointment_service.client.dto.DeductStockRequest;
 import com.service.appointment_service.client.dto.ServiceDto;
+import com.service.appointment_service.client.dto.ServiceMaterialDto;
+import com.service.appointment_service.client.dto.UserDto;
 import com.service.appointment_service.dto.request.AppointmentRequest;
+import com.service.appointment_service.dto.request.AppointmentSearchRequest;
 import com.service.appointment_service.dto.response.AppointmentResponseDto;
 import com.service.appointment_service.dto.response.BranchDto;
 import com.service.appointment_service.dto.response.DoctorDto;
@@ -18,18 +37,10 @@ import com.service.appointment_service.exception.AppException;
 import com.service.appointment_service.exception.ERROR_CODE;
 import com.service.appointment_service.repository.AppointmentRepository;
 import com.service.appointment_service.repository.ProtocolTrackingRepository;
-import jakarta.servlet.http.HttpServletRequest;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -315,4 +326,78 @@ public class AppointmentService {
     public Appointment save(Appointment appointment) {
         return appointmentRepository.save(appointment);
     }
+
+    public Page<AppointmentResponseDto> searchAppointments(AppointmentSearchRequest request) {
+
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        Specification<Appointment> spec = (root, query, cb) -> cb.conjunction();
+
+        // ===== Lọc cục bộ =====
+        if (request.getBranchId() != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("branchId"), request.getBranchId()));
+        }
+
+        if (request.getServiceId() != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("serviceId"), request.getServiceId()));
+        }
+
+        if (StringUtils.hasText(request.getStatus())) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(cb.lower(root.get("status")), request.getStatus().toLowerCase()));
+        }
+
+        if (StringUtils.hasText(request.getNotes())) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("notes")), "%" + request.getNotes().toLowerCase() + "%"));
+        }
+
+        if (request.getStartTime() != null && request.getEndTime() != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.between(root.get("appointmentTime"),
+                            request.getStartTime(), request.getEndTime()));
+        }
+
+        // ===== Lọc theo tên bác sĩ / bệnh nhân =====
+        List<UUID> matchingPatientIds = Collections.emptyList();
+        List<UUID> matchingDoctorIds = Collections.emptyList();
+
+        try {
+            if (StringUtils.hasText(request.getPatientName())) {
+                matchingPatientIds = userServiceClient.searchUsersByNameAndRole(request.getPatientName(), "PATIENT");
+            }
+            if (StringUtils.hasText(request.getDoctorName())) {
+                matchingDoctorIds = userServiceClient.searchUsersByNameAndRole(request.getDoctorName(), "DOCTOR");
+            }
+        } catch (Exception e) {
+            throw new AppException(ERROR_CODE.USER_SERVICE_UNAVAILABLE);
+        }
+
+        // Nếu không tìm thấy user phù hợp → trả rỗng luôn
+        if (StringUtils.hasText(request.getPatientName()) && matchingPatientIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+        if (StringUtils.hasText(request.getDoctorName()) && matchingDoctorIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        // ✅ Gán sang biến final để dùng trong lambda
+        final List<UUID> finalPatientIds = matchingPatientIds;
+        final List<UUID> finalDoctorIds = matchingDoctorIds;
+
+        if (!finalPatientIds.isEmpty()) {
+            spec = spec.and((root, query, cb) ->
+                    root.<UUID>get("patientId").in(finalPatientIds));
+        }
+
+        if (!finalDoctorIds.isEmpty()) {
+            spec = spec.and((root, query, cb) ->
+                    root.<UUID>get("doctorId").in(finalDoctorIds));
+        }
+
+        Page<Appointment> page = appointmentRepository.findAll(spec, pageable);
+        return page.map(this::mapToResponseDto);
+    }
+
 }

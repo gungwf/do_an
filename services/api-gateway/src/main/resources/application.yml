@@ -102,7 +102,7 @@ spring:
         - id: appointment-service-payment
           uri: lb://appointment-service
           predicates:
-            - Path=/api/**
+            - Path=/api/v1/**
 
         - id: appointment-service-available-slots
           uri: lb://appointment-service
@@ -113,6 +113,13 @@ spring:
           uri: lb://sys-srv
           predicates:
             - Path=/doctor-profiles/**
+
+        - id: chatbot-service
+          uri: http://localhost:8000
+          predicates:
+            - Path=/api/ai/**
+          filters:
+            - StripPrefix=0
 
 eureka:
   client:

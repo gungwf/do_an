@@ -89,4 +89,17 @@ public class UserController {
         UserDto updatedUser = authService.toggleUserActiveStatus(id);
         return ResponseEntity.ok(updatedUser);
     }
+
+    /**
+     * Example: GET /api/users/search-by-name?name=John&role=PATIENT
+     * Returns list of UUIDs of users matching role + name contains (case-insensitive)
+     */
+    @GetMapping("/search-by-name")
+    public ResponseEntity<List<UUID>> searchByNameAndRole(
+            @RequestParam("name") String name,
+            @RequestParam("role") String role) {
+
+        List<UUID> ids = authService.searchUserIdsByNameAndRole(name, role);
+        return ResponseEntity.ok(ids);
+    }
 }

@@ -4,12 +4,14 @@ package com.service.appointment_service.controller;
 import com.service.appointment_service.client.dto.UserDto;
 import com.service.appointment_service.client.client.UserServiceClient;
 import com.service.appointment_service.dto.request.AppointmentRequest;
+import com.service.appointment_service.dto.request.AppointmentSearchRequest;
 import com.service.appointment_service.dto.response.AppointmentResponseDto;
 import com.service.appointment_service.dto.request.UpdateAppointmentStatusRequest;
 import com.service.appointment_service.entity.Appointment;
 import com.service.appointment_service.service.AppointmentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -112,5 +114,11 @@ public class AppointmentController {
         // Gọi service để thực hiện hủy lịch
         AppointmentResponseDto canceledAppointment = appointmentService.cancelAppointment(id, patient.id());
         return ResponseEntity.ok(canceledAppointment);
+    }
+
+    @PostMapping("/search")
+    public ResponseEntity<Page<AppointmentResponseDto>> searchAppointments(
+            @RequestBody AppointmentSearchRequest request) {
+        return ResponseEntity.ok(appointmentService.searchAppointments(request));
     }
 }
