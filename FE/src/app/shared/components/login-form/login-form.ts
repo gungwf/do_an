@@ -40,14 +40,29 @@ export class LoginForm {
       this.authService.login(this.loginForm.getRawValue()).subscribe({
         next: (response) => {
           this.toastr.success('Đăng nhập thành công!');
-          this.loginSuccess.emit();
-    
+          this.loginSuccess.emit(); // <-- Dòng này có thể sẽ đóng modal
+  
+          // --- BẮT ĐẦU THAY ĐỔI TỪ ĐÂY ---
+
+          // Kiểm tra theo thứ tự ưu tiên: Admin -> Doctor -> User
+          
           if (this.authService.isAdmin()) {
+            // 1. Nếu là Admin
             this.router.navigate(['/admin/dashboard']);
 
+          } else if (this.authService.isDoctor()) {
+            // 2. (MỚI) Nếu là Bác sĩ
+            // (Đường dẫn /doctor sẽ tự động chuyển đến /doctor/appointments
+            //  nhờ file doctor.routes.ts)
+            this.router.navigate(['/doctor']); 
+
           } else {
-            window.location.reload();
+            // 3. Mặc định (Patient hoặc vai trò khác)
+            // (Giữ nguyên logic cũ của bạn)
+            window.location.reload(); 
           }
+
+          // --- KẾT THÚC THAY ĐỔI ---
         },
         error: (err) => {
           this.errorMessage = err.message;
@@ -58,4 +73,3 @@ export class LoginForm {
     }
   }
 }
-

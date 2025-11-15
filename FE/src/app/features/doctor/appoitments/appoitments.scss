@@ -1,0 +1,73 @@
+/* src/app/features/doctor/appoitments/appoitments.component.scss */
+
+// Giả định bạn có biến màu chung, nếu không, hãy dùng màu trực tiếp
+:host {
+  display: block;
+}
+
+// Container chính của trang, khớp với padding của layout
+.page-container {
+  padding: 24px; // Tương tự .admin-main
+}
+
+// Tiêu đề trang
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+// "Thẻ" chứa nội dung chính (ví dụ: bảng)
+.content-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  overflow: hidden;
+}
+
+// Tùy chỉnh bảng
+.table {
+  // Giúp cột trạng thái và tác vụ không bị xuống dòng
+  th, td {
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  // Cột ghi chú có thể dài, cho phép xuống dòng và giới hạn chiều rộng
+  .notes-cell {
+    white-space: normal;
+    min-width: 200px;
+    max-width: 350px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// Đảm bảo spinner căn giữa
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Style này được dùng để mô phỏng cách Bootstrap
+  hiển thị modal mà không cần dùng JS.
+  (Nếu bạn đã cài đặt Bootstrap JS đúng cách, bạn không cần cái này,
+  nhưng cách làm với *ngIf ở trên là an toàn nhất)
+*/
+
+// Đảm bảo .modal-open làm tối nền
+:host-context(.modal-open) {
+  overflow: hidden;
+}
+
+// Bắt buộc hiển thị modal khi *ngIf là true
+.modal.show {
+  display: block;
+}
+
+// Bắt buộc hiển thị nền mờ khi *ngIf là true
+.modal-backdrop.show {
+  opacity: 0.5;
+}

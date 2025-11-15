@@ -1,0 +1,76 @@
+<div class="admin-wrapper">
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.collapsed]="isSidebarCollapsed">
+    <div class="sidebar-header">
+      <div class="logo">
+        <i class="bi bi-heart-pulse-fill fs-4"></i>
+        <!-- Thay đổi logo text -->
+        <span class="logo-text">Bác sĩ</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <!-- 
+        Đã xóa các section của Admin (Dashboard, Users, Branches, Products)
+        Chỉ giữ lại section cho Lịch hẹn 
+      -->
+      <div class="nav-section">
+        <a routerLink="/doctor/appointments" routerLinkActive="active" class="nav-item">
+          <i class="bi bi-calendar-event"></i>
+          <!-- Thay đổi text và link -->
+          <span class="nav-text">Quản lý Lịch hẹn</span>
+        </a>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main Content: Giữ nguyên 100% từ admin-layout -->
+  <div class="main-content" [class.sidebar-collapsed]="isSidebarCollapsed">
+    
+    <!-- Header: Giữ nguyên 100% từ admin-layout -->
+    <header class="admin-header">
+      <div class="header-left">
+        <button class="btn btn-link sidebar-toggle" (click)="toggleSidebar()">
+          <i class="bi bi-list"></i>
+        </button>
+        <div class="search-box">
+          <i class="bi bi-search"></i>
+          <input type="text" placeholder="Search here..." />
+        </div>
+      </div>
+      <div class="header-right">
+        <a href="#" class="header-icon">
+          <i class="bi bi-bell"></i>
+        </a>
+        <a href="#" class="header-icon">
+          <i class="bi bi-chat-dots"></i>
+        </a>
+        <div class="dropdown">
+          <a href="#" class="header-profile" data-bs-toggle="dropdown">
+            <div class="profile-avatar">
+              <i class="bi bi-person-circle"></i>
+            </div>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <a class="dropdown-item" href="#">
+                <i class="bi bi-person-fill me-2"></i> Hồ sơ
+              </a>
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <a class="dropdown-item text-danger" (click)="logout()" style="cursor: pointer">
+                <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content Area: Giữ nguyên 100% từ admin-layout -->
+    <main class="admin-main">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

@@ -1,0 +1,37 @@
+import { Component } from '@angular/core';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { AuthService } from '../../core/services/auth';
+import { ToastrService } from 'ngx-toastr';
+
+@Component({
+  selector: 'app-doctor-layout',
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+  ],
+  templateUrl: './doctor-layout.html',
+  styleUrl: './doctor-layout.scss', // Đảm bảo bạn đã sao chép file scss
+})
+export class DoctorLayout {
+  isSidebarCollapsed = false;
+
+  constructor(
+    public authService: AuthService,
+    private toastr: ToastrService,
+    private router: Router
+  ) {}
+
+  toggleSidebar() {
+    this.isSidebarCollapsed = !this.isSidebarCollapsed;
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.toastr.success('Đăng xuất thành công!');
+    this.router.navigate(['/']); // Điều hướng về trang chủ
+  }
+}

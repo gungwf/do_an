@@ -204,5 +204,17 @@ export class AuthService {
     const role = this.getUserRole();
     return role === 'admin' || role === 'role_admin';
   }
-}
 
+  // --- BẮT ĐẦU PHẦN THÊM MỚI ---
+
+  /**
+   * Kiểm tra xem user có phải bác sĩ không
+   */
+  isDoctor(): boolean {
+    const role = this.getUserRole();
+    // Dựa trên logic của 'isAdmin', chúng ta cũng kiểm tra 'doctor' và 'role_doctor'
+    return role === 'doctor' || role === 'role_doctor';
+  }
+  
+  // --- KẾT THÚC PHẦN THÊM MỚI ---
+}

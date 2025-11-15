@@ -20,7 +20,8 @@ import {
   templateUrl: './appointments.html',
   styleUrls: ['./appointments.scss']
 })
-export class AdminAppointments implements OnInit { // SỬA 1: Tên Class
+// *** THAY ĐỔI 1: Sửa tên Class (để sửa lỗi build) ***
+export class AdminAppointments implements OnInit { 
   // Services
   private fb = inject(FormBuilder);
   private appointmentService = inject(AppointmentService);
@@ -47,7 +48,7 @@ export class AdminAppointments implements OnInit { // SỬA 1: Tên Class
   constructor() {
     this.searchForm = this.fb.group({
       branchId: [''],
-      // SỬA 2: Bỏ 'disabled: true'
+      // Logic dropdown đã sửa
       doctorId: [''], 
       status: [''],
       patientName: [''], 
@@ -72,46 +73,41 @@ export class AdminAppointments implements OnInit { // SỬA 1: Tên Class
       .pipe(finalize(() => this.isLoadingDoctors = false))
       .subscribe(data => {
         this.allDoctors = data;
-        // SỬA 3: Hiển thị tất cả bác sĩ khi tải xong
+        // Hiển thị tất cả bác sĩ khi tải xong
         this.filteredDoctors = data; 
       });
   }
 
-  // SỬA 4: Cập nhật logic filter động
+  // Logic filter động đã sửa
   onBranchChange(): void {
     const branchId = this.searchForm.get('branchId')?.value;
     const doctorControl = this.searchForm.get('doctorId');
 
     if (branchId) {
-      // Nếu CÓ chọn chi nhánh -> Lọc
       this.filteredDoctors = this.allDoctors.filter(d => d.branchId === branchId);
     } else {
-      // Nếu KHÔNG chọn chi nhánh (chọn "Tất cả") -> Hiển thị tất cả
       this.filteredDoctors = this.allDoctors;
     }
     
-    // Reset lựa chọn bác sĩ cũ
     doctorControl?.reset('', { onlySelf: true });
   }
 
-  // SỬA 5: Cập nhật logic Reset
+  // Logic Reset đã sửa
   resetSearch(): void {
     this.searchForm.reset({
       branchId: '',
-      doctorId: '', // Bỏ 'disabled'
+      doctorId: '', 
       status: '',
       patientName: '',
       doctorName: '',
       startTime: '',
       endTime: ''
     });
-    // Hiển thị lại tất cả bác sĩ
     this.filteredDoctors = this.allDoctors; 
     this.currentPage = 0;
     this.loadAppointments();
   }
 
-  // Nút "Tìm kiếm"
   applyFilters(): void {
     this.currentPage = 0;
     this.loadAppointments();
@@ -138,7 +134,10 @@ export class AdminAppointments implements OnInit { // SỬA 1: Tên Class
       patientName: formValues.patientName || null,
       doctorName: finalDoctorName,
       startTime: this.formatDateToISO(formValues.startTime, 'start'),
-      endTime: this.formatDateToISO(formValues.endTime, 'end')
+      endTime: this.formatDateToISO(formValues.endTime, 'end'),
+
+      // *** THAY ĐỔI 2: Thêm sắp xếp (yêu cầu của bạn) ***
+      sort: "appointmentTime,desc"
     };
 
     this.appointmentService.searchAppointments(searchBody)
@@ -174,7 +173,7 @@ export class AdminAppointments implements OnInit { // SỬA 1: Tên Class
   }
 
   onPageChange(page: number): void {
-    if (page < 0 || page >= this.totalPages) return; // Thêm bảo vệ
+    if (page < 0 || page >= this.totalPages) return; 
     this.currentPage = page;
     this.loadAppointments();
   }
