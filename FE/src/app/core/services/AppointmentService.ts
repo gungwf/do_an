@@ -9,7 +9,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 export interface BranchSimpleDto {
   id: string;
   branchName: string;
-  address: string;
+  address?: string; // Dữ liệu từ API /branches/simple có thể không có
   phoneNumber?: string;
 }
 
@@ -34,13 +34,10 @@ export interface PaymentResponse {
   paymentUrl: string;
 }
 
-/**
- * DTO cho một lịch hẹn (được trả về từ API /appointments/patient/{patientId})
- */
 export interface AppointmentResponseDto {
   id: string;
-  appointmentTime: string; // "2025-10-10T03:00:00Z"
-  status: 'PENDING' | 'CONFIRMED' | 'CANCELED' | 'COMPLETED';
+  appointmentTime: string; 
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELED' | 'COMPLETED' | 'PENDING_PAYMENT'; // Thêm status
   notes: string;
   priceAtBooking: number;
   patient: { id: string; fullName: string; email: string; };
@@ -48,6 +45,26 @@ export interface AppointmentResponseDto {
   branch: { id: string; branchName: string; address: string; };
 }
 
+// --- INTERFACE MỚI CHO ADMIN SEARCH ---
+export interface AppointmentSearchDto {
+  page: number;
+  size: number;
+  patientName?: string | null;
+  doctorName?: string | null;
+  status?: string | null;
+  branchId?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  sort?: string | null;
+}
+
+// --- INTERFACE MỚI CHO ADMIN SEARCH RESPONSE ---
+export interface AppointmentSearchResponse {
+  content: AppointmentResponseDto[]; 
+  totalElements: number;
+  totalPages: number;
+  // ... các trường phân trang khác
+}
 
 // ------------------------------------
 // --- SERVICE CHÍNH ---
@@ -68,7 +85,8 @@ export class AppointmentService {
   // ------------------------------------
 
   getBranchesSimple(): Observable<BranchSimpleDto[]> {
-    return this.http.get<BranchSimpleDto[]>(`${this.BASE_URL}/branches`);
+    // *** ĐÃ SỬA: Sửa API path thành /branches/simple ***
+    return this.http.get<BranchSimpleDto[]>(`${this.BASE_URL}/branches/simple`);
   }
 
   getDoctors(): Observable<DoctorDto[]> {
@@ -87,7 +105,7 @@ export class AppointmentService {
   }
 
   // ------------------------------------
-  // --- CÁC HÀM XỬ LÝ LỊCH HẸN VÀ THANH TOÁN ---
+  // --- CÁC HÀM CỦA BỆNH NHÂN ---
   // ------------------------------------
 
   bookAppointment(payload: any): Observable<any> { 
@@ -112,29 +130,36 @@ export class AppointmentService {
     return this.http.get(`${this.BASE_URL}/api/v1/payment/vnpay-return`, { params });
   }
 
-  // ------------------------------------
-  // --- HÀM MỚI: LẤY LỊCH HẸN CỦA TÔI ---
-  // ------------------------------------
-
-  /**
-   * Lấy danh sách lịch hẹn của bệnh nhân dựa trên ID.
-   * API: /appointments/patient/{patientId}
-   * @param patientId ID của bệnh nhân
-   */
   getMyAppointments(patientId: string): Observable<AppointmentResponseDto[]> {
-    // Gọi API bạn đã cung cấp (qua Gateway)
     return this.http.get<AppointmentResponseDto[]>(`${this.BASE_URL}/appointments/patient/${patientId}`);
   }
   
   // ------------------------------------
-  // --- HÀM TODO: HỦY LỊCH HẸN ---
+  // --- HÀM MỚI CHO BÁC SĨ ---
+  // ------------------------------------
+
+  /**
+   * [DOCTOR] Lấy danh sách lịch hẹn của một bác sĩ cụ thể
+   * API: GET /appointments/doctor/{doctorId}
+   */
+  getDoctorAppointments(doctorId: string): Observable<AppointmentResponseDto[]> {
+    // Hàm này sẽ sử dụng AppointmentResponseDto vì cấu trúc JSON trả về là tương tự
+    return this.http.get<AppointmentResponseDto[]>(`${this.BASE_URL}/appointments/doctor/${doctorId}`);
+  }
+
+  // ------------------------------------
+  // --- HÀM MỚI CHO ADMIN ---
   // ------------------------------------
   
   /**
-   * TODO: Triển khai API hủy lịch hẹn nếu có
-   * Ví dụ: return this.http.delete(`${this.BASE_URL}/appointments/${appointmentId}`);
+   * [ADMIN] Tìm kiếm, lọc và phân trang tất cả cuộc hẹn
+   * API: POST /appointments/search
    */
-  // cancelAppointment(appointmentId: string): Observable<any> {
-  //   // return this.http.post(`${this.BASE_URL}/appointments/${appointmentId}/cancel`, {});
-  // }
+  searchAppointments(filters: AppointmentSearchDto): Observable<AppointmentSearchResponse> {
+    return this.http.post<AppointmentSearchResponse>(`${this.BASE_URL}/appointments/search`, filters);
+  }
+
+  getAppointmentById(appointmentId: string): Observable<AppointmentResponseDto> {
+    return this.http.get<AppointmentResponseDto>(`${this.BASE_URL}/appointments/${appointmentId}`);
+  }
 }

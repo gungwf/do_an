@@ -1,0 +1,158 @@
+<div class="page-container">
+  <h2 class="page-title">Quản lý Lịch hẹn</h2>
+
+  <div *ngIf="appointments$ | async as appointments; else loading" class="content-card">
+
+    <div *ngIf="appointments.length > 0; else noAppointments">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Bệnh nhân</th>
+              <th>Thời gian hẹn</th>
+              <th>Trạng thái</th>
+              <th>Ghi chú</th>
+              <th>Tác vụ</th> 
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let appt of appointments">
+              
+              <td>
+                <div class="fw-bold">{{ appt.patient.fullName }}</div>
+                <div class="text-muted small">{{ appt.patient.email }}</div>
+              </td>
+
+              <td>{{ appt.appointmentTime | date: 'dd/MM/yyyy HH:mm' }}</td>
+              
+              <td>
+                <span [ngSwitch]="appt.status">
+                  <span *ngSwitchCase="'CONFIRMED'" class="badge bg-success">Đã xác nhận</span>
+                  <span *ngSwitchCase="'PENDING'" class="badge bg-warning text-dark">Chờ xác nhận</span>
+                  <span *ngSwitchCase="'COMPLETED'" class="badge bg-primary">Đã hoàn thành</span>
+                  <span *ngSwitchCase="'CANCELED'" class="badge bg-danger">Đã hủy</span>
+                  <span *ngSwitchCase="'PENDING_PAYMENT'" class="badge bg-secondary">Chờ thanh toán</span>
+                  <span *ngSwitchDefault class="badge bg-light text-dark">{{ appt.status }}</span>
+                </span>
+              </td>
+
+              <td class="notes-cell">
+                {{ appt.notes || 'Không có' }}
+              </td>
+              
+              <td>
+                <button 
+                  class="btn btn-sm btn-outline-primary"
+                  (click)="onViewDetails(appt.id)"> 
+                  <i class="bi bi-eye"></i> Xem
+                </button>
+              </td>
+
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div> <ng-template #noAppointments>
+      <div class="alert alert-info" role="alert">
+        <i class="bi bi-info-circle-fill"></i> Bạn không có lịch hẹn nào.
+      </div>
+    </ng-template>
+    
+  </div> <ng-template #loading>
+    <div class="text-center p-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Đang tải...</span>
+      </div>
+    </div>
+  </ng-template> </div>
+
+<div 
+  *ngIf="isLoadingDetail || selectedAppointment" 
+  class="modal-backdrop fade show" 
+  (click)="onCloseModal()">
+</div>
+
+<div 
+  *ngIf="isLoadingDetail || selectedAppointment" 
+  class="modal fade show" 
+  id="appointmentDetailModal" 
+  tabindex="-1" 
+  aria-labelledby="appointmentDetailModalLabel" 
+  aria-modal="true" 
+  role="dialog" 
+  style="display: block;">
+
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      
+      <div class="modal-header">
+        <h5 class="modal-title" id="appointmentDetailModalLabel">
+          Chi tiết Cuộc hẹn
+        </h5>
+        <button 
+          type="button" 
+          class="btn-close" 
+          (click)="onCloseModal()" 
+          aria-label="Close">
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        
+        <div *ngIf="isLoadingDetail" class="text-center p-5">
+          <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Đang tải...</span>
+          </div>
+          <p class="mt-2">Đang tải chi tiết...</p>
+        </div>
+        
+        <div *ngIf="selectedAppointment as appt">
+          <div classs="row g-3">
+            
+            <div class="col-12 mb-3">
+              <h6><i class="bi bi-person-fill"></i> Thông tin Bệnh nhân</h6>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>Tên:</strong> {{ appt.patient.fullName }}</li>
+                <li class="list-group-item"><strong>Email:</strong> {{ appt.patient.email }}</li>
+              </ul>
+            </div>
+            
+            <div class="col-12">
+              <h6><i class="bi bi-calendar-event-fill"></i> Thông tin Lịch hẹn</h6>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>Thời gian:</strong> {{ appt.appointmentTime | date: 'dd/MM/yyyy HH:mm' }}</li>
+                <li class="list-group-item"><strong>Trạng thái:</strong> 
+                  <span class="badge" 
+                        [class.bg-success]="appt.status === 'CONFIRMED'"
+                        [class.bg-warning]="appt.status === 'PENDING'"
+                        [class.bg-primary]="appt.status === 'COMPLETED'"
+                        [class.bg-danger]="appt.status === 'CANCELED'"
+                        [class.bg-secondary]="appt.status === 'PENDING_PAYMENT'">
+                    {{ appt.status }}
+                  </span>
+                </li>
+                <li class="list-group-item"><strong>Chi nhánh:</strong> {{ appt.branch.branchName }}</li>
+                <li class="list-group-item"><strong>Địa chỉ:</strong> {{ appt.branch.address }}</li>
+                <li class="list-group-item"><strong>Giá:</strong> {{ appt.priceAtBooking | number }} VNĐ</li>
+                <li class="list-group-item"><strong>Ghi chú:</strong>
+                  <p class="fst-italic text-muted mb-0">
+                    {{ appt.notes || '(Không có ghi chú)' }}
+                  </p>
+                </li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="onCloseModal()">
+          Đóng
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -4,54 +4,30 @@
     <div class="sidebar-header">
       <div class="logo">
         <i class="bi bi-heart-pulse-fill fs-4"></i>
-        <span class="logo-text">Hospital</span>
+        <!-- Thay đổi logo text -->
+        <span class="logo-text">Bác sĩ</span>
       </div>
     </div>
 
     <nav class="sidebar-nav">
-      <!-- Dashboard Section -->
+      <!-- 
+        Đã xóa các section của Admin (Dashboard, Users, Branches, Products)
+        Chỉ giữ lại section cho Lịch hẹn 
+      -->
       <div class="nav-section">
-        <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-item">
-          <i class="bi bi-house-door"></i>
-          <span class="nav-text">Dashboard</span>
-        </a>
-      </div>
-
-      <!-- Applications Section -->
-      <div class="nav-section">
-        <!-- <div class="nav-group">
-          <span class="nav-group-title">Applications</span>
-        </div> -->
-        <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
-          <i class="bi bi-file-text"></i>
-          <span class="nav-text">Người dùng</span>
-        </a>
-        <a routerLink="/admin/branches" routerLinkActive="active" class="nav-item">
-          <i class="bi bi-grid"></i>
-          <span class="nav-text">Chi nhánh</span>
-        </a>
-      </div>
-
-      <!-- Components Section -->
-      <div class="nav-section">
-        <!-- <div class="nav-group">
-          <span class="nav-group-title">Components</span>
-        </div> -->
-        <a routerLink="/admin/products" routerLinkActive="active" class="nav-item">
-          <i class="bi bi-puzzle"></i>
-          <span class="nav-text">Sản phẩm</span>
-        </a>
-        <a routerLink="/admin/appointments" routerLinkActive="active" class="nav-item">
+        <a routerLink="/doctor/appointments" routerLinkActive="active" class="nav-item">
           <i class="bi bi-calendar-event"></i>
-          <span class="nav-text">Cuộc hẹn</span>
+          <!-- Thay đổi text và link -->
+          <span class="nav-text">Quản lý Lịch hẹn</span>
         </a>
       </div>
     </nav>
   </aside>
 
-  <!-- Main Content -->
+  <!-- Main Content: Giữ nguyên 100% từ admin-layout -->
   <div class="main-content" [class.sidebar-collapsed]="isSidebarCollapsed">
-    <!-- Header -->
+    
+    <!-- Header: Giữ nguyên 100% từ admin-layout -->
     <header class="admin-header">
       <div class="header-left">
         <button class="btn btn-link sidebar-toggle" (click)="toggleSidebar()">
@@ -92,13 +68,9 @@
       </div>
     </header>
 
-    <!-- Content Area -->
+    <!-- Content Area: Giữ nguyên 100% từ admin-layout -->
     <main class="admin-main">
       <router-outlet></router-outlet>
     </main>
   </div>
 </div>
-
-
-
-

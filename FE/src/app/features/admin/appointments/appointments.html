@@ -1,67 +1,200 @@
 <div class="admin-page">
   <div class="page-header mb-4">
-    <h2 class="page-title">Quản lý Cuộc hẹn</h2>
-    <button class="btn btn-primary">
-      <i class="bi bi-plus-circle me-2"></i>Thêm cuộc hẹn
-    </button>
+    <h2 class="page-title">Quản lý Cuộc hẹn (Admin)</h2>
+  </div>
+
+  <div class="card mb-3">
+    <div class.card="card-body">
+      <h5 class.card="card-title mb-3">Tìm kiếm & Lọc</h5>
+      <form [formGroup]="searchForm">
+        <div class="row g-3">
+          
+          <div class="col-md-3">
+            <label class="form-label">Chi nhánh</label>
+            <select class="form-select" formControlName="branchId" (change)="onBranchChange()">
+              <option value="">Tất cả chi nhánh</option>
+              @for (branch of branches; track branch.id) {
+                <option [value]="branch.id">{{ branch.branchName }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- SỬA 6: Cập nhật logic Dropdown Bác sĩ -->
+          <div class="col-md-3">
+            <label class="form-label">Chọn Bác sĩ</label>
+            <select 
+              class="form-select" 
+              formControlName="doctorId"
+              [disabled]="isLoadingDoctors"> <!-- Chỉ disable khi đang tải -->
+              
+              @if (isLoadingDoctors) {
+                <option value="">Đang tải bác sĩ...</option>
+              } @else if (searchForm.get('branchId')?.value) {
+                <!-- Có chọn chi nhánh -->
+                <option value="">Tất cả (thuộc chi nhánh)</option>
+              } @else {
+                <!-- Không chọn chi nhánh -->
+                <option value="">Tất cả bác sĩ (toàn hệ thống)</option>
+              }
+
+              @for (doctor of filteredDoctors; track doctor.id) {
+                <option [value]="doctor.id">{{ doctor.fullName }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Trạng thái</label>
+            <select class="form-select" formControlName="status">
+              <option value="">Tất cả</option>
+              <option value="PENDING_PAYMENT">Chờ thanh toán</option>
+              <option value="CONFIRMED">Đã xác nhận</option>
+              <option value="COMPLETED">Đã hoàn thành</option>
+              <option value="CANCELED">Đã hủy</option> <!-- SỬA 7: Sửa lỗi Typo -->
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Tên bệnh nhân (Tìm kiếm)</label>
+            <input
+              type="text"
+              class="form-control"
+              formControlName="patientName"
+              placeholder="Nhập tên bệnh nhân..."
+            />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Tên bác sĩ (Tìm kiếm)</label>
+            <input
+              type="text"
+              class="form-control"
+              formControlName="doctorName"
+              placeholder="Nhập tên bác sĩ (hoặc chọn ở trên)"
+            />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Từ ngày</label>
+            <input
+              type="date"
+              class="form-control"
+              formControlName="startTime"
+            />
+          </div>
+          
+          <div class="col-md-3">
+            <label class="form-label">Đến ngày</label>
+            <input
+              type="date"
+              class="form-control"
+              formControlName="endTime"
+            />
+          </div>
+
+        </div>
+
+        <div class="mt-3">
+          <button type="button" class="btn btn-primary me-2" (click)="applyFilters()">
+            <i class="bi bi-search me-2"></i>Tìm kiếm
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="resetSearch()">
+            <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <div class="card">
-    <div class="card-body">
-      <div *ngIf="isLoading" class="text-center p-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
+    <div class.card="card-body">
+      <!-- SỬA 8: Thêm Spinner vào khối @if -->
+      @if (isLoading) {
+        <div class="text-center p-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
         </div>
-      </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Bệnh nhân</th>
+                <th>Bác sĩ</th>
+                <th>Chi nhánh</th>
+                <th>Thời gian hẹn</th>
+                <th>Trạng thái</th>
+                <th class="col-actions">Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (appt of appointments; track appt.id) {
+                <tr>
+                  <!-- Bỏ ? vì interface định nghĩa là bắt buộc -->
+                  <td>{{ appt.patient.fullName || 'N/A' }}</td>
+                  <td>{{ appt.doctor.fullName || 'N/A' }}</td>
+                  <td>{{ appt.branch.branchName || 'N/A' }}</td>
+                  <td>{{ appt.appointmentTime | date:'dd/MM/yyyy HH:mm' }}</td>
+                  <td>
+                    @switch (appt.status) {
+                      @case ('PENDING_PAYMENT') { <span class="badge bg-warning text-dark">Chờ TT</span> }
+                      @case ('CONFIRMED') { <span class="badge bg-primary">Đã xác nhận</span> }
+                      @case ('COMPLETED') { <span class="badge bg-success">Hoàn thành</span> }
+                      @case ('CANCELED') { <span class="badge bg-danger">Đã hủy</span> } <!-- SỬA 7 (Lần 2) -->
+                      @default { <span class="badge bg-secondary">{{ appt.status }}</span> }
+                    }
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-info me-2" title="Xem chi tiết">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="text-center text-muted py-4">
+                    Chưa có dữ liệu
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          
+          <!-- Code Pagination (Bạn đã cung cấp) -->
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <div>
+              Hiển thị {{ appointments.length }} / {{ totalElements }} kết quả
+            </div>
+            <nav *ngIf="totalPages > 1">
+              <ul class="pagination mb-0">
+                <li class="page-item" [class.disabled]="currentPage === 0">
+                  <a class="page-link" (click)="onPageChange(currentPage - 1)" style="cursor: pointer">
+                    <i class="bi bi-chevron-left"></i>
+                  </a>
+                </li>
+                
+                <li
+                  *ngFor="let page of getPageNumbers()"
+                  class="page-item"
+                  [class.active]="page === currentPage"
+                >
+                  <a class="page-link" (click)="onPageChange(page)" style="cursor: pointer">
+                    {{ page + 1 }}
+                  </a>
+                </li>
+                
+                <li class="page-item" [class.disabled]="currentPage >= totalPages - 1">
+                  <a class="page-link" (click)="onPageChange(currentPage + 1)" style="cursor: pointer">
+                    <i class="bi bi-chevron-right"></i>
+                  </a>
+                </li>
+              </ul>
+            </nav>
+            </div>
 
-      <div *ngIf="!isLoading" class="table-responsive">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Bệnh nhân</th>
-              <th>Bác sĩ</th>
-              <th>Ngày hẹn</th>
-              <th>Giờ hẹn</th>
-              <th>Trạng thái</th>
-              <th>Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let appointment of appointments">
-              <td>{{ appointment.id }}</td>
-              <td>{{ appointment.patientName }}</td>
-              <td>{{ appointment.doctorName }}</td>
-              <td>{{ appointment.appointmentDate }}</td>
-              <td>{{ appointment.appointmentTime }}</td>
-              <td>
-                <span class="badge bg-success">Đã xác nhận</span>
-              </td>
-              <td>
-                <button class="btn btn-sm btn-outline-primary me-2">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-danger" (click)="deleteAppointment(appointment.id)">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="appointments.length === 0">
-              <td colspan="7" class="text-center text-muted py-4">
-                Chưa có dữ liệu
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        </div>
+      }
     </div>
   </div>
 </div>
-
-
-
-
-
-
-
-
