@@ -8,9 +8,12 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.Query;
 
 public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificationExecutor<User> {
     Optional<User> findByEmail(String email);
     List<User> findByRole(UserRole role);
     List<User> findByRoleAndFullNameIgnoreCaseContaining(UserRole role, String fullName);
+
+    List<User> findByIdInAndRole(List<UUID> ids, UserRole role);
 }

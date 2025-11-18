@@ -86,7 +86,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
                                 "/webjars/**",
-                                "/api/ai/chat"
+                                "/api/ai/chat",
+                                "/products/search"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.GET,
@@ -96,7 +97,8 @@ public class SecurityConfig {
                                 "/doctor-profiles/specialties",
                                 "/branches/simple",
                                 "/patient-profiles/me",
-                                "/users/doctors"
+                                "/users/doctors",
+                                "/products/categories"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

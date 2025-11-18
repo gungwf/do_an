@@ -1,11 +1,13 @@
 package com.service.medical_record_service.client.client;
 
 import com.service.medical_record_service.client.dto.AppointmentResponseDto;
+import com.service.medical_record_service.client.dto.InternalStatusUpdateRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Map;
@@ -18,4 +20,10 @@ public interface AppointmentServiceClient {
 
     @PatchMapping("/{id}/set-service")
     ResponseEntity<Void> setServiceForAppointment(@PathVariable UUID id,@RequestBody Map<String, UUID> payload);
+
+    @PutMapping("/appointments/{id}/internal-status")
+    void updateAppointmentStatusInternal(
+        @PathVariable("id") UUID appointmentId,
+        @RequestBody InternalStatusUpdateRequest request
+    );
 }

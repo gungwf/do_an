@@ -18,6 +18,4 @@ public class MedicalRecordServiceLink {
     @JsonBackReference // Tránh lặp vô tận khi chuyển JSON
     private MedicalRecord medicalRecord;
 
-    // Chúng ta không cần @ManyToOne cho serviceId
-    // vì nó nằm ở cùng một service, chỉ cần lưu ID là đủ
 }

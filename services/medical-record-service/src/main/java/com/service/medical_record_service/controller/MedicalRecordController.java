@@ -64,7 +64,6 @@ public class MedicalRecordController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('doctor')") // Chỉ bác sĩ mới có quyền sửa
     public ResponseEntity<MedicalRecord> updateMedicalRecord(
             @PathVariable UUID id,
             @RequestBody UpdateMedicalRecordRequest request

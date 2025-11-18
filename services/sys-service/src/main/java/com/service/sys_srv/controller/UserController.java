@@ -7,6 +7,7 @@ import com.service.sys_srv.dto.request.UpdateUserRequest;
 import com.service.sys_srv.dto.response.*;
 import com.service.sys_srv.entity.User;
 import com.service.sys_srv.service.AuthService;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -101,5 +102,10 @@ public class UserController {
 
         List<UUID> ids = authService.searchUserIdsByNameAndRole(name, role);
         return ResponseEntity.ok(ids);
+    }
+
+    @GetMapping("/basic-info")
+    public Map<UUID, String> getPatientNames(@RequestParam List<UUID> ids) {
+        return authService.getPatientNames(ids);
     }
 }

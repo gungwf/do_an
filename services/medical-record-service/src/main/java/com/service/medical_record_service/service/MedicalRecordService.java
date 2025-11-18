@@ -4,6 +4,7 @@ import com.service.medical_record_service.client.client.AppointmentServiceClient
 import com.service.medical_record_service.client.client.ProductInventoryClient;
 import com.service.medical_record_service.client.dto.AppointmentResponseDto;
 import com.service.medical_record_service.client.dto.DeductStockRequest;
+import com.service.medical_record_service.client.dto.InternalStatusUpdateRequest;
 import com.service.medical_record_service.client.dto.ProductDto;
 import com.service.medical_record_service.dto.request.MedicalRecordRequest;
 import com.service.medical_record_service.dto.request.PrescriptionItemRequest;
@@ -36,97 +37,8 @@ public class MedicalRecordService {
     private final PrescriptionItemRepository prescriptionItemRepository;
     private final MedicalRecordServiceLinkRepository medicalRecordServiceLinkRepository;
 
-@Transactional
+    @Transactional
 public MedicalRecord createMedicalRecord(MedicalRecordRequest request) {
-    // 1. Kiểm tra xem lịch hẹn này đã có bệnh án chưa
-//    if (medicalRecordRepository.findByAppointmentId(request.getAppointmentId()).isPresent()) {
-//        throw new IllegalStateException("Medical record for this appointment already exists.");
-//    }
-//
-//    MedicalRecord medicalRecord = new MedicalRecord();
-//    medicalRecord.setAppointmentId(request.getAppointmentId());
-//
-//    // 2. Lấy thông tin chi nhánh từ appointment-service (cần cho việc trừ kho)
-//    AppointmentResponseDto appointment = appointmentServiceClient.getAppointmentById(request.getAppointmentId());
-//    if (appointment.branch() == null || appointment.branch().id() == null) {
-//        // Tạm thời dùng IllegalStateException, bạn có thể đổi thành AppException
-//        throw new IllegalStateException("Không thể xác định chi nhánh từ lịch hẹn ID: " + request.getAppointmentId());
-//    }
-//    UUID branchId = appointment.branch().id();
-//
-//
-//    List<PrescriptionItemRequest> itemsToProcess = new ArrayList<>();
-//
-//    // Áp dụng template hoặc dùng dữ liệu thủ công
-//    if (request.getTemplateId() != null) {
-//        // --- TRƯỜNG HỢP DÙNG TEMPLATE ---
-//        DiagnosisTemplate template = templateRepository.findById(request.getTemplateId())
-//                .orElseThrow(() -> new RuntimeException("Template not found with id: " + request.getTemplateId()));
-//
-//        // Sao chép thông tin từ template vào bệnh án
-//        medicalRecord.setDiagnosis(template.getDiagnosisContent());
-//        medicalRecord.setIcd10Code(template.getIcd10Code());
-//
-//        // Sao chép các mục trong đơn thuốc của template để xử lý tiếp
-//        if (template.getPrescriptionItems() != null) {
-//            itemsToProcess = template.getPrescriptionItems().stream()
-//                    .map(item -> new PrescriptionItemRequest(
-//                            item.getProductId(),
-//                            item.getQuantity(),
-//                            item.getDosage()))
-//                    .collect(Collectors.toList());
-//        }
-//    } else {
-//        // --- TRƯỜNG HỢP TẠO THỦ CÔNG ---
-//        medicalRecord.setDiagnosis(request.getDiagnosis());
-//        medicalRecord.setIcd10Code(request.getIcd10Code());
-//        if (request.getPrescriptionItems() != null) {
-//            itemsToProcess = request.getPrescriptionItems();
-//        }
-//    }
-//
-//    // 4. Xử lý đơn thuốc (trừ kho và tạo entity)
-//    if (!itemsToProcess.isEmpty()) {
-//        List<PrescriptionItem> prescriptionEntities = new ArrayList<>();
-//        for (PrescriptionItemRequest itemRequest : itemsToProcess) {
-//            // Gọi sang product-inventory-service để trừ kho
-//            DeductStockRequest deductRequest = new DeductStockRequest();
-//            deductRequest.setBranchId(branchId);
-//            deductRequest.setProductId(itemRequest.productId());
-//            deductRequest.setQuantityToDeduct(itemRequest.quantity());
-//            productInventoryClient.deductStock(deductRequest);
-//
-//            // Tạo entity PrescriptionItem
-//            PrescriptionItem item = new PrescriptionItem();
-//            item.setProductId(itemRequest.productId());
-//            item.setQuantity(itemRequest.quantity());
-//            item.setDosage(itemRequest.dosage());
-//            item.setMedicalRecord(medicalRecord); // Liên kết ngược lại
-//            prescriptionEntities.add(item);
-//        }
-//        medicalRecord.setPrescriptionItems(prescriptionEntities);
-//    }
-//
-//    if (request.getServiceIds() != null && !request.getServiceIds().isEmpty()) {
-//        List<MedicalRecordServiceLink> serviceLinks = new ArrayList<>();
-//        for (UUID serviceId : request.getServiceIds()) {
-//            // (Bạn có thể thêm logic gọi serviceRepository.findById(serviceId)
-//            // để kiểm tra xem serviceId có thật không)
-//
-//            MedicalRecordServiceId linkId = new MedicalRecordServiceId();
-//            linkId.setMedicalRecordId(medicalRecord.getId()); // Sẽ được gán sau khi save
-//            linkId.setServiceId(serviceId);
-//
-//            MedicalRecordServiceLink link = new MedicalRecordServiceLink();
-//            link.setId(linkId);
-//            link.setMedicalRecord(medicalRecord); // Liên kết ngược lại
-//
-//            serviceLinks.add(link);
-//        }
-//        medicalRecord.setPerformedServices(serviceLinks);
-//    }
-//
-//    return medicalRecordRepository.save(medicalRecord);
 
     if (medicalRecordRepository.findByAppointmentId(request.getAppointmentId()).isPresent()) {
         throw new IllegalStateException("Medical record for this appointment already exists.");
@@ -168,7 +80,13 @@ public MedicalRecord createMedicalRecord(MedicalRecordRequest request) {
     }
 
     // 4. Lưu bệnh án (KHÔNG tính tiền, KHÔNG trừ kho)
-    return medicalRecordRepository.save(medicalRecord);
+        MedicalRecord savedRecord = medicalRecordRepository.save(medicalRecord);
+
+        appointmentServiceClient.updateAppointmentStatusInternal(
+            request.getAppointmentId(),
+            new InternalStatusUpdateRequest("CREATED_MEDICAL_RECORD"));
+
+        return savedRecord;
 }
 
     public MedicalRecord getRecordByAppointmentId(UUID appointmentId) {
@@ -178,13 +96,13 @@ public MedicalRecord createMedicalRecord(MedicalRecordRequest request) {
 
     public MedicalRecord lockMedicalRecord(UUID recordId, String signatureData) {
         MedicalRecord medicalRecord = medicalRecordRepository.findById(recordId)
-                .orElseThrow(() -> new AppException(ERROR_CODE.MEDICAL_RECORD_NOT_FOUND)); // Cần thêm mã lỗi này
+                .orElseThrow(() -> new AppException(ERROR_CODE.MEDICAL_RECORD_NOT_FOUND));
 
         if (medicalRecord.isLocked()) {
             throw new AppException(ERROR_CODE.MEDICAL_RECORD_LOCKED);
         }
 
-        medicalRecord.setESignature(signatureData); // signatureData có thể là tên bác sĩ, hoặc một chuỗi base64 của hình ảnh chữ ký
+        medicalRecord.setESignature(signatureData);
         medicalRecord.setLocked(true);
 
         return medicalRecordRepository.save(medicalRecord);
@@ -304,7 +222,6 @@ public MedicalRecord createMedicalRecord(MedicalRecordRequest request) {
         medicalRecord.setIcd10Code(request.getIcd10Code());
 
         // 3. Xóa các dịch vụ cũ và thêm lại (nếu có)
-        // (Hibernate sẽ tự động xóa các bản ghi trong medical_record_services)
         medicalRecord.getPerformedServices().clear();
         if (request.getServiceIds() != null && !request.getServiceIds().isEmpty()) {
             List<MedicalRecordServiceLink> serviceLinks = new ArrayList<>();
@@ -322,7 +239,6 @@ public MedicalRecord createMedicalRecord(MedicalRecordRequest request) {
         }
 
         // 4. Xóa đơn thuốc cũ và thêm lại (nếu có)
-        // (Hibernate sẽ tự động xóa các bản ghi trong prescription_items)
         medicalRecord.getPrescriptionItems().clear();
         if (request.getPrescriptionItems() != null && !request.getPrescriptionItems().isEmpty()) {
             List<PrescriptionItem> prescriptionEntities = new ArrayList<>();
@@ -338,6 +254,8 @@ public MedicalRecord createMedicalRecord(MedicalRecordRequest request) {
         }
 
         // 5. Lưu lại Bệnh án (và các liên kết con)
-        return medicalRecordRepository.save(medicalRecord);
+        MedicalRecord updatedRecord = medicalRecordRepository.save(medicalRecord);
+
+        return medicalRecordRepository.save(updatedRecord);
     }
 }

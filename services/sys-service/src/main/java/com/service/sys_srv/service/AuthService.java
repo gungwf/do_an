@@ -524,4 +524,13 @@ public class AuthService {
             return List.of();
         }
     }
+
+    public Map<UUID, String> getPatientNames(List<UUID> ids) {
+        return userRepository.findByIdInAndRole(ids, UserRole.patient)
+            .stream()
+            .collect(Collectors.toMap(
+                User::getId,
+                User::getFullName
+            ));
+    }
 }

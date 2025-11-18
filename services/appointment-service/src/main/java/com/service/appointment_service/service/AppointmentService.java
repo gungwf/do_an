@@ -1,16 +1,21 @@
 package com.service.appointment_service.service;
 
+import com.service.appointment_service.dto.request.DoctorAppointmentSearchRequest;
+import jakarta.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -374,7 +379,6 @@ public class AppointmentService {
             throw new AppException(ERROR_CODE.USER_SERVICE_UNAVAILABLE);
         }
 
-        // Nếu không tìm thấy user phù hợp → trả rỗng luôn
         if (StringUtils.hasText(request.getPatientName()) && matchingPatientIds.isEmpty()) {
             return Page.empty(pageable);
         }
@@ -382,7 +386,6 @@ public class AppointmentService {
             return Page.empty(pageable);
         }
 
-        // ✅ Gán sang biến final để dùng trong lambda
         final List<UUID> finalPatientIds = matchingPatientIds;
         final List<UUID> finalDoctorIds = matchingDoctorIds;
 
@@ -398,6 +401,99 @@ public class AppointmentService {
 
         Page<Appointment> page = appointmentRepository.findAll(spec, pageable);
         return page.map(this::mapToResponseDto);
+    }
+
+    @Transactional
+    public void updateAppointmentStatusFromInternal(UUID appointmentId, String newStatusStr) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+            .orElseThrow(() -> new AppException(ERROR_CODE.APPOINTMENT_NOT_FOUND));
+
+        AppointmentStatus newStatus = AppointmentStatus.valueOf(newStatusStr.toUpperCase());
+
+        appointment.setStatus(newStatus);
+        appointmentRepository.save(appointment);
+
+    }
+
+    public Page<AppointmentResponseDto> searchAppointmentsForDoctor(
+        UUID doctorId,
+        DoctorAppointmentSearchRequest req
+    ) {
+
+        // ----- 1. Xử lý SORT -----
+        Pageable pageable;
+        if (req.getSort() != null && !req.getSort().isEmpty()) {
+            String[] sortParams = req.getSort().split(",");
+            Sort sort = Sort.by(
+                sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
+                    ? Sort.Direction.DESC
+                    : Sort.Direction.ASC,
+                sortParams[0]
+            );
+            pageable = PageRequest.of(req.getPage(), req.getSize(), sort);
+        } else {
+            pageable = PageRequest.of(req.getPage(), req.getSize());
+        }
+
+
+        // ----- 2. Lấy tất cả patientId của appointments doctorId -----
+        List<UUID> patientIds = appointmentRepository.findByDoctorId(doctorId)
+            .stream()
+            .map(Appointment::getPatientId)
+            .distinct()
+            .collect(Collectors.toList());
+
+        // ----- 3. Gọi sys-srv để lấy tên bệnh nhân -----
+        Map<UUID, String> patientNames = patientIds.isEmpty()
+            ? Map.of()
+            : userServiceClient.getPatientNames(patientIds);
+
+
+        // ----- 4. Tạo Specification ngay trong Service -----
+        Specification<Appointment> spec = (root, query, cb) -> {
+
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Lọc theo doctorId
+            predicates.add(cb.equal(root.get("doctorId"), doctorId));
+
+            // Lọc theo status - convert string to enum
+            if (req.getStatus() != null && !req.getStatus().isEmpty()) {
+                try {
+                    AppointmentStatus statusEnum = AppointmentStatus.valueOf(req.getStatus().toUpperCase());
+                    predicates.add(cb.equal(root.get("status"), statusEnum));
+                } catch (IllegalArgumentException e) {
+                    log.warn("Invalid status value: {}", req.getStatus());
+                }
+            }
+
+            // Tìm kiếm theo searchText → dùng tên bệnh nhân từ sys-srv
+            if (req.getSearchText() != null && !req.getSearchText().isEmpty()) {
+
+                String keyword = req.getSearchText().toLowerCase();
+
+                List<UUID> matchedPatients = patientNames.entrySet().stream()
+                    .filter(e -> e.getValue().toLowerCase().contains(keyword))
+                    .map(Map.Entry::getKey)
+                    .toList();
+
+                if (matchedPatients.isEmpty()) {
+                    // KHÔNG trả kết quả nếu không match tên
+                    return cb.disjunction();
+                }
+
+                predicates.add(root.get("patientId").in(matchedPatients));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+
+        // ----- 5. Query DB với spec + paging -----
+        Page<Appointment> resultPage = appointmentRepository.findAll(spec, pageable);
+
+        // ----- 6. Map sang DTO -----
+        return resultPage.map(this::mapToResponseDto);
     }
 
 }

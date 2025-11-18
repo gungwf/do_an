@@ -2,6 +2,7 @@ package com.service.appointment_service.client.client;
 
 import com.service.appointment_service.client.dto.*;
 import com.service.appointment_service.dto.response.BranchDto;
+import java.util.Map;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,4 +32,7 @@ public interface UserServiceClient {
             @RequestParam("name") String name,
             @RequestParam("role") String role
     );
+
+    @GetMapping("users/basic-info")
+    Map<UUID, String> getPatientNames(@RequestParam("ids") List<UUID> ids);
 }

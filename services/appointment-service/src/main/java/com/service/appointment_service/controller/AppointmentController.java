@@ -5,6 +5,8 @@ import com.service.appointment_service.client.dto.UserDto;
 import com.service.appointment_service.client.client.UserServiceClient;
 import com.service.appointment_service.dto.request.AppointmentRequest;
 import com.service.appointment_service.dto.request.AppointmentSearchRequest;
+import com.service.appointment_service.dto.request.DoctorAppointmentSearchRequest;
+import com.service.appointment_service.dto.request.InternalStatusUpdateRequest;
 import com.service.appointment_service.dto.response.AppointmentResponseDto;
 import com.service.appointment_service.dto.request.UpdateAppointmentStatusRequest;
 import com.service.appointment_service.entity.Appointment;
@@ -64,7 +66,6 @@ public class AppointmentController {
 
     // get appointment cho bác sĩ
     @GetMapping("/doctor/{doctorId}")
-    @PreAuthorize("hasAnyAuthority('doctor', 'staff')")
     public ResponseEntity<List<AppointmentResponseDto>> getAppointmentsForDoctor(@PathVariable UUID doctorId) {
         return ResponseEntity.ok(appointmentService.getAppointmentsForDoctor(doctorId));
     }
@@ -121,4 +122,22 @@ public class AppointmentController {
             @RequestBody AppointmentSearchRequest request) {
         return ResponseEntity.ok(appointmentService.searchAppointments(request));
     }
+
+    @PutMapping("/{id}/internal-status")
+    public ResponseEntity<Void> updateAppointmentStatusInternal(
+        @PathVariable UUID id,
+        @RequestBody InternalStatusUpdateRequest request
+    ) {
+        appointmentService.updateAppointmentStatusFromInternal(id, request.status());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/doctor/{doctorId}/appointments")
+    public Page<AppointmentResponseDto> search(
+        @PathVariable UUID doctorId,
+        @RequestBody DoctorAppointmentSearchRequest req
+    ) {
+        return appointmentService.searchAppointmentsForDoctor(doctorId, req);
+    }
+
 }
