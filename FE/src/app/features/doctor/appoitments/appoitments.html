@@ -42,63 +42,68 @@
               
               <td>
                 <button 
-                  class="btn btn-sm btn-outline-primary"
+                  class="btn btn-sm btn-outline-primary me-2"
                   (click)="onViewDetails(appt.id)"> 
                   <i class="bi bi-eye"></i> Xem
                 </button>
-              </td>
 
+                <button 
+                  *ngIf="appt.status === 'CONFIRMED' || appt.status === 'COMPLETED'"
+                  class="btn btn-sm btn-success"
+                  (click)="onStartMedicalRecord(appt)">
+                  <i class="bi bi-file-earmark-plus"></i> Tạo Bệnh án
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
-    </div> <ng-template #noAppointments>
+    </div> 
+    
+    <ng-template #noAppointments>
       <div class="alert alert-info" role="alert">
         <i class="bi bi-info-circle-fill"></i> Bạn không có lịch hẹn nào.
       </div>
     </ng-template>
     
-  </div> <ng-template #loading>
+  </div> 
+  
+  <ng-template #loading>
     <div class="text-center p-5">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Đang tải...</span>
       </div>
     </div>
-  </ng-template> </div>
+  </ng-template> 
+</div>
 
+<!-- 
+===============================================
+  1. MODAL XEM CHI TIẾT (ĐÃ KHÔI PHỤC NỘI DUNG)
+===============================================
+-->
 <div 
   *ngIf="isLoadingDetail || selectedAppointment" 
   class="modal-backdrop fade show" 
   (click)="onCloseModal()">
 </div>
-
 <div 
   *ngIf="isLoadingDetail || selectedAppointment" 
   class="modal fade show" 
   id="appointmentDetailModal" 
-  tabindex="-1" 
-  aria-labelledby="appointmentDetailModalLabel" 
-  aria-modal="true" 
-  role="dialog" 
   style="display: block;">
-
   <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
       
       <div class="modal-header">
-        <h5 class="modal-title" id="appointmentDetailModalLabel">
-          Chi tiết Cuộc hẹn
-        </h5>
-        <button 
-          type="button" 
-          class="btn-close" 
-          (click)="onCloseModal()" 
-          aria-label="Close">
-        </button>
+        <h5 class="modal-title">Chi tiết Cuộc hẹn</h5>
+        <button type="button" class="btn-close" (click)="onCloseModal()" aria-label="Close"></button>
       </div>
       
+      <!-- === KHÔI PHỤC NỘI DUNG BỊ MẤT TẠI ĐÂY === -->
       <div class="modal-body">
         
+        <!-- Spinner -->
         <div *ngIf="isLoadingDetail" class="text-center p-5">
           <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
             <span class="visually-hidden">Đang tải...</span>
@@ -106,6 +111,7 @@
           <p class="mt-2">Đang tải chi tiết...</p>
         </div>
         
+        <!-- Nội dung -->
         <div *ngIf="selectedAppointment as appt">
           <div classs="row g-3">
             
@@ -144,8 +150,8 @@
 
           </div>
         </div>
-
       </div>
+      <!-- === KẾT THÚC PHẦN KHÔI PHỤC === -->
       
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="onCloseModal()">
@@ -156,3 +162,16 @@
     </div>
   </div>
 </div>
+<!-- === HẾT Modal Xem Chi Tiết === -->
+
+
+<!-- 
+===============================================
+  2. MODAL TẠO BỆNH ÁN (Giữ nguyên)
+===============================================
+-->
+<app-medical-record-form
+  [appointment]="recordForAppointment"
+  (closeModal)="onCloseRecordModal()"
+  (submitSuccess)="onSubmitSuccess()">
+</app-medical-record-form>
