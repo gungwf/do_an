@@ -121,6 +121,11 @@ spring:
           filters:
             - StripPrefix=0
 
+        - id: medical-record-service-service-bill
+          uri: lb://medical-record-service
+          predicates:
+            - Path=/bills/**
+
 eureka:
   client:
     service-url:

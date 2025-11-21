@@ -56,4 +56,21 @@ public class InventoryController {
                     .body("KHÔNG TÌM THẤY bản ghi tồn kho cho branchId: " + branchId + " và productId: " + productId);
         }
     }
+
+    @GetMapping("/{branchId}/{productId}")
+    public ResponseEntity<?> getInventoryByBranchAndProduct(
+            @PathVariable UUID branchId,
+            @PathVariable UUID productId
+    ) {
+        var inventory = inventoryService.getInventoryByBranchAndProduct(branchId, productId);
+        if (inventory == null) {
+            return ResponseEntity.notFound().build();
+        }
+        var dto = new com.product_inventory_service.product_inventory_service.dto.response.InventoryResponseDto(
+                inventory.getId().getBranchId(),
+                inventory.getId().getProductId(),
+                inventory.getQuantity()
+        );
+        return ResponseEntity.ok(dto);
+    }
 }

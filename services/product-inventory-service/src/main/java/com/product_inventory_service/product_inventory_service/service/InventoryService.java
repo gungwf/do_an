@@ -88,5 +88,13 @@ public class InventoryService {
         return inventoryRepository.findById(inventoryId).isPresent();
     }
 
+    public Inventory getInventoryByBranchAndProduct(UUID branchId, UUID productId) {
+        InventoryId inventoryId = new InventoryId();
+        inventoryId.setBranchId(branchId);
+        inventoryId.setProductId(productId);
+        return inventoryRepository.findById(inventoryId)
+                .orElse(null);
+    }
+
 
 }

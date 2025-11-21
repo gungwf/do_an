@@ -25,7 +25,8 @@ public enum ERROR_CODE {
     DOCTOR_BUSY(3004,"Doctor is already booked at this time.",HttpStatus.CONFLICT),
     PATIENT_BUSY(3005,"Patient has an appointment at this time.",HttpStatus.CONFLICT),
     INVALID_STATUS(3006,"Invalid status.",HttpStatus.CONFLICT),
-    USER_SERVICE_UNAVAILABLE(3007,"Cannot connect to user-service" ,HttpStatus.BAD_REQUEST );
+    USER_SERVICE_UNAVAILABLE(3007,"Cannot connect to user-service" ,HttpStatus.BAD_REQUEST ),
+    INSUFFICIENT_STOCK(4003, "Không đủ số lượng tồn kho", HttpStatus.BAD_REQUEST );
 
     private final int code;
     private final String message;

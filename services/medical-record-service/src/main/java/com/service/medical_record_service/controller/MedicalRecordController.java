@@ -3,6 +3,7 @@ package com.service.medical_record_service.controller;
 import com.service.medical_record_service.dto.request.LockRequest;
 import com.service.medical_record_service.dto.request.MedicalRecordRequest;
 import com.service.medical_record_service.dto.request.UpdateMedicalRecordRequest;
+import com.service.medical_record_service.entity.Enum.BillType;
 import com.service.medical_record_service.entity.MedicalRecord;
 import com.service.medical_record_service.service.MedicalRecordService;
 import lombok.RequiredArgsConstructor;
@@ -50,17 +51,35 @@ public class MedicalRecordController {
     }
 
     @GetMapping("/{id}/calculate-total")
-    @PreAuthorize("isAuthenticated()") // Bảo vệ, chỉ service nội bộ (có token) mới được gọi
-    public ResponseEntity<Map<String, BigDecimal>> getBillTotal(@PathVariable UUID id) {
-        BigDecimal total = medicalRecordService.calculateBillTotal(id);
-        return ResponseEntity.ok(Map.of("totalAmount", total));
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, BigDecimal>> getBillTotal(
+        @PathVariable UUID id,
+        @RequestParam("type") String typeStr // Nhận tham số type
+    ) {
+        try {
+            BillType type = BillType.valueOf(typeStr.toUpperCase());
+            BigDecimal total = medicalRecordService.calculateBillTotal(id, type);
+            return ResponseEntity.ok(Map.of("totalAmount", total));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PostMapping("/{id}/trigger-deduct-stock")
     @PreAuthorize("isAuthenticated()") // Chỉ service nội bộ
-    public ResponseEntity<Void> confirmPaymentAndDeductStock(@PathVariable UUID id) {
+    public ResponseEntity<Void> triggerDeductStock(@PathVariable UUID id) {
         medicalRecordService.triggerDeductStock(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{id}/check-stock")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> checkStock(@PathVariable UUID id) {
+        var shortages = medicalRecordService.checkStock(id);
+        if (shortages == null || shortages.isEmpty()) {
+            return ResponseEntity.ok().body(java.util.List.of());
+        }
+        return ResponseEntity.status(409).body(shortages);
     }
 
     @PutMapping("/{id}")

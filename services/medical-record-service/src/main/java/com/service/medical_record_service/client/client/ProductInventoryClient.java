@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.UUID;
+import com.service.medical_record_service.client.dto.InventoryResponseDto;
 
 @FeignClient(name = "product-inventory-service")
 public interface ProductInventoryClient {
@@ -16,5 +17,8 @@ public interface ProductInventoryClient {
 
     @PatchMapping("/inventory/deduct")
     void deductStock(DeductStockRequest request);
+
+    @GetMapping("/inventory/{branchId}/{productId}")
+    InventoryResponseDto getInventoryByBranchAndProduct(@PathVariable("branchId") UUID branchId, @PathVariable("productId") UUID productId);
 
 }

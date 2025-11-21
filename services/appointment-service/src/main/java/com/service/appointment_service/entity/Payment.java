@@ -19,7 +19,7 @@ public class Payment {
     private UUID id;
 
     @OneToOne
-    @JoinColumn(name = "appointment_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "appointment_id", referencedColumnName = "id", nullable = true)
     private Appointment appointment;
 
     @Column(nullable = false)
@@ -36,6 +36,12 @@ public class Payment {
 
     @Column(name = "transaction_id")
     private String transactionId;
+
+    @Column(name = "bill_id")
+    private java.util.UUID billId;
+
+    @Column(name = "paid_at")
+    private java.time.Instant paidAt;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
