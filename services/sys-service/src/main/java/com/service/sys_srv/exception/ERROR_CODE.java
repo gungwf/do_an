@@ -19,6 +19,7 @@ public enum ERROR_CODE {
     USER_NOT_FOUND(1002,"Không tìm thấy tài khoản",HttpStatus.NOT_FOUND),
     DUPLICATE_EMAIL(1005,"Email đã tồn tại!",HttpStatus.CONFLICT),
     PATIENT_PROFILE_NOT_FOUND(1003,"Không tìm hồ sơ bệnh nhân",HttpStatus.NOT_FOUND),
+    DOCTOR_PROFILE_NOT_FOUND(1003,"Không tìm hồ sơ bác sĩ",HttpStatus.NOT_FOUND),
     ILLEGAL_ROLE(1004,"Vai trò không phù hợp",HttpStatus.BAD_REQUEST),
     BRANCH_NOT_FOUND(1006,"Không tìm thấy Cơ sở",HttpStatus.NOT_FOUND),
     PROFILE_NOT_FOUND(1007,"Không tìm thấy hồ sơ",HttpStatus.NOT_FOUND);

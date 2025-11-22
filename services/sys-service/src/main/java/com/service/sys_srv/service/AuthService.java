@@ -65,6 +65,11 @@ public class AuthService {
                 .orElseThrow(() -> new AppException(ERROR_CODE.PATIENT_PROFILE_NOT_FOUND));
     }
 
+    public DoctorProfile getDoctorProfileByUserId(UUID userId) {
+        return doctorProfileRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ERROR_CODE.DOCTOR_PROFILE_NOT_FOUND));
+    }
+
     public List<User> getAllUser() {
         return userRepository.findAll();
     }

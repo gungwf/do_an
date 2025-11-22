@@ -4,6 +4,7 @@ import com.service.sys_srv.dto.request.UpdateDoctorProfileRequest;
 import com.service.sys_srv.dto.response.SpecialtySimpleDto;
 import com.service.sys_srv.dto.response.UserDto;
 import com.service.sys_srv.entity.DoctorProfile;
+import com.service.sys_srv.entity.PatientProfile;
 import com.service.sys_srv.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -44,5 +45,20 @@ public class DoctorProfileController {
     public ResponseEntity<List<SpecialtySimpleDto>> getSpecialties() {
         // API này nên công khai để ai cũng xem được
         return ResponseEntity.ok(authService.getUniqueSpecialties());
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<DoctorProfile> getMyProfile(Authentication authentication) {
+
+        // 1. Lấy email của bác sĩ từ token
+        String userEmail = authentication.getName();
+
+        // 2. Lấy UserDto để có được userId
+        UserDto userDto = authService.getUserByEmail(userEmail);
+
+        // 3. Dùng userId để lấy DoctorProfile
+        DoctorProfile profile = authService.getDoctorProfileByUserId(userDto.getId());
+
+        return ResponseEntity.ok(profile);
     }
 }
