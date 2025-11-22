@@ -12,6 +12,7 @@ import com.service.appointment_service.client.dto.UserDto;
 import com.service.appointment_service.dto.request.AppointmentRequest;
 import com.service.appointment_service.dto.request.AppointmentSearchRequest;
 import com.service.appointment_service.dto.request.DoctorAppointmentSearchRequest;
+import com.service.appointment_service.dto.request.StaffAppointmentSearchRequest;
 import com.service.appointment_service.dto.response.AppointmentResponseDto;
 import com.service.appointment_service.dto.response.BranchDto;
 import com.service.appointment_service.dto.response.DoctorDto;
@@ -506,6 +507,76 @@ public class AppointmentService {
     Page<Appointment> resultPage = appointmentRepository.findAll(spec, pageable);
 
     // ----- 6. Map sang DTO -----
+    return resultPage.map(this::mapToResponseDto);
+  }
+
+  public Page<AppointmentResponseDto> searchAppointmentsForStaff(
+      UUID branchId,
+      StaffAppointmentSearchRequest req
+  ) {
+
+    Pageable pageable;
+    if (req.getSort() != null && !req.getSort().isEmpty()) {
+      String[] sortParams = req.getSort().split(",");
+      Sort sort = Sort.by(
+          sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
+              ? Sort.Direction.DESC
+              : Sort.Direction.ASC,
+          sortParams[0]
+      );
+      pageable = PageRequest.of(req.getPage(), req.getSize(), sort);
+    } else {
+      pageable = PageRequest.of(req.getPage(), req.getSize());
+    }
+
+    List<UUID> patientIds = appointmentRepository.findByBranchId(branchId)
+        .stream()
+        .map(Appointment::getPatientId)
+        .distinct()
+        .collect(Collectors.toList());
+
+    Map<UUID, String> patientNames = patientIds.isEmpty()
+        ? Map.of()
+        : userServiceClient.getPatientNames(patientIds);
+
+    Specification<Appointment> spec = (root, query, cb) -> {
+      List<Predicate> predicates = new ArrayList<>();
+
+      predicates.add(cb.equal(root.get("branchId"), branchId));
+
+      if (req.getStatus() != null && !req.getStatus().isEmpty()) {
+        try {
+          AppointmentStatus statusEnum = AppointmentStatus.valueOf(req.getStatus().toUpperCase());
+          predicates.add(cb.equal(root.get("status"), statusEnum));
+        } catch (IllegalArgumentException e) {
+          log.warn("Invalid status value: {}", req.getStatus());
+        }
+      }
+
+      if (req.getStartTime() != null && req.getEndTime() != null) {
+        predicates.add(cb.between(root.get("appointmentTime"), req.getStartTime(), req.getEndTime()));
+      } else if (req.getStartTime() != null) {
+        predicates.add(cb.greaterThanOrEqualTo(root.get("appointmentTime"), req.getStartTime()));
+      } else if (req.getEndTime() != null) {
+        predicates.add(cb.lessThanOrEqualTo(root.get("appointmentTime"), req.getEndTime()));
+      }
+
+      if (req.getSearchText() != null && !req.getSearchText().isEmpty()) {
+        String keyword = req.getSearchText().toLowerCase();
+        List<UUID> matchedPatients = patientNames.entrySet().stream()
+            .filter(e -> e.getValue().toLowerCase().contains(keyword))
+            .map(Map.Entry::getKey)
+            .toList();
+        if (matchedPatients.isEmpty()) {
+          return cb.disjunction();
+        }
+        predicates.add(root.get("patientId").in(matchedPatients));
+      }
+
+      return cb.and(predicates.toArray(new Predicate[0]));
+    };
+
+    Page<Appointment> resultPage = appointmentRepository.findAll(spec, pageable);
     return resultPage.map(this::mapToResponseDto);
   }
 

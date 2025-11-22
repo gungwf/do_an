@@ -2,26 +2,43 @@ package com.service.medical_record_service.controller;
 
 import com.service.medical_record_service.dto.request.BillLineRequest;
 import com.service.medical_record_service.dto.request.CreateBillRequest;
+import com.service.medical_record_service.dto.request.BillSearchRequest;
 import com.service.medical_record_service.dto.response.StockShortage;
+import com.service.medical_record_service.dto.response.BillSearchItemDto;
 import com.service.medical_record_service.entity.Bill;
 import com.service.medical_record_service.entity.BillLine;
 import com.service.medical_record_service.entity.Enum.BillType;
+import com.service.medical_record_service.entity.Enum.BillStatus;
 import com.service.medical_record_service.repository.BillLineRepository;
 import com.service.medical_record_service.repository.BillRepository;
+import com.service.medical_record_service.repository.spec.BillSpecifications;
+import com.service.medical_record_service.client.client.UserServiceClient;
 import com.service.medical_record_service.client.client.ProductInventoryClient;
 import com.service.medical_record_service.client.dto.DeductStockRequest;
 import jakarta.validation.Valid;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.Optional;
+import org.springframework.lang.NonNull;
 
 @RestController
 @RequestMapping("/bills")
@@ -33,6 +50,7 @@ public class BillController {
     private final BillLineRepository billLineRepository;
 
     private final ProductInventoryClient productInventoryClient;
+    private final UserServiceClient userServiceClient;
 
     @Value("${app.branch.central-warehouse-id}")
     private String centralWarehouseBranchId;
@@ -236,12 +254,12 @@ public class BillController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getBill(@PathVariable("id") UUID id) {
-        var opt = billRepository.findById(id);
+    public ResponseEntity<Map<String, Object>> getBill(@PathVariable("id") @NonNull UUID id) {
+        Optional<Bill> opt = billRepository.findById(id);
         if (opt.isEmpty()) return ResponseEntity.notFound().build();
         Bill bill = opt.get();
         var lines = billLineRepository.findByBillId(bill.getId());
-        java.util.List<Map<String,Object>> items = new ArrayList<>();
+        List<Map<String,Object>> items = new ArrayList<>();
         for (BillLine l : lines) {
             items.add(Map.of(
                     "productId", l.getProductId(),
@@ -259,9 +277,88 @@ public class BillController {
         ));
     }
 
+    @PostMapping("/search")
+    public ResponseEntity<Map<String, Object>> searchBills(@RequestBody BillSearchRequest request) {
+        int page = request.page() == null ? 0 : request.page();
+        int size = request.size() == null ? 20 : request.size();
+        Instant fromPaidAt = request.fromPaidAt() == null ? null : Instant.ofEpochMilli(request.fromPaidAt());
+        Instant toPaidAt = request.toPaidAt() == null ? null : Instant.ofEpochMilli(request.toPaidAt());
+
+        Collection<UUID> patientIdsFilter = null;
+        String patientName = request.patientName();
+        if (patientName != null && !patientName.isBlank()) {
+            try {
+                List<UUID> ids = userServiceClient.searchUserIdsByNameAndRole(patientName, "PATIENT");
+                if (ids == null || ids.isEmpty()) {
+                    return ResponseEntity.ok(emptyPageResponse(page, size));
+                }
+                patientIdsFilter = ids;
+            } catch (Exception ex) {
+                return ResponseEntity.ok(emptyPageResponse(page, size));
+            }
+        }
+
+        BillType bt = null;
+        if (request.billType() != null && !request.billType().isBlank()) {
+            try { bt = BillType.valueOf(request.billType()); } catch (Exception ignored) {}
+        }
+        BillStatus st = null;
+        if (request.status() != null && !request.status().isBlank()) {
+            try { st = BillStatus.valueOf(request.status()); } catch (Exception ignored) {}
+        }
+
+        UUID branchId = request.branchId();
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Specification<Bill> spec = BillSpecifications.build(bt, st, branchId, fromPaidAt, toPaidAt, patientIdsFilter);
+        Page<Bill> pageResult = billRepository.findAll(spec, pageable);
+
+        List<BillSearchItemDto> content = new ArrayList<>();
+        Set<UUID> patientIdsInPage = new HashSet<>();
+        for (Bill b : pageResult.getContent()) {
+            if (b.getPatientId() != null) patientIdsInPage.add(b.getPatientId());
+        }
+        Map<UUID,String> nameMap = Collections.emptyMap();
+        if (!patientIdsInPage.isEmpty()) {
+            try {
+                nameMap = userServiceClient.getPatientNames(new ArrayList<>(patientIdsInPage));
+            } catch (Exception ignored) {}
+        }
+        for (Bill b : pageResult.getContent()) {
+            content.add(new BillSearchItemDto(
+                    b.getId(),
+                    b.getBillType(),
+                    b.getStatus(),
+                    b.getBranchId(),
+                    b.getPatientId(),
+                    b.getPatientId() == null ? null : nameMap.getOrDefault(b.getPatientId(), null),
+                    b.getTotalAmount(),
+                    b.getPaidAt(),
+                    b.getCreatedAt()
+            ));
+        }
+
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("page", pageResult.getNumber());
+        resp.put("size", pageResult.getSize());
+        resp.put("totalElements", pageResult.getTotalElements());
+        resp.put("totalPages", pageResult.getTotalPages());
+        resp.put("content", content);
+        return ResponseEntity.ok(resp);
+    }
+
+    private Map<String,Object> emptyPageResponse(int page, int size) {
+        Map<String,Object> m = new HashMap<>();
+        m.put("content", Collections.emptyList());
+        m.put("page", page);
+        m.put("size", size);
+        m.put("totalElements", 0);
+        m.put("totalPages", 0);
+        return m;
+    }
+
     @GetMapping("/{id}/check-stock")
-    public ResponseEntity<List<StockShortage>> checkStockForBill(@PathVariable("id") UUID id) {
-        var opt = billRepository.findById(id);
+    public ResponseEntity<List<StockShortage>> checkStockForBill(@PathVariable("id") @NonNull UUID id) {
+        Optional<Bill> opt = billRepository.findById(id);
         if (opt.isEmpty()) return ResponseEntity.notFound().build();
         Bill bill = opt.get();
         var lines = billLineRepository.findByBillId(bill.getId());
@@ -281,14 +378,14 @@ public class BillController {
     }
 
     @PostMapping("/{id}/mark-paid")
-    public ResponseEntity<Map<String, Object>> markBillPaid(@PathVariable("id") UUID id) {
-        var billOpt = billRepository.findById(id);
+    public ResponseEntity<Map<String, Object>> markBillPaid(@PathVariable("id") @NonNull UUID id) {
+        Optional<Bill> billOpt = billRepository.findById(id);
         if (billOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         Bill bill = billOpt.get();
-        bill.setStatus(com.service.medical_record_service.entity.Enum.BillStatus.PAID);
-        bill.setPaidAt(java.time.Instant.now());
+        bill.setStatus(BillStatus.PAID);
+        bill.setPaidAt(Instant.now());
         billRepository.save(bill);
 
         // Deduct stock for bill lines
@@ -302,16 +399,16 @@ public class BillController {
                 productInventoryClient.deductStock(req);
             } catch (Exception ex) {
                 // If any deduct fails, mark special status and log
-                bill.setStatus(com.service.medical_record_service.entity.Enum.BillStatus.PAID_BUT_DEDUCT_FAILED);
+                bill.setStatus(BillStatus.PAID_BUT_DEDUCT_FAILED);
                 billRepository.save(bill);
-                java.util.Map<String,Object> r = new HashMap<>();
+                Map<String,Object> r = new HashMap<>();
                 r.put("status","PARTIAL_FAILURE");
                 r.put("message","Paid but deduct failed: " + ex.getMessage());
                 return ResponseEntity.status(500).body(r);
             }
         }
 
-        java.util.Map<String,Object> r = new HashMap<>();
+        Map<String,Object> r = new HashMap<>();
         r.put("status","PAID");
         r.put("billId", bill.getId().toString());
         return ResponseEntity.ok(r);

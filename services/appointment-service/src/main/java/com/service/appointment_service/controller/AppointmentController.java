@@ -1,25 +1,22 @@
 package com.service.appointment_service.controller;
 
-
 import com.service.appointment_service.client.dto.UserDto;
 import com.service.appointment_service.client.client.UserServiceClient;
 import com.service.appointment_service.dto.request.AppointmentRequest;
 import com.service.appointment_service.dto.request.AppointmentSearchRequest;
 import com.service.appointment_service.dto.request.DoctorAppointmentSearchRequest;
+import com.service.appointment_service.dto.request.StaffAppointmentSearchRequest;
 import com.service.appointment_service.dto.request.InternalStatusUpdateRequest;
 import com.service.appointment_service.dto.response.AppointmentResponseDto;
 import com.service.appointment_service.dto.request.UpdateAppointmentStatusRequest;
 import com.service.appointment_service.entity.Appointment;
 import com.service.appointment_service.service.AppointmentService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -28,16 +25,16 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @PreAuthorize("isAuthenticated()")
 public class AppointmentController {
+
     private final AppointmentService appointmentService;
+
     private final UserServiceClient userServiceClient;
 
-    //tạo appointment
+    // tạo appointment
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('patient', 'staff', 'doctor')")
     public ResponseEntity<?> createAppointment(
             Authentication authentication,
-            @RequestBody AppointmentRequest request
-    ) {
+            @RequestBody AppointmentRequest request) {
         try {
             String patientEmail = authentication.getName();
             Appointment newAppointment = appointmentService.createAppointment(patientEmail, request);
@@ -47,7 +44,7 @@ public class AppointmentController {
         }
     }
 
-    //get appointment by id
+    // get appointment by id
     @GetMapping("/{id}")
     public ResponseEntity<AppointmentResponseDto> getAppointmentById(@PathVariable UUID id) {
         try {
@@ -59,7 +56,6 @@ public class AppointmentController {
 
     // get appointment cho bệnh nhân
     @GetMapping("/patient/{patientId}")
-    @PreAuthorize("hasAuthority('patient')")
     public ResponseEntity<List<AppointmentResponseDto>> getAppointmentsForPatient(@PathVariable UUID patientId) {
         return ResponseEntity.ok(appointmentService.getAppointmentsForPatient(patientId));
     }
@@ -72,13 +68,12 @@ public class AppointmentController {
 
     // update status appointment
     @PatchMapping("/status/{id}")
-    @PreAuthorize("hasAnyAuthority('doctor', 'staff')")
     public ResponseEntity<?> updateAppointmentStatus(
             @PathVariable UUID id,
-            @RequestBody UpdateAppointmentStatusRequest request
-    ) {
+            @RequestBody UpdateAppointmentStatusRequest request) {
         try {
-            AppointmentResponseDto updatedAppointment = appointmentService.updateAppointmentStatus(id, request.getStatus());
+            AppointmentResponseDto updatedAppointment = appointmentService.updateAppointmentStatus(id,
+                    request.getStatus());
             return ResponseEntity.ok(updatedAppointment);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -95,18 +90,15 @@ public class AppointmentController {
     @PutMapping("/{id}")
     public ResponseEntity<AppointmentResponseDto> updateAppointment(
             @PathVariable UUID id,
-            @RequestBody AppointmentRequest request
-    ) {
+            @RequestBody AppointmentRequest request) {
         AppointmentResponseDto updatedAppointment = appointmentService.updateAppointment(id, request);
         return ResponseEntity.ok(updatedAppointment);
     }
 
     @PatchMapping("/{id}/cancel")
-    @PreAuthorize("hasAuthority('patient')") // Chỉ bệnh nhân mới được tự hủy lịch
     public ResponseEntity<?> cancelAppointment(
             @PathVariable UUID id,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         // Lấy email của bệnh nhân từ token
         String patientEmail = authentication.getName();
         // Gọi sang sys-srv để lấy ID của bệnh nhân
@@ -125,19 +117,24 @@ public class AppointmentController {
 
     @PutMapping("/{id}/internal-status")
     public ResponseEntity<Void> updateAppointmentStatusInternal(
-        @PathVariable UUID id,
-        @RequestBody InternalStatusUpdateRequest request
-    ) {
+            @PathVariable UUID id,
+            @RequestBody InternalStatusUpdateRequest request) {
         appointmentService.updateAppointmentStatusFromInternal(id, request.status());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/doctor/{doctorId}/appointments")
     public Page<AppointmentResponseDto> search(
-        @PathVariable UUID doctorId,
-        @RequestBody DoctorAppointmentSearchRequest req
-    ) {
+            @PathVariable UUID doctorId,
+            @RequestBody DoctorAppointmentSearchRequest req) {
         return appointmentService.searchAppointmentsForDoctor(doctorId, req);
+    }
+
+    @PostMapping("/staff/{branchId}/appointments")
+    public Page<AppointmentResponseDto> searchForStaff(
+            @PathVariable UUID branchId,
+            @RequestBody StaffAppointmentSearchRequest req) {
+        return appointmentService.searchAppointmentsForStaff(branchId, req);
     }
 
 }
