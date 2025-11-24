@@ -41,7 +41,8 @@
             "mainClass": "com.service.appointment_service.AppointmentServiceApplication",
             "projectName": "appointment-service",
             "args": "",
-            "envFile": "${workspaceFolder}/.env"
+            "envFile": "${workspaceFolder}/.env",
+            "vmArgs": " -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=59667 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dspring.jmx.enabled=true -Djava.rmi.server.hostname=localhost -Dspring.application.admin.enabled=true -Dspring.boot.project.name=appointment-service"
         },
         {
             "type": "java",
@@ -50,6 +51,16 @@
             "cwd": "${workspaceFolder}",
             "mainClass": "com.service.medical_record_service.MedicalRecordServiceApplication",
             "projectName": "medical-record-service",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-ProductInventoryServiceApplication<product-inventory-service>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.product_inventory_service.product_inventory_service.ProductInventoryServiceApplication",
+            "projectName": "product-inventory-service",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
         }

@@ -6,6 +6,8 @@ import com.service.appointment_service.dto.request.AppointmentRequest;
 import com.service.appointment_service.dto.request.AppointmentSearchRequest;
 import com.service.appointment_service.dto.request.DoctorAppointmentSearchRequest;
 import com.service.appointment_service.dto.request.StaffAppointmentSearchRequest;
+import com.service.appointment_service.client.dto.StaffSearchRequest;
+import com.service.appointment_service.client.dto.StaffSearchResponseDto;
 import com.service.appointment_service.dto.request.InternalStatusUpdateRequest;
 import com.service.appointment_service.dto.response.AppointmentResponseDto;
 import com.service.appointment_service.dto.request.UpdateAppointmentStatusRequest;
@@ -130,10 +132,23 @@ public class AppointmentController {
         return appointmentService.searchAppointmentsForDoctor(doctorId, req);
     }
 
-    @PostMapping("/staff/{branchId}/appointments")
+    @PostMapping("/staff/appointments")
     public Page<AppointmentResponseDto> searchForStaff(
-            @PathVariable UUID branchId,
+            Authentication authentication,
             @RequestBody StaffAppointmentSearchRequest req) {
+        String staffEmail = authentication.getName();
+        StaffSearchRequest staffReq = new StaffSearchRequest();
+        staffReq.setEmail(staffEmail);
+        staffReq.setRole("staff");
+        staffReq.setSize(1);
+        Page<StaffSearchResponseDto> staffPage = userServiceClient.searchStaffs(staffReq);
+        if (staffPage.isEmpty()) {
+            throw new RuntimeException("Staff not found or no branch assigned");
+        }
+        UUID branchId = staffPage.getContent().get(0).getBranchId();
+        if (branchId == null) {
+            throw new RuntimeException("Staff has no branch assigned");
+        }
         return appointmentService.searchAppointmentsForStaff(branchId, req);
     }
 
