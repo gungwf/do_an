@@ -6,6 +6,8 @@ import com.service.medical_record_service.client.dto.DeductStockRequest;
 import com.service.medical_record_service.dto.request.MedicalRecordRequest;
 import com.service.medical_record_service.dto.request.PrescriptionItemRequest;
 import com.service.medical_record_service.dto.request.UpdateMedicalRecordRequest;
+import com.service.medical_record_service.dto.response.MedicalRecordDetailResponse;
+import com.service.medical_record_service.dto.response.PerformedServiceDto;
 import com.service.medical_record_service.dto.response.StockShortage;
 import com.service.medical_record_service.entity.*;
 import com.service.medical_record_service.entity.Enum.BillType;
@@ -81,6 +83,35 @@ public class MedicalRecordService {
     public MedicalRecord getRecordByAppointmentId(UUID appointmentId) {
         return medicalRecordRepository.findByAppointmentId(appointmentId)
                 .orElseThrow(() -> new AppException(ERROR_CODE.PRODUCT_NOT_FOUND));
+    }
+
+    public MedicalRecordDetailResponse getRecordDetailByAppointmentId(UUID appointmentId) {
+        MedicalRecord record = getRecordByAppointmentId(appointmentId);
+
+            List<PerformedServiceDto> performed = new ArrayList<>();
+            if (record.getPerformedServices() != null) {
+                for (MedicalRecordServiceLink link : record.getPerformedServices()) {
+                    var svcId = link.getId().getServiceId();
+                    var svcOpt = serviceRepository.findById(svcId);
+                    svcOpt.ifPresent(svc -> {
+                        link.setServiceName(svc.getServiceName());
+                        link.setPrice(svc.getPrice());
+                        performed.add(new PerformedServiceDto(svc.getId(), svc.getServiceName(), svc.getPrice()));
+                    });
+                }
+            }
+
+            return new MedicalRecordDetailResponse(
+                record.getId(),
+                record.getAppointmentId(),
+                record.getDiagnosis(),
+                record.getIcd10Code(),
+                record.isLocked(),
+                record.getESignature(),
+                record.getCreatedAt(),
+                record.getUpdatedAt(),
+                performed
+            );
     }
 
     public MedicalRecord lockMedicalRecord(UUID recordId, String signatureData) {

@@ -4,6 +4,7 @@ import com.service.medical_record_service.dto.request.LockRequest;
 import com.service.medical_record_service.dto.request.MedicalRecordRequest;
 import com.service.medical_record_service.dto.request.UpdateMedicalRecordRequest;
 import com.service.medical_record_service.entity.Enum.BillType;
+import com.service.medical_record_service.dto.response.MedicalRecordDetailResponse;
 import com.service.medical_record_service.entity.MedicalRecord;
 import com.service.medical_record_service.service.MedicalRecordService;
 import lombok.RequiredArgsConstructor;
@@ -29,9 +30,9 @@ public class MedicalRecordController {
     }
 
     @GetMapping("/appointment/{appointmentId}")
-    public ResponseEntity<MedicalRecord> getRecordByAppointmentId(@PathVariable UUID appointmentId) {
+    public ResponseEntity<MedicalRecordDetailResponse> getRecordByAppointmentId(@PathVariable UUID appointmentId) {
         try {
-            return ResponseEntity.ok(medicalRecordService.getRecordByAppointmentId(appointmentId));
+            return ResponseEntity.ok(medicalRecordService.getRecordDetailByAppointmentId(appointmentId));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

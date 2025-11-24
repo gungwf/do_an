@@ -3,6 +3,7 @@ package com.service.medical_record_service.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "medical_record_services")
@@ -17,5 +18,12 @@ public class MedicalRecordServiceLink {
     @JoinColumn(name = "medical_record_id")
     @JsonBackReference // Tránh lặp vô tận khi chuyển JSON
     private MedicalRecord medicalRecord;
+
+    // Transient enriched fields for response
+    @Transient
+    private String serviceName;
+
+    @Transient
+    private BigDecimal price;
 
 }
