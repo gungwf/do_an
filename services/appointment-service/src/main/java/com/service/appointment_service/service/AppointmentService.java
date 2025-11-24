@@ -314,8 +314,8 @@ public class AppointmentService {
         .orElseThrow(() -> new RuntimeException(
             "Appointment not found with id: " + orderId)); // Sau này có thể đổi thành AppException
 
-    // 2. Cập nhật trạng thái thành CONFIRMED
-    appointment.setStatus(AppointmentStatus.CONFIRMED);
+    // 2. Cập nhật trạng thái thành PAID_SERVICE
+    appointment.setStatus(AppointmentStatus.PAID_SERVICE);
     appointmentRepository.save(appointment);
 
     log.info("Đã xác nhận thanh toán và cập nhật trạng thái cho Lịch hẹn ID: {}", orderId);
@@ -323,6 +323,16 @@ public class AppointmentService {
     // 3. Gửi email xác nhận lịch hẹn thành công
     AppointmentResponseDto dto = mapToResponseDto(appointment);
     emailService.sendAppointmentConfirmation(dto);
+  }
+
+  // Đánh dấu lại lịch hẹn cần tính thêm tiền do thêm dịch vụ mới
+  @Transactional
+  public AppointmentResponseDto markPendingBilling(UUID appointmentId) {
+    Appointment appt = appointmentRepository.findById(appointmentId)
+        .orElseThrow(() -> new AppException(ERROR_CODE.APPOINTMENT_NOT_FOUND));
+    appt.setStatus(AppointmentStatus.PENDING_BILLING);
+    appointmentRepository.save(appt);
+    return mapToResponseDto(appt);
   }
 
   public Appointment findById(UUID id) {

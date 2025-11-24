@@ -16,7 +16,7 @@ public class MedicalRecordServiceLink {
     @ManyToOne
     @MapsId("medicalRecordId") // Ánh xạ phần medicalRecordId của @EmbeddedId
     @JoinColumn(name = "medical_record_id")
-    @JsonBackReference // Tránh lặp vô tận khi chuyển JSON
+    @JsonBackReference
     private MedicalRecord medicalRecord;
 
     // Transient enriched fields for response

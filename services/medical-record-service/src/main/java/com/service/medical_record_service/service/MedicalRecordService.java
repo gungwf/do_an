@@ -3,6 +3,7 @@ package com.service.medical_record_service.service;
 import com.service.medical_record_service.client.client.AppointmentServiceClient;
 import com.service.medical_record_service.client.client.ProductInventoryClient;
 import com.service.medical_record_service.client.dto.DeductStockRequest;
+import com.service.medical_record_service.client.dto.InternalStatusUpdateRequest;
 import com.service.medical_record_service.dto.request.MedicalRecordRequest;
 import com.service.medical_record_service.dto.request.PrescriptionItemRequest;
 import com.service.medical_record_service.dto.request.UpdateMedicalRecordRequest;
@@ -76,8 +77,20 @@ public class MedicalRecordService {
             medicalRecord.setPrescriptionItems(prescriptionEntities);
         }
 
-        // 4. Lưu và Trả về (KHÔNG TRỪ KHO Ở ĐÂY NỮA)
-        return medicalRecordRepository.save(medicalRecord);
+        // 4. Lưu bệnh án
+        MedicalRecord saved = medicalRecordRepository.save(medicalRecord);
+
+        // 5. Cập nhật trạng thái lịch hẹn -> CREATED_MEDICAL_RECORD
+        try {
+            appointmentServiceClient.updateAppointmentStatusInternal(
+                saved.getAppointmentId(),
+                new InternalStatusUpdateRequest("PENDING_BILLING")
+            );
+        } catch (Exception e) {
+            log.warn("Không thể cập nhật trạng thái lịch hẹn sang PENDING_BILLING: {}", e.getMessage());
+        }
+
+        return saved;
     }
 
     public MedicalRecord getRecordByAppointmentId(UUID appointmentId) {
