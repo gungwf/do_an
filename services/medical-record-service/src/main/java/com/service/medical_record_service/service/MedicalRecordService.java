@@ -302,41 +302,24 @@ public class MedicalRecordService {
         medicalRecord.setDiagnosis(request.getDiagnosis());
         medicalRecord.setIcd10Code(request.getIcd10Code());
 
-        // 3. Xóa các dịch vụ cũ và thêm lại (nếu có)
-        medicalRecord.getPerformedServices().clear();
-        if (request.getServiceIds() != null && !request.getServiceIds().isEmpty()) {
-            List<MedicalRecordServiceLink> serviceLinks = new ArrayList<>();
-            for (UUID serviceId : request.getServiceIds()) {
-                MedicalRecordServiceId linkId = new MedicalRecordServiceId();
-                linkId.setMedicalRecordId(medicalRecordId);
-                linkId.setServiceId(serviceId);
+        // 3. Giữ nguyên performedServices (không cập nhật dịch vụ trong lần update này)
 
-                MedicalRecordServiceLink link = new MedicalRecordServiceLink();
-                link.setId(linkId);
-                link.setMedicalRecord(medicalRecord);
-                serviceLinks.add(link);
-            }
-            medicalRecord.getPerformedServices().addAll(serviceLinks);
-        }
-
-        // 4. Xóa đơn thuốc cũ và thêm lại (nếu có)
-        medicalRecord.getPrescriptionItems().clear();
+        // 4. Thêm mới đơn thuốc (append) nếu có trong request
         if (request.getPrescriptionItems() != null && !request.getPrescriptionItems().isEmpty()) {
-            List<PrescriptionItem> prescriptionEntities = new ArrayList<>();
+            if (medicalRecord.getPrescriptionItems() == null) {
+                medicalRecord.setPrescriptionItems(new ArrayList<>());
+            }
             for (PrescriptionItemRequest itemRequest : request.getPrescriptionItems()) {
                 PrescriptionItem item = new PrescriptionItem();
                 item.setProductId(itemRequest.productId());
                 item.setQuantity(itemRequest.quantity());
                 item.setDosage(itemRequest.dosage());
                 item.setMedicalRecord(medicalRecord);
-                prescriptionEntities.add(item);
+                medicalRecord.getPrescriptionItems().add(item);
             }
-            medicalRecord.getPrescriptionItems().addAll(prescriptionEntities);
         }
 
-        // 5. Lưu lại Bệnh án (và các liên kết con)
-        MedicalRecord updatedRecord = medicalRecordRepository.save(medicalRecord);
-
-        return medicalRecordRepository.save(updatedRecord);
+        // 5. Lưu bệnh án với các đơn thuốc mới thêm
+        return medicalRecordRepository.save(medicalRecord);
     }
 }
