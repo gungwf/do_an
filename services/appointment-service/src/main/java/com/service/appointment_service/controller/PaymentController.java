@@ -89,4 +89,10 @@ public class PaymentController {
         Map<String, String> result = paymentService.handleVnPayReturnPrescription(allParams);
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/vnpay-return-prescription-online")
+    public ResponseEntity<Map<String, String>> handleVnPayReturnPrescriptionOnline(@RequestParam Map<String, String> allParams) {
+        Map<String, String> result = paymentService.handleVnPayReturnPrescription(allParams);
+        return ResponseEntity.ok(result);
+    }
 }

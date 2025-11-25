@@ -435,7 +435,7 @@ public class PaymentService {
                 Appointment appointment = payment.getAppointment();
 
                 // Cập nhật trạng thái appointment (xác nhận)
-                appointment.setStatus(AppointmentStatus.CONFIRMED);
+                appointment.setStatus(AppointmentStatus.PAID_SERVICE);
 
                 // Gọi service y tế để trừ kho cho các vật tư liên quan tới dịch vụ trong medical record
                 try {

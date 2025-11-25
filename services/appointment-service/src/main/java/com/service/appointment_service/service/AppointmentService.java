@@ -314,8 +314,8 @@ public class AppointmentService {
         .orElseThrow(() -> new RuntimeException(
             "Appointment not found with id: " + orderId)); // Sau này có thể đổi thành AppException
 
-    // 2. Cập nhật trạng thái thành PAID_SERVICE
-    appointment.setStatus(AppointmentStatus.PAID_SERVICE);
+    // 2. Cập nhật trạng thái thành CONFIRMED
+    appointment.setStatus(AppointmentStatus.CONFIRMED);
     appointmentRepository.save(appointment);
 
     log.info("Đã xác nhận thanh toán và cập nhật trạng thái cho Lịch hẹn ID: {}", orderId);
