@@ -48,6 +48,16 @@ public class Bill {
   @Column(name = "raw_response", columnDefinition = "TEXT")
   private String rawResponse;
 
+  // Snapshot recipient info for online purchases (nullable for other bill types)
+  @Column(name = "recipient_name")
+  private String recipientName;
+
+  @Column(name = "recipient_phone")
+  private String recipientPhone;
+
+  @Column(name = "recipient_address")
+  private String recipientAddress;
+
   @CreationTimestamp
   @Column(name = "created_at")
   private Instant createdAt;

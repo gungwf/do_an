@@ -63,6 +63,9 @@ public class BillController {
         bill.setBranchId(request.branchId());
         bill.setBillType(BillType.valueOf(request.billType()));
         bill.setTotalAmount(request.totalAmount());
+        bill.setRecipientName(request.recipientName());
+        bill.setRecipientPhone(request.recipientPhone());
+        bill.setRecipientAddress(request.recipientAddress());
         bill = billRepository.save(bill);
 
         if (request.items() != null && !request.items().isEmpty()) {
@@ -91,6 +94,9 @@ public class BillController {
         bill.setCreatorId(request.creatorId());
         bill.setBranchId(request.branchId());
         bill.setBillType(BillType.valueOf(request.billType()));
+        bill.setRecipientName(request.recipientName());
+        bill.setRecipientPhone(request.recipientPhone());
+        bill.setRecipientAddress(request.recipientAddress());
 
         // Compute totalAmount server-side from items (fetch unit price from product service)
         BigDecimal total = BigDecimal.ZERO;
@@ -173,6 +179,9 @@ public class BillController {
         bill.setBranchId(staffBranchId);
         bill.setBillType(BillType.valueOf(request.billType()));
         bill.setTotalAmount(total);
+        bill.setRecipientName(request.recipientName());
+        bill.setRecipientPhone(request.recipientPhone());
+        bill.setRecipientAddress(request.recipientAddress());
         bill = billRepository.save(bill);
 
         // persist bill lines with unit prices from product service
@@ -234,6 +243,9 @@ public class BillController {
         bill.setBranchId(centralBranchId);
         bill.setBillType(BillType.valueOf(request.billType()));
         bill.setTotalAmount(total);
+        bill.setRecipientName(request.recipientName());
+        bill.setRecipientPhone(request.recipientPhone());
+        bill.setRecipientAddress(request.recipientAddress());
         bill = billRepository.save(bill);
 
         // persist bill lines with computed unit prices
@@ -273,6 +285,9 @@ public class BillController {
                 "status", bill.getStatus().toString(),
                 "totalAmount", bill.getTotalAmount(),
                 "branchId", bill.getBranchId(),
+            "recipientName", bill.getRecipientName(),
+            "recipientPhone", bill.getRecipientPhone(),
+            "recipientAddress", bill.getRecipientAddress(),
                 "items", items
         ));
     }
