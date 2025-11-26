@@ -177,7 +177,7 @@ public class BillController {
         bill.setPatientId(request.patientId());
         bill.setCreatorId(staffId);
         bill.setBranchId(staffBranchId);
-        bill.setBillType(BillType.valueOf(request.billType()));
+        bill.setBillType(BillType.DRUG_PAYMENT);
         bill.setTotalAmount(total);
         bill.setRecipientName(request.recipientName());
         bill.setRecipientPhone(request.recipientPhone());
@@ -241,7 +241,7 @@ public class BillController {
         bill.setPatientId(request.patientId());
         bill.setCreatorId(request.creatorId());
         bill.setBranchId(centralBranchId);
-        bill.setBillType(BillType.valueOf(request.billType()));
+        bill.setBillType(BillType.DRUG_PAYMENT);
         bill.setTotalAmount(total);
         bill.setRecipientName(request.recipientName());
         bill.setRecipientPhone(request.recipientPhone());
