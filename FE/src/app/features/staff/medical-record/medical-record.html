@@ -1,0 +1,108 @@
+<div class="medical-records">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h5 m-0"><i class="bi bi-file-earmark-medical me-2"></i>Lịch hẹn / cuộc họp</h1>
+    <button class="btn btn-outline-secondary btn-sm" (click)="reload()">
+      <i class="bi bi-arrow-clockwise"></i> Tải lại
+    </button>
+  </div>
+
+  <form class="card p-3 mb-3" (ngSubmit)="onSearch()">
+    <div class="row g-2">
+      <div class="col-md-2">
+        <label class="form-label mb-1">Từ ngày</label>
+        <input type="date" class="form-control form-control-sm" [(ngModel)]="searchDto.startTime" name="startTime">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label mb-1">Đến ngày</label>
+        <input type="date" class="form-control form-control-sm" [(ngModel)]="searchDto.endTime" name="endTime">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-1">Tìm kiếm</label>
+        <input type="text" class="form-control form-control-sm" [(ngModel)]="searchDto.searchText" name="searchText" placeholder="Tên bệnh nhân...">
+      </div>
+      <div class="col-md-2">
+          <label class="form-label mb-1">Trạng thái</label>
+          <select class="form-select form-select-sm" [(ngModel)]="searchDto.status" name="status">
+            <option value="">Tất cả</option>
+            <option value="PENDING">PENDING</option>
+            <option value="CONFIRMED">CONFIRMED</option>
+            <option value="PENDING_BILLING">PENDING_BILLING</option>
+            <option value="PAID_SERVICE">PAID_SERVICE</option>
+            <option value="COMPLETED">COMPLETED</option>
+            <option value="PAID">PAID</option>
+          </select>
+        </div>
+      <div class="col-md-3 d-flex align-items-end gap-2">
+        <button class="btn btn-primary btn-sm" type="submit">
+          <i class="bi bi-search"></i> Lọc
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" type="button" (click)="resetFilters()">
+          <i class="bi bi-x-circle"></i> Xóa
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <div *ngIf="loading" class="p-4 text-center">
+        <div class="spinner-border text-primary" style="width:2.5rem;height:2.5rem"></div>
+      </div>
+
+      <table class="table table-hover table-sm mb-0" *ngIf="!loading && appointments.length">
+        <thead class="table-light">
+          <tr>
+            <th>Thời gian</th>
+            <th>Bệnh nhân</th>
+            <th>Bác sĩ</th>
+            <th>Trạng thái</th>
+            <th>Ghi chú</th>
+            <th class="text-center">Tác vụ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let a of appointments">
+            <td>{{ a.appointmentTime | date:'short' }}</td>
+            <td>{{ a.patientDisplayName || '-' }}</td>
+            <td>{{ a.doctorDisplayName || '-' }}</td>
+            <td><span class="badge" [ngClass]="badgeClass(a.status)">{{ a.status || '-' }}</span></td>
+            <td>{{ a.notes || '-' }}</td>
+            <td class="text-center">
+              <button *ngIf="a.status === 'PENDING_BILLING'"
+                      class="btn btn-outline-primary btn-sm"
+                      (click)="openRecord(a.id)">
+                <i class="bi bi-journal-medical"></i> Xem bệnh án
+              </button>
+              <span *ngIf="a.status === 'PAID_SERVICE'" class="badge bg-success">
+                <i class="bi bi-check-circle-fill"></i> Đã thanh toán
+              </span>
+              <span *ngIf="a.status !== 'PENDING_BILLING' && a.status !== 'PAID_SERVICE'" class="text-muted">-</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div *ngIf="!loading && !appointments.length" class="p-4 text-center text-muted">
+        <i class="bi bi-inbox display-6 d-block mb-2"></i> Không có dữ liệu
+      </div>
+    </div>
+
+    <div class="card-footer d-flex justify-content-between align-items-center" *ngIf="totalPages > 0">
+      <small>Trang {{ searchDto.page + 1 }} / {{ totalPages }} ({{ totalElements }} bản ghi)</small>
+      <div class="btn-group btn-group-sm">
+        <button class="btn btn-outline-secondary" [disabled]="searchDto.page===0" (click)="goPage(searchDto.page-1)">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button class="btn btn-outline-secondary" [disabled]="searchDto.page>=totalPages-1" (click)="goPage(searchDto.page+1)">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-medical-record-view-dialog
+  *ngIf="viewingAppointmentId"
+  [appointmentId]="viewingAppointmentId"
+  (closed)="closeDialog()">
+</app-medical-record-view-dialog>

@@ -55,3 +55,4 @@ export class ProductService {
     return this.http.post<ProductSearchResponse>(`${this.baseUrl}/search`, body);
   }
 }
+

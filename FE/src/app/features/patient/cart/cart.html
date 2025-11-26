@@ -61,7 +61,18 @@
 
     <div class="text-end mt-3">
       <h5 class="fw-bold">Tổng cộng: {{ getTotal() | currency:'VND':'symbol':'1.0-0' }}</h5>
-      <button class="btn btn-primary mt-2">Tiến hành thanh toán</button>
+      <button class="btn btn-primary mt-2" (click)="openCheckoutDialog()">
+        <i class="bi bi-credit-card me-2"></i>
+        Tiến hành thanh toán
+      </button>
     </div>
   </div>
 </div>
+
+<!-- Checkout Dialog -->
+<app-checkout-dialog
+  *ngIf="showCheckoutDialog"
+  [cartItems]="cartItems"
+  [totalAmount]="getTotal()"
+  (closed)="closeCheckoutDialog()"
+></app-checkout-dialog>

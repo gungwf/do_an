@@ -1,87 +1,157 @@
 <div class="page-container">
-  <h2 class="page-title">Quản lý Lịch hẹn</h2>
+  <h2 class="page-title">Quản lý Lịch hẹn ({{ totalElements }})</h2>
 
-  <div *ngIf="appointments$ | async as appointments; else loading" class="content-card">
+  <div class="card content-card mb-3">
+    <div class="card-body">
+      <div class="row g-3">
+        
+        <div class="col-md-5">
+          <label for="searchText" class="form-label">Tìm theo tên bệnh nhân</label>
+          <div class="input-group">
+            <input 
+              type="text" 
+              class="form-control" 
+              id="searchText"
+              placeholder="Nhập tên..."
+              [(ngModel)]="paginationState.searchText"
+              (keyup.enter)="onSearch()">
+            <button class="btn btn-outline-primary" type="button" (click)="onSearch()">
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </div>
 
-    <div *ngIf="appointments.length > 0; else noAppointments">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle">
-          <thead class="table-light">
-            <tr>
-              <th>Bệnh nhân</th>
-              <th>Thời gian hẹn</th>
-              <th>Trạng thái</th>
-              <th>Ghi chú</th>
-              <th>Tác vụ</th> 
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let appt of appointments">
-              
-              <td>
-                <div class="fw-bold">{{ appt.patient.fullName }}</div>
-                <div class="text-muted small">{{ appt.patient.email }}</div>
-              </td>
-
-              <td>{{ appt.appointmentTime | date: 'dd/MM/yyyy HH:mm' }}</td>
-              
-              <td>
-                <span [ngSwitch]="appt.status">
-                  <span *ngSwitchCase="'CONFIRMED'" class="badge bg-success">Đã xác nhận</span>
-                  <span *ngSwitchCase="'PENDING'" class="badge bg-warning text-dark">Chờ xác nhận</span>
-                  <span *ngSwitchCase="'COMPLETED'" class="badge bg-primary">Đã hoàn thành</span>
-                  <span *ngSwitchCase="'CANCELED'" class="badge bg-danger">Đã hủy</span>
-                  <span *ngSwitchCase="'PENDING_PAYMENT'" class="badge bg-secondary">Chờ thanh toán</span>
-                  <span *ngSwitchDefault class="badge bg-light text-dark">{{ appt.status }}</span>
-                </span>
-              </td>
-
-              <td class="notes-cell">
-                {{ appt.notes || 'Không có' }}
-              </td>
-              
-              <td>
-                <button 
-                  class="btn btn-sm btn-outline-primary me-2"
-                  (click)="onViewDetails(appt.id)"> 
-                  <i class="bi bi-eye"></i> Xem
-                </button>
-
-                <button 
-                  *ngIf="appt.status === 'CONFIRMED' || appt.status === 'COMPLETED'"
-                  class="btn btn-sm btn-success"
-                  (click)="onStartMedicalRecord(appt)">
-                  <i class="bi bi-file-earmark-plus"></i> Tạo Bệnh án
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="col-md-4">
+          <label for="statusFilter" class="form-label">Lọc theo trạng thái</label>
+          <select 
+            class="form-select" 
+            id="statusFilter"
+            [(ngModel)]="paginationState.status"
+            (ngModelChange)="onFilterChange()">
+            <option value="">Tất cả trạng thái</option>
+            <option value="PENDING">Chờ xác nhận (PENDING)</option>
+            <option value="CONFIRMED">Đã xác nhận (CONFIRMED)</option>
+            <option value="COMPLETED">Đã hoàn thành (COMPLETED)</option>
+            <option value="CANCELED">Đã hủy (CANCELED)</option>
+            <option value="PENDING_PAYMENT">Chờ thanh toán (PENDING_PAYMENT)</option>
+            <option value="PENDING_BILLING">Chờ thanh toán dịch vụ (PENDING_BILLING)</option>
+            <option value="PAID_SERVICE">Đã thanh toán dịch vụ (PAID_SERVICE)</option>
+          </select>
+        </div>
       </div>
-    </div> 
+    </div>
+  </div>
+
+
+  <div class="content-card">
     
-    <ng-template #noAppointments>
-      <div class="alert alert-info" role="alert">
-        <i class="bi bi-info-circle-fill"></i> Bạn không có lịch hẹn nào.
-      </div>
-    </ng-template>
-    
-  </div> 
-  
-  <ng-template #loading>
-    <div class="text-center p-5">
+    <div *ngIf="isLoading" class="text-center p-5">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Đang tải...</span>
       </div>
     </div>
-  </ng-template> 
+
+    <div *ngIf="!isLoading">
+      
+      <div *ngIf="appointments.length > 0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Bệnh nhân</th>
+                <th>Thời gian hẹn</th>
+                <th>Trạng thái</th>
+                <th>Ghi chú</th>
+                <th>Tác vụ</th> 
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let appt of appointments">
+                
+                <td>
+                  <div class="fw-bold">{{ appt.patient.fullName }}</div>
+                  <div class="text-muted small">{{ appt.patient.email }}</div>
+                </td>
+
+                <td>{{ appt.appointmentTime | date: 'dd/MM/yyyy HH:mm' }}</td>
+                
+                <td>
+                  <span [ngSwitch]="appt.status">
+                    <span *ngSwitchCase="'CONFIRMED'" class="badge bg-success">Đã xác nhận</span>
+                    <span *ngSwitchCase="'PENDING'" class="badge bg-warning text-dark">Chờ xác nhận</span>
+                    <span *ngSwitchCase="'COMPLETED'" class="badge bg-primary">Đã hoàn thành</span>
+                    <span *ngSwitchCase="'CANCELED'" class="badge bg-danger">Đã hủy</span>
+                    <span *ngSwitchCase="'PENDING_PAYMENT'" class="badge bg-secondary">Chờ thanh toán</span>
+                    <span *ngSwitchCase="'PENDING_BILLING'" class="badge bg-info">Chờ thanh toán dịch vụ</span>
+                    <span *ngSwitchCase="'PAID_SERVICE'" class="badge bg-success">Đã thanh toán dịch vụ</span>
+                    <span *ngSwitchDefault class="badge bg-light text-dark">{{ appt.status }}</span>
+                  </span>
+                </td>
+
+                <td class="notes-cell">
+                  {{ appt.notes || 'Không có' }}
+                </td>
+                
+                <td>
+                  <button 
+                    class="btn btn-sm btn-outline-primary me-2"
+                    (click)="onViewDetails(appt.id)"> 
+                    <i class="bi bi-eye"></i> Xem
+                  </button>
+
+                  <button 
+                    *ngIf="canCreateMedicalRecord(appt)"
+                    class="btn btn-sm btn-success"
+                    (click)="onStartMedicalRecord(appt)">
+                    <i class="bi bi-file-earmark-plus"></i> Tạo Bệnh án
+                  </button>
+
+                  <span 
+                    *ngIf="appt.status === 'PENDING_BILLING'"
+                    class="badge bg-info">
+                    <i class="bi bi-clock-fill"></i> Chờ thanh toán
+                  </span>
+
+                  <span 
+                    *ngIf="appt.status === 'PAID_SERVICE'"
+                    class="badge bg-success">
+                    <i class="bi bi-check-circle-fill"></i> Đã thanh toán
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div> 
+      
+      <div *ngIf="appointments.length === 0">
+        <div class="alert alert-info" role="alert">
+          <i class="bi bi-info-circle-fill"></i> Không tìm thấy lịch hẹn nào.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav *ngIf="!isLoading && totalPages > 1" class="mt-4 d-flex justify-content-center">
+    <ul class="pagination">
+      <li class="page-item" [class.disabled]="paginationState.page === 0">
+        <a class="page-link" href="#" (click)="goToPage(paginationState.page - 1); $event.preventDefault()">Trước</a>
+      </li>
+
+      <ng-container *ngFor="let page of [].constructor(totalPages); let i = index">
+        <li class="page-item" [class.active]="i === paginationState.page">
+          <a class="page-link" href="#" (click)="goToPage(i); $event.preventDefault()">{{ i + 1 }}</a>
+        </li>
+      </ng-container>
+
+      <li class="page-item" [class.disabled]="paginationState.page === totalPages - 1">
+        <a class="page-link" href="#" (click)="goToPage(paginationState.page + 1); $event.preventDefault()">Sau</a>
+      </li>
+    </ul>
+  </nav>
+
 </div>
 
-<!-- 
-===============================================
-  1. MODAL XEM CHI TIẾT (ĐÃ KHÔI PHỤC NỘI DUNG)
-===============================================
--->
 <div 
   *ngIf="isLoadingDetail || selectedAppointment" 
   class="modal-backdrop fade show" 
@@ -100,10 +170,8 @@
         <button type="button" class="btn-close" (click)="onCloseModal()" aria-label="Close"></button>
       </div>
       
-      <!-- === KHÔI PHỤC NỘI DUNG BỊ MẤT TẠI ĐÂY === -->
       <div class="modal-body">
         
-        <!-- Spinner -->
         <div *ngIf="isLoadingDetail" class="text-center p-5">
           <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
             <span class="visually-hidden">Đang tải...</span>
@@ -111,7 +179,6 @@
           <p class="mt-2">Đang tải chi tiết...</p>
         </div>
         
-        <!-- Nội dung -->
         <div *ngIf="selectedAppointment as appt">
           <div classs="row g-3">
             
@@ -129,11 +196,12 @@
                 <li class="list-group-item"><strong>Thời gian:</strong> {{ appt.appointmentTime | date: 'dd/MM/yyyy HH:mm' }}</li>
                 <li class="list-group-item"><strong>Trạng thái:</strong> 
                   <span class="badge" 
-                        [class.bg-success]="appt.status === 'CONFIRMED'"
+                        [class.bg-success]="appt.status === 'CONFIRMED' || appt.status === 'PAID_SERVICE'"
                         [class.bg-warning]="appt.status === 'PENDING'"
                         [class.bg-primary]="appt.status === 'COMPLETED'"
                         [class.bg-danger]="appt.status === 'CANCELED'"
-                        [class.bg-secondary]="appt.status === 'PENDING_PAYMENT'">
+                        [class.bg-secondary]="appt.status === 'PENDING_PAYMENT'"
+                        [class.bg-info]="appt.status === 'PENDING_BILLING'">
                     {{ appt.status }}
                   </span>
                 </li>
@@ -151,7 +219,6 @@
           </div>
         </div>
       </div>
-      <!-- === KẾT THÚC PHẦN KHÔI PHỤC === -->
       
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="onCloseModal()">
@@ -162,14 +229,7 @@
     </div>
   </div>
 </div>
-<!-- === HẾT Modal Xem Chi Tiết === -->
 
-
-<!-- 
-===============================================
-  2. MODAL TẠO BỆNH ÁN (Giữ nguyên)
-===============================================
--->
 <app-medical-record-form
   [appointment]="recordForAppointment"
   (closeModal)="onCloseRecordModal()"

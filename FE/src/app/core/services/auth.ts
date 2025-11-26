@@ -15,6 +15,11 @@ export interface UserDto {
   phoneNumber?: string;
   // Thêm các trường khác nếu API "Get My Profile" của bạn trả về
 }
+export interface DoctorDto {
+  userId: string;
+  specialty: string;
+  degree: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -121,6 +126,24 @@ export class AuthService {
       })
     );
   }
+  getCurrentDoctor(): Observable<DoctorDto | null> {
+    const profileApiUrl = '/doctor-profiles/me';
+
+    // GỌI API (Interceptor sẽ tự đính kèm token)
+    return this.http.get<DoctorDto>(`${this.apiUrl}${profileApiUrl}`).pipe(
+      tap(doctor => {
+        // Khi lấy được thông tin doctor, LƯU LẠI userId
+        if (doctor && doctor.userId) {
+          this.saveUserId(doctor.userId);
+          console.log('AuthService: Đã lấy và lưu thông tin bác sĩ:', doctor);
+        }
+      }),
+      catchError(err => {
+        console.error('getCurrentDoctor: Không thể lấy thông tin bác sĩ. Lỗi:', err);
+        return of(null);
+      })
+    );
+  }
 
   // --- CÁC HÀM TIỆN ÍCH (HELPER) ---
 
@@ -214,6 +237,10 @@ export class AuthService {
     const role = this.getUserRole();
     // Dựa trên logic của 'isAdmin', chúng ta cũng kiểm tra 'doctor' và 'role_doctor'
     return role === 'doctor' || role === 'role_doctor';
+  }
+  isStaff(): boolean {
+    const role = this.getUserRole();
+    return role === 'staff' || role === 'role_staff' ;
   }
   
   // --- KẾT THÚC PHẦN THÊM MỚI ---

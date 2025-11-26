@@ -1,0 +1,86 @@
+<div class="admin-wrapper">
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.collapsed]="isSidebarCollapsed">
+    <div class="sidebar-header">
+      <div class="logo">
+        <i class="bi bi-person-workspace fs-4"></i>
+        <span class="logo-text">Staff Portal</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <a routerLink="/staff/dashboard" routerLinkActive="active" class="nav-item">
+          <i class="bi bi-house-door"></i>
+          <span class="nav-text">Dashboard</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <a routerLink="/staff/medical-records" routerLinkActive="active" class="nav-item">
+          <i class="bi bi-file-earmark-medical"></i>
+          <span class="nav-text">Bệnh án</span>
+        </a>
+        <a routerLink="/staff/appointments" routerLinkActive="active" class="nav-item">
+          <i class="bi bi-calendar-check"></i>
+          <span class="nav-text">Lịch hẹn</span>
+        </a>
+        <a routerLink="/staff/patients" routerLinkActive="active" class="nav-item">
+          <i class="bi bi-people"></i>
+          <span class="nav-text">Bệnh nhân</span>
+        </a>
+        <a routerLink="/staff/doctors" routerLinkActive="active" class="nav-item">
+          <i class="bi bi-person-badge"></i>
+          <span class="nav-text">Bác sĩ</span>
+        </a>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-content" [class.sidebar-collapsed]="isSidebarCollapsed">
+    <header class="admin-header">
+      <div class="admin-header-left">
+        <button class="btn btn-link sidebar-toggle" (click)="toggleSidebar()">
+          <i class="bi bi-list"></i>
+        </button>
+        <div class="search-box">
+          <i class="bi bi-search"></i>
+          <input type="text" placeholder="Search here..." />
+        </div>
+      </div>
+      <div class="admin-header-right">
+        <a class="header-icon">
+          <i class="bi bi-bell"></i>
+        </a>
+        <a class="header-icon">
+          <i class="bi bi-chat-dots"></i>
+        </a>
+        <div class="dropdown">
+          <a class="header-profile" data-bs-toggle="dropdown">
+            <div class="profile-avatar">
+              <i class="bi bi-person-circle"></i>
+            </div>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <span class="dropdown-item disabled">
+                <i class="bi bi-person-fill me-2"></i>{{ displayName }}
+              </span>
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <a class="dropdown-item text-danger" (click)="logout()" style="cursor:pointer">
+                <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-main">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

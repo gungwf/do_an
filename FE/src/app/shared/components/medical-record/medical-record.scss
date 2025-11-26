@@ -1,0 +1,25 @@
+.mr-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 1100;
+}
+.mr-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 4rem;
+  z-index: 1110;
+  pointer-events: none;
+}
+.card {
+  width: 600px;
+  max-width: 95vw;
+  pointer-events: all;
+}
+.table-sm td, .table-sm th {
+  padding: 0.4rem;
+  font-size: 0.875rem;
+}
