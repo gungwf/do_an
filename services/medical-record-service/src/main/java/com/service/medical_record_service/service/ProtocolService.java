@@ -8,7 +8,15 @@ import com.service.medical_record_service.repository.ProtocolServiceLinkReposito
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
+import com.service.medical_record_service.dto.response.ProtocolResponseDto;
 import java.util.UUID;
 
 @Service
@@ -22,8 +30,31 @@ public class ProtocolService {
         return protocolRepository.save(protocol);
     }
 
-    public List<Protocol> getAllProtocols() {
-        return protocolRepository.findAll();
+    public Page<ProtocolResponseDto> getAllProtocols(Pageable pageable, String name, Sort sort) {
+        // Ensure pageable uses provided sort if any
+        Pageable effectivePageable = pageable;
+        if (sort != null && sort.isSorted()) {
+            effectivePageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+        }
+
+        Page<Protocol> page;
+        if (name == null || name.isBlank()) {
+            page = protocolRepository.findAll(effectivePageable);
+        } else {
+            page = protocolRepository.findByProtocolNameContainingIgnoreCase(name, effectivePageable);
+        }
+
+        var dtoList = page.stream().map(p -> new ProtocolResponseDto(
+            p.getId(),
+            p.getProtocolName(),
+            p.getDescription(),
+            p.getTotalSessions(),
+            p.getPrice(),
+            p.isActive(),
+            p.getCreatedAt(),
+            p.getUpdatedAt()
+        )).toList();
+        return new PageImpl<>(dtoList, effectivePageable, page.getTotalElements());
     }
 
     public Protocol getProtocolById(UUID id) {
@@ -47,15 +78,22 @@ public class ProtocolService {
         protocolRepository.save(existingProtocol);
     }
 
-    public ProtocolServiceLink linkServiceToProtocol(UUID protocolId, UUID serviceId) {
-        // (Thêm logic kiểm tra sự tồn tại của protocol và service)
-        ProtocolServiceId id = new ProtocolServiceId();
-        id.setProtocolId(protocolId);
-        id.setServiceId(serviceId);
 
-        ProtocolServiceLink link = new ProtocolServiceLink();
-        link.setId(id);
+    public List<ProtocolServiceLink> linkServicesToProtocol(UUID protocolId, List<UUID> serviceIds) {
+        List<ProtocolServiceLink> links = new ArrayList<>();
+        if (serviceIds == null || serviceIds.isEmpty()) {
+            return links;
+        }
+        for (UUID serviceId : serviceIds) {
+            ProtocolServiceId id = new ProtocolServiceId();
+            id.setProtocolId(protocolId);
+            id.setServiceId(serviceId);
 
-        return protocolServiceLinkRepository.save(link);
+            ProtocolServiceLink link = new ProtocolServiceLink();
+            link.setId(id);
+
+            links.add(protocolServiceLinkRepository.save(link));
+        }
+        return links;
     }
 }

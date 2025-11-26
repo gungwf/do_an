@@ -1,11 +1,15 @@
 package com.service.medical_record_service.controller;
 
-import com.service.medical_record_service.dto.request.LinkServiceRequest;
+import com.service.medical_record_service.dto.request.LinkServicesRequest;
+import com.service.medical_record_service.dto.response.ProtocolResponseDto;
 import com.service.medical_record_service.entity.Protocol;
 import com.service.medical_record_service.entity.ProtocolServiceLink;
 import com.service.medical_record_service.service.ProtocolService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,8 +30,22 @@ public class ProtocolController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Protocol>> getAllProtocols() {
-        return ResponseEntity.ok(protocolService.getAllProtocols());
+    public ResponseEntity<Page<ProtocolResponseDto>> getAllProtocols(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "sort", required = false) String sort
+    ) {
+        Sort sortObj = Sort.unsorted();
+        if (sort != null && !sort.isBlank()) {
+            String[] parts = sort.split(",");
+            if (parts.length == 2) {
+                sortObj = Sort.by(Sort.Direction.fromString(parts[1].trim()), parts[0].trim());
+            } else {
+                sortObj = Sort.by(sort.trim());
+            }
+        }
+        return ResponseEntity.ok(protocolService.getAllProtocols(PageRequest.of(page, size), name, sortObj));
     }
 
     @GetMapping("/{id}")
@@ -50,10 +68,10 @@ public class ProtocolController {
 
     @PostMapping("/{protocolId}/services")
     @PreAuthorize("hasAuthority('admin')")
-    public ResponseEntity<ProtocolServiceLink> linkService(
+    public ResponseEntity<List<ProtocolServiceLink>> linkServices(
             @PathVariable UUID protocolId,
-            @RequestBody LinkServiceRequest request
+            @RequestBody LinkServicesRequest request
     ) {
-        return ResponseEntity.ok(protocolService.linkServiceToProtocol(protocolId, request.serviceId()));
+        return ResponseEntity.ok(protocolService.linkServicesToProtocol(protocolId, request.serviceIds()));
     }
 }
