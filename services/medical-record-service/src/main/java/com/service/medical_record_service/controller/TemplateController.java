@@ -4,6 +4,7 @@ import com.service.medical_record_service.client.dto.UserDto;
 import com.service.medical_record_service.client.client.UserServiceClient;
 import com.service.medical_record_service.dto.request.TemplateRequest;
 import com.service.medical_record_service.entity.DiagnosisTemplate;
+import com.service.medical_record_service.dto.response.TemplateDropdownItemDto;
 import com.service.medical_record_service.service.TemplateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -34,5 +35,17 @@ public class TemplateController {
         String doctorEmail = authentication.getName();
         UserDto doctor = userServiceClient.getUserByEmail(doctorEmail);
         return ResponseEntity.ok(templateService.getTemplatesByDoctor(doctor.id()));
+    }
+
+    @GetMapping("/my-templates/dropdown")
+    @PreAuthorize("hasAuthority('doctor')")
+    public ResponseEntity<List<TemplateDropdownItemDto>> getMyTemplatesDropdown(Authentication authentication) {
+        String doctorEmail = authentication.getName();
+        UserDto doctor = userServiceClient.getUserByEmail(doctorEmail);
+        List<DiagnosisTemplate> templates = templateService.getTemplatesByDoctor(doctor.id());
+        List<TemplateDropdownItemDto> items = templates.stream()
+                .map(t -> new TemplateDropdownItemDto(t.getId(), t.getTemplateName()))
+                .toList();
+        return ResponseEntity.ok(items);
     }
 }
