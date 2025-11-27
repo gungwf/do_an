@@ -20,4 +20,5 @@ public class MedicalRecordDetailResponse {
   private Instant createdAt;
   private Instant updatedAt;
   private List<PerformedServiceDto> performedServices;
+  private List<PrescriptionItemDto> prescriptionItems;
 }

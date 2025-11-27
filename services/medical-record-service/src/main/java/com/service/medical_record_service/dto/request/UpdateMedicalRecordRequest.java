@@ -8,6 +8,7 @@ import java.util.UUID;
 public class UpdateMedicalRecordRequest {
     private String diagnosis;
     private String icd10Code;
+    private UUID templateId; // Optional: load prescription items from a template
 
     // Bác sĩ có thể gửi lại toàn bộ danh sách dịch vụ và đơn thuốc đã được cập nhật
     private List<UUID> serviceIds;

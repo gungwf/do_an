@@ -9,6 +9,7 @@ import com.service.medical_record_service.dto.request.PrescriptionItemRequest;
 import com.service.medical_record_service.dto.request.UpdateMedicalRecordRequest;
 import com.service.medical_record_service.dto.response.MedicalRecordDetailResponse;
 import com.service.medical_record_service.dto.response.PerformedServiceDto;
+import com.service.medical_record_service.dto.response.PrescriptionItemDto;
 import com.service.medical_record_service.dto.response.StockShortage;
 import com.service.medical_record_service.entity.*;
 import com.service.medical_record_service.entity.Enum.BillType;
@@ -114,6 +115,19 @@ public class MedicalRecordService {
                 }
             }
 
+            List<PrescriptionItemDto> prescriptionItems = new ArrayList<>();
+            if (record.getPrescriptionItems() != null) {
+                for (PrescriptionItem pi : record.getPrescriptionItems()) {
+                    prescriptionItems.add(new PrescriptionItemDto(
+                        pi.getId(),
+                        pi.getProductId(),
+                        pi.getQuantity(),
+                        pi.getDosage(),
+                        pi.getNotes()
+                    ));
+                }
+            }
+
             return new MedicalRecordDetailResponse(
                 record.getId(),
                 record.getAppointmentId(),
@@ -123,7 +137,8 @@ public class MedicalRecordService {
                 record.getESignature(),
                 record.getCreatedAt(),
                 record.getUpdatedAt(),
-                performed
+                performed,
+                prescriptionItems
             );
     }
 
@@ -304,7 +319,7 @@ public class MedicalRecordService {
 
         // 3. Giữ nguyên performedServices (không cập nhật dịch vụ trong lần update này)
 
-        // 4. Thêm mới đơn thuốc (append) nếu có trong request
+        // 4a. Thêm mới đơn thuốc (append) nếu có trong request
         if (request.getPrescriptionItems() != null && !request.getPrescriptionItems().isEmpty()) {
             if (medicalRecord.getPrescriptionItems() == null) {
                 medicalRecord.setPrescriptionItems(new ArrayList<>());
@@ -316,6 +331,25 @@ public class MedicalRecordService {
                 item.setDosage(itemRequest.dosage());
                 item.setMedicalRecord(medicalRecord);
                 medicalRecord.getPrescriptionItems().add(item);
+            }
+        }
+
+        // 4b. Nếu có templateId, load các đơn thuốc từ template và append vào bệnh án
+        if (request.getTemplateId() != null) {
+            var template = templateRepository.findById(request.getTemplateId())
+                    .orElseThrow(() -> new AppException(ERROR_CODE.MEDICAL_RECORD_NOT_FOUND));
+            if (template.getPrescriptionItems() != null && !template.getPrescriptionItems().isEmpty()) {
+                if (medicalRecord.getPrescriptionItems() == null) {
+                    medicalRecord.setPrescriptionItems(new ArrayList<>());
+                }
+                template.getPrescriptionItems().forEach(ti -> {
+                    PrescriptionItem pi = new PrescriptionItem();
+                    pi.setProductId(ti.getProductId());
+                    pi.setQuantity(ti.getQuantity());
+                    pi.setDosage(ti.getDosage());
+                    pi.setMedicalRecord(medicalRecord);
+                    medicalRecord.getPrescriptionItems().add(pi);
+                });
             }
         }
 
