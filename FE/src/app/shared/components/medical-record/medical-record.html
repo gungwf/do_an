@@ -1,0 +1,83 @@
+<div class="mr-backdrop" (click)="close()"></div>
+<div class="mr-container">
+  <div class="card shadow-lg">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <strong><i class="bi bi-journal-medical me-2"></i>Bệnh án</strong>
+      <button class="btn btn-sm btn-outline-secondary" (click)="close()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="card-body" *ngIf="loading">
+      <div class="py-4 text-center">
+        <div class="spinner-border text-primary"></div>
+      </div>
+    </div>
+
+    <div class="card-body" *ngIf="!loading && error">
+      <div class="alert alert-danger mb-0">{{ error }}</div>
+    </div>
+
+    <div class="card-body" *ngIf="!loading && data">
+      <div class="mb-3">
+        <label class="text-muted small">Chẩn đoán</label>
+        <div class="fw-semibold">{{ data.diagnosis || '-' }}</div>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="text-muted small">Tạo lúc</label>
+          <div>{{ data.createdAt | date:'short' }}</div>
+        </div>
+        <div class="col-md-6">
+          <label class="text-muted small">Cập nhật lúc</label>
+          <div>{{ data.updatedAt | date:'short' }}</div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="text-muted small mb-2 d-block">Dịch vụ thực hiện</label>
+        <div *ngIf="data.performedServices?.length; else noSvc">
+          <table class="table table-sm table-bordered mb-2">
+            <thead class="table-light">
+              <tr>
+                <th>Tên dịch vụ</th>
+                <th class="text-end" style="width:130px">Giá (VNĐ)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let s of data.performedServices">
+                <td>
+                  <i class="bi bi-check2-circle text-success me-1"></i>
+                  {{ s.serviceName }}
+                </td>
+                <td class="text-end">{{ s.price | number:'1.0-0' }}</td>
+              </tr>
+            </tbody>
+            <tfoot class="table-light">
+              <tr>
+                <td class="fw-semibold">Tổng cộng</td>
+                <td class="text-end fw-semibold">{{ getTotalPrice() | number:'1.0-0' }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <ng-template #noSvc>
+          <div class="text-muted fst-italic">Không có</div>
+        </ng-template>
+      </div>
+    </div>
+
+    <div class="card-footer d-flex justify-content-between">
+      <button class="btn btn-secondary btn-sm" (click)="close()">Đóng</button>
+      <button 
+        class="btn btn-primary btn-sm" 
+        (click)="proceedToPayment()"
+        [disabled]="paymentLoading || !data">
+        <span *ngIf="paymentLoading" class="spinner-border spinner-border-sm me-1"></span>
+        <i *ngIf="!paymentLoading" class="bi bi-credit-card me-1"></i>
+        Thanh toán
+      </button>
+    </div>
+  </div>
+</div>

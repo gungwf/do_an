@@ -1,0 +1,117 @@
+<div class="checkout-backdrop" (click)="close()"></div>
+<div class="checkout-dialog">
+  <div class="checkout-content">
+    <div class="checkout-header">
+      <h5 class="mb-0 fw-semibold">
+        <i class="bi bi-cart-check me-2"></i>Xác nhận thanh toán
+      </h5>
+      <button type="button" class="btn-close" (click)="close()" aria-label="Close"></button>
+    </div>
+
+    <div class="checkout-body">
+      <!-- Danh sách sản phẩm chi tiết -->
+      <div class="products-list mb-4">
+        <h6 class="fw-semibold mb-3">Chi tiết đơn hàng</h6>
+        <div class="product-item" *ngFor="let item of cartItems">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+              <div class="product-name">{{ item.productName }}</div>
+              <div class="product-info">
+                <span class="text-muted">{{ item.price | currency:'VND':'symbol':'1.0-0' }}</span>
+                <span class="mx-2">×</span>
+                <span class="text-muted">{{ item.quantity }}</span>
+              </div>
+            </div>
+            <div class="product-total">
+              {{ (item.price * item.quantity) | currency:'VND':'symbol':'1.0-0' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tóm tắt đơn hàng -->
+      <div class="order-summary mb-4">
+        <div class="d-flex justify-content-between mb-2">
+          <span>Tổng số lượng:</span>
+          <span class="fw-semibold">{{ getTotalQuantity() }} sản phẩm</span>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span class="fw-semibold">Tổng tiền:</span>
+          <span class="text-danger fw-bold fs-5">{{ totalAmount | currency:'VND':'symbol':'1.0-0' }}</span>
+        </div>
+      </div>
+
+      <!-- Form thông tin người nhận -->
+      <form [formGroup]="checkoutForm" (ngSubmit)="onSubmit()">
+        <!-- Tên người nhận -->
+        <div class="mb-3">
+          <label for="recipientName" class="form-label">Tên người nhận</label>
+          <input
+            type="text"
+            class="form-control"
+            id="recipientName"
+            formControlName="recipientName"
+            placeholder="Nhập họ tên người nhận"
+            [class.is-invalid]="recipientName?.invalid && (recipientName?.dirty || recipientName?.touched)"
+          />
+          <div *ngIf="recipientName?.invalid && (recipientName?.dirty || recipientName?.touched)" class="invalid-feedback">
+            <div *ngIf="recipientName?.errors?.['required']">Vui lòng nhập tên người nhận.</div>
+            <div *ngIf="recipientName?.errors?.['minlength']">Tên phải có ít nhất 2 ký tự.</div>
+          </div>
+        </div>
+
+        <!-- Số điện thoại -->
+        <div class="mb-3">
+          <label for="recipientPhone" class="form-label">Số điện thoại</label>
+          <input
+            type="tel"
+            class="form-control"
+            id="recipientPhone"
+            formControlName="recipientPhone"
+            placeholder="Nhập số điện thoại (10-11 số)"
+            [class.is-invalid]="recipientPhone?.invalid && (recipientPhone?.dirty || recipientPhone?.touched)"
+          />
+          <div *ngIf="recipientPhone?.invalid && (recipientPhone?.dirty || recipientPhone?.touched)" class="invalid-feedback">
+            <div *ngIf="recipientPhone?.errors?.['required']">Vui lòng nhập số điện thoại.</div>
+            <div *ngIf="recipientPhone?.errors?.['pattern']">Số điện thoại không hợp lệ (10-11 số).</div>
+          </div>
+        </div>
+
+        <!-- Địa chỉ -->
+        <div class="mb-3">
+          <label for="recipientAddress" class="form-label">Địa chỉ nhận hàng</label>
+          <textarea
+            class="form-control"
+            id="recipientAddress"
+            formControlName="recipientAddress"
+            rows="3"
+            placeholder="Nhập địa chỉ chi tiết"
+            [class.is-invalid]="recipientAddress?.invalid && (recipientAddress?.dirty || recipientAddress?.touched)"
+          ></textarea>
+          <div *ngIf="recipientAddress?.invalid && (recipientAddress?.dirty || recipientAddress?.touched)" class="invalid-feedback">
+            <div *ngIf="recipientAddress?.errors?.['required']">Vui lòng nhập địa chỉ.</div>
+            <div *ngIf="recipientAddress?.errors?.['minlength']">Địa chỉ phải có ít nhất 10 ký tự.</div>
+          </div>
+        </div>
+
+        <div class="d-grid mt-4">
+          <button 
+            type="submit" 
+            class="btn btn-primary btn-lg" 
+            [disabled]="loading"
+          >
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+            <i *ngIf="!loading" class="bi bi-credit-card me-2"></i>
+            {{ loading ? 'Đang xử lý...' : 'Thanh toán' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="text-center mt-3 pb-3">
+      <a href="#" (click)="$event.preventDefault(); close()" class="text-decoration-none text-muted">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại giỏ hàng
+      </a>
+    </div>
+  </div>
+</div>

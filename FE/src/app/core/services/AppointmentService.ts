@@ -9,7 +9,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 export interface BranchSimpleDto {
   id: string;
   branchName: string;
-  address?: string; // Dữ liệu từ API /branches/simple có thể không có
+  address?: string;
   phoneNumber?: string;
 }
 
@@ -37,7 +37,7 @@ export interface PaymentResponse {
 export interface AppointmentResponseDto {
   id: string;
   appointmentTime: string; 
-  status: 'PENDING' | 'CONFIRMED' | 'CANCELED' | 'COMPLETED' | 'PENDING_PAYMENT'; // Thêm status
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELED' | 'COMPLETED' | 'PENDING_PAYMENT' | 'CREATED_MEDICAL_RECORD' | 'PENDING_BILLING' | 'PAID_SERVICE';
   notes: string;
   priceAtBooking: number;
   patient: { id: string; fullName: string; email: string; };
@@ -45,7 +45,7 @@ export interface AppointmentResponseDto {
   branch: { id: string; branchName: string; address: string; };
 }
 
-// --- INTERFACE MỚI CHO ADMIN SEARCH ---
+// --- INTERFACE CHO ADMIN SEARCH ---
 export interface AppointmentSearchDto {
   page: number;
   size: number;
@@ -58,13 +58,33 @@ export interface AppointmentSearchDto {
   sort?: string | null;
 }
 
-// --- INTERFACE MỚI CHO ADMIN SEARCH RESPONSE ---
+// --- INTERFACE CHO ADMIN SEARCH RESPONSE ---
 export interface AppointmentSearchResponse {
   content: AppointmentResponseDto[]; 
   totalElements: number;
   totalPages: number;
   // ... các trường phân trang khác
 }
+
+// === 1. THÊM DTO MỚI CHO DOCTOR SEARCH REQUEST ===
+export interface DoctorAppointmentSearchDto {
+  page: number;
+  size: number;
+  sort: string;
+  searchText: string | null;
+  status: string | null;
+}
+
+// === 2. THÊM DTO MỚI CHO DOCTOR SEARCH RESPONSE (Page) ===
+export interface PagedAppointmentResponse {
+  content: AppointmentResponseDto[];
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number; // Trang hiện tại (bắt đầu từ 0)
+  // (Bạn có thể thêm 'first', 'last', 'empty' nếu cần)
+}
+
 
 // ------------------------------------
 // --- SERVICE CHÍNH ---
@@ -82,10 +102,10 @@ export class AppointmentService {
 
   // ------------------------------------
   // --- CÁC HÀM GET DỮ LIỆU CHUNG ---
+  // (Giữ nguyên không đổi)
   // ------------------------------------
 
   getBranchesSimple(): Observable<BranchSimpleDto[]> {
-    // *** ĐÃ SỬA: Sửa API path thành /branches/simple ***
     return this.http.get<BranchSimpleDto[]>(`${this.BASE_URL}/branches/simple`);
   }
 
@@ -106,6 +126,7 @@ export class AppointmentService {
 
   // ------------------------------------
   // --- CÁC HÀM CỦA BỆNH NHÂN ---
+  // (Giữ nguyên không đổi)
   // ------------------------------------
 
   bookAppointment(payload: any): Observable<any> { 
@@ -135,20 +156,28 @@ export class AppointmentService {
   }
   
   // ------------------------------------
-  // --- HÀM MỚI CHO BÁC SĨ ---
+  // --- 3. CẬP NHẬT HÀM CỦA BÁC SĨ ---
   // ------------------------------------
 
   /**
-   * [DOCTOR] Lấy danh sách lịch hẹn của một bác sĩ cụ thể
-   * API: GET /appointments/doctor/{doctorId}
+   * [DOCTOR] Lấy danh sách lịch hẹn (Phân trang, Lọc, Sắp xếp)
+   * API: POST /appointments/doctor/{doctorId}/appointments
    */
-  getDoctorAppointments(doctorId: string): Observable<AppointmentResponseDto[]> {
-    // Hàm này sẽ sử dụng AppointmentResponseDto vì cấu trúc JSON trả về là tương tự
-    return this.http.get<AppointmentResponseDto[]>(`${this.BASE_URL}/appointments/doctor/${doctorId}`);
+  getDoctorAppointments(
+    doctorId: string, 
+    payload: DoctorAppointmentSearchDto // <-- Sửa tham số
+  ): Observable<PagedAppointmentResponse> { // <-- Sửa kiểu trả về
+    
+    // Sửa từ .get() thành .post() và cập nhật URL
+    return this.http.post<PagedAppointmentResponse>(
+      `${this.BASE_URL}/appointments/doctor/${doctorId}/appointments`, 
+      payload
+    );
   }
 
   // ------------------------------------
-  // --- HÀM MỚI CHO ADMIN ---
+  // --- HÀM CỦA ADMIN ---
+  // (Giữ nguyên không đổi)
   // ------------------------------------
   
   /**
@@ -159,6 +188,10 @@ export class AppointmentService {
     return this.http.post<AppointmentSearchResponse>(`${this.BASE_URL}/appointments/search`, filters);
   }
 
+  // ------------------------------------
+  // --- HÀM CHUNG ---
+  // (Giữ nguyên không đổi)
+  // ------------------------------------
   getAppointmentById(appointmentId: string): Observable<AppointmentResponseDto> {
     return this.http.get<AppointmentResponseDto>(`${this.BASE_URL}/appointments/${appointmentId}`);
   }

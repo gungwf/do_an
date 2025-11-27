@@ -36,40 +36,36 @@ export class LoginForm {
 
   onSubmit() {
     this.errorMessage = null;
-    if (this.loginForm.valid) {
-      this.authService.login(this.loginForm.getRawValue()).subscribe({
-        next: (response) => {
-          this.toastr.success('Đăng nhập thành công!');
-          this.loginSuccess.emit(); // <-- Dòng này có thể sẽ đóng modal
-  
-          // --- BẮT ĐẦU THAY ĐỔI TỪ ĐÂY ---
 
-          // Kiểm tra theo thứ tự ưu tiên: Admin -> Doctor -> User
-          
-          if (this.authService.isAdmin()) {
-            // 1. Nếu là Admin
-            this.router.navigate(['/admin/dashboard']);
-
-          } else if (this.authService.isDoctor()) {
-            // 2. (MỚI) Nếu là Bác sĩ
-            // (Đường dẫn /doctor sẽ tự động chuyển đến /doctor/appointments
-            //  nhờ file doctor.routes.ts)
-            this.router.navigate(['/doctor']); 
-
-          } else {
-            // 3. Mặc định (Patient hoặc vai trò khác)
-            // (Giữ nguyên logic cũ của bạn)
-            window.location.reload(); 
-          }
-
-          // --- KẾT THÚC THAY ĐỔI ---
-        },
-        error: (err) => {
-          this.errorMessage = err.message;
-        },
-      });
-    } else {
+    if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
+      return;
     }
+
+    const credentials = this.loginForm.getRawValue();
+    this.authService.login(credentials).subscribe({
+      next: () => {
+        // Đóng dialog trước khi navigate
+        this.loginSuccess.emit();
+        
+        // Hiển thị thông báo
+        this.toastr.success('Đăng nhập thành công!', 'Thành công');
+        
+        // Navigate dựa vào role
+        console.log('Role:', this.authService.getUserRole());
+        if (this.authService.isAdmin()) {
+          this.router.navigate(['/admin']);
+        } else if (this.authService.isDoctor()) {
+          this.router.navigate(['/doctor']);
+        } else if (this.authService.isStaff()) {
+          this.router.navigate(['/staff']);
+        } else {
+          this.router.navigate(['/']);
+        }
+      },
+    error: err => {
+      this.errorMessage = err.message || 'Đăng nhập thất bại';
+    }
+  });
   }
 }

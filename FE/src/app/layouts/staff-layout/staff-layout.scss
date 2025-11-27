@@ -1,0 +1,14 @@
+@use '../admin-layout/admin-layout.scss' as admin;
+
+// Tùy chỉnh nhẹ khác biệt nếu cần (mặc định tái sử dụng toàn bộ kiểu admin)
+.sidebar .logo i {
+  color: #3498db;
+}
+
+.sidebar .logo-text {
+  color: #ecf0f1;
+}
+
+.nav-item.active {
+  color: #3498db;
+}

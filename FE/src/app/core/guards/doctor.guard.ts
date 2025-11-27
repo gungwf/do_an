@@ -1,20 +1,19 @@
-import { Injectable, inject } from '@angular/core'; // Cần Injectable
+import { Injectable } from '@angular/core';
 import { 
-  CanActivateFn, 
+  CanActivate, 
   Router, 
   ActivatedRouteSnapshot, 
-  RouterStateSnapshot,
-  CanActivate // Cần CanActivate
+  RouterStateSnapshot
 } from '@angular/router';
-import { AuthService } from '../services/auth'; // <-- Đảm bảo đường dẫn này đúng
-import { Observable } from 'rxjs'; // Cần Observable
+import { AuthService } from '../services/auth';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
-export class DoctorGuard implements CanActivate { // Implement CanActivate
+export class DoctorGuard implements CanActivate {
 
-  // Sử dụng constructor injection
   constructor(
     private authService: AuthService,
     private router: Router
@@ -23,16 +22,45 @@ export class DoctorGuard implements CanActivate { // Implement CanActivate
   canActivate(
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
-  ): boolean | Observable<boolean> | Promise<boolean> {
+  ): Observable<boolean> | boolean {
     
-    // Kiểm tra xem đã đăng nhập VÀ là bác sĩ không
-    if (this.authService.isAuthenticated() && this.authService.isDoctor()) {
-      return true; // OK, cho phép truy cập
-    } else {
-      // Chưa đăng nhập hoặc không phải bác sĩ, điều hướng về trang chủ
-      console.warn('Truy cập bị từ chối, yêu cầu quyền bác sĩ!');
-      this.router.navigate(['/']);
-      return false; // Chặn truy cập
+    // Kiểm tra đã đăng nhập chưa
+    if (!this.authService.isAuthenticated()) {
+      console.warn('DoctorGuard: Chưa đăng nhập!');
+      this.router.navigate(['/auth/login']);
+      return false;
     }
+
+    // Kiểm tra role từ token
+    if (!this.authService.isDoctor()) {
+      console.warn('DoctorGuard: Không có quyền bác sĩ!');
+      this.router.navigate(['/']);
+      return false;
+    }
+
+    // Nếu chưa có userId trong localStorage, gọi API lấy thông tin bác sĩ
+    if (!this.authService.getUserId()) {
+      console.log('DoctorGuard: Đang lấy thông tin bác sĩ...');
+      return this.authService.getCurrentDoctor().pipe(
+        map(doctor => {
+          if (doctor && doctor.userId) {
+            console.log('DoctorGuard: Đã lấy userId của bác sĩ:', doctor.userId);
+            return true;
+          } else {
+            console.error('DoctorGuard: Không thể lấy thông tin bác sĩ!');
+            this.router.navigate(['/']);
+            return false;
+          }
+        }),
+        catchError(err => {
+          console.error('DoctorGuard: Lỗi khi lấy thông tin bác sĩ:', err);
+          this.router.navigate(['/']);
+          return of(false);
+        })
+      );
+    }
+
+    // Đã có userId, cho phép truy cập
+    return true;
   }
 }

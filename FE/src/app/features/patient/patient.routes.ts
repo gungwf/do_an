@@ -2,9 +2,6 @@ import { Routes } from '@angular/router';
 import { Home } from './home/home';
 import { MedicalRecords } from './medical-records/medical-records';
 import { AppointmentBooking } from './appointment-booking/appointment-booking';
-import { PaymentSuccess } from './payment-success/payment-success';
-import { PaymentFailed } from './payment-failed/payment-failed';
-import { PaymentReturnHandler } from './payment-return-handler/payment-return-handler';
 import { authGuard } from '../../core/guards/auth-guard';
 
 export const PATIENT_ROUTES: Routes = [
@@ -31,30 +28,15 @@ export const PATIENT_ROUTES: Routes = [
     canActivate: [authGuard],
   },
   {
-  path: 'cart',
-  loadComponent: () =>
-    import('./cart/cart').then((m) => m.CartComponent),
+    path: 'cart',
+    loadComponent: () =>
+      import('./cart/cart').then((m) => m.CartComponent),
     canActivate: [authGuard]
-
   },
   {
-  path: 'products',
-  loadComponent: () =>
-    import('./products/products').then(m => m.ProductsComponent),
+    path: 'products',
+    loadComponent: () =>
+      import('./products/products').then(m => m.ProductsComponent),
   },
-  {
-    path: 'payment-return',
-    component: PaymentReturnHandler,
-    canActivate: [authGuard],
-  },
-  {
-    path: 'payment-success',
-    component: PaymentSuccess,
-    canActivate: [authGuard],
-  },
-  {
-    path: 'payment-failed',
-    component: PaymentFailed,
-    canActivate: [authGuard],
-  },
+  
 ];
