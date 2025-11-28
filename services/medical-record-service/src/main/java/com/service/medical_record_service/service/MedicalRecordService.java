@@ -354,6 +354,18 @@ public class MedicalRecordService {
         }
 
         // 5. Lưu bệnh án với các đơn thuốc mới thêm
-        return medicalRecordRepository.save(medicalRecord);
+        MedicalRecord saved = medicalRecordRepository.save(medicalRecord);
+
+        // 6. Cập nhật trạng thái lịch hẹn thành hoàn thành (COMPLETED)
+        try {
+            appointmentServiceClient.updateAppointmentStatusInternal(
+                saved.getAppointmentId(),
+                new InternalStatusUpdateRequest("COMPLETED")
+            );
+        } catch (Exception e) {
+            log.warn("Không thể cập nhật trạng thái lịch hẹn sang COMPLETED: {}", e.getMessage());
+        }
+
+        return saved;
     }
 }
