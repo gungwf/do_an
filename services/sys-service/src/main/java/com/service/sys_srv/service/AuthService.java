@@ -157,11 +157,15 @@ public class AuthService {
                 List.of(new SimpleGrantedAuthority(roleName))
         );
 
-        // claim chứa danh sách quyền
+        // claim chứa danh sách quyền và branchId (nếu có)
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("authorities", userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList()));
+            .map(GrantedAuthority::getAuthority)
+            .collect(Collectors.toList()));
+        // Nếu user thuộc chi nhánh (ví dụ staff/doctor), thêm branchId vào token
+        if (user.getBranchId() != null) {
+            extraClaims.put("branchId", user.getBranchId().toString());
+        }
 
         return jwtService.generateToken(extraClaims, userDetails);
 

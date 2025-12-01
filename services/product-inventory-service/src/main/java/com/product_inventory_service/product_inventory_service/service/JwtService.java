@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -66,6 +67,27 @@ public class JwtService {
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // Token hết hạn sau 10 tiếng
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    /**
+     * Tạo token cho STAFF với branchId và authorities mặc định.
+     */
+    public String generateStaffToken(UserDetails userDetails, UUID branchId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("authorities", List.of("staff"));
+        if (branchId != null) {
+            claims.put("branchId", branchId.toString());
+        }
+        return generateToken(claims, userDetails);
+    }
+
+    /**
+     * Tạo token cho ADMIN với authorities mặc định.
+     */
+    public String generateAdminToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("authorities", List.of("admin"));
+        return generateToken(claims, userDetails);
     }
 
     //================================================================
@@ -124,5 +146,16 @@ public class JwtService {
         return roles.stream()
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
+    }
+
+    public UUID extractBranchId(String token) {
+        Claims claims = extractAllClaims(token);
+        Object raw = claims.get("branchId");
+        if (raw == null) return null;
+        try {
+            return UUID.fromString(raw.toString());
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

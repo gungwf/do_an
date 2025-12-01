@@ -9,6 +9,11 @@ import com.product_inventory_service.product_inventory_service.repository.Invent
 import com.product_inventory_service.product_inventory_service.repository.ProductRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +24,8 @@ import java.util.UUID;
 public class InventoryService {
     private final InventoryRepository inventoryRepository;
     private final ProductRepository productRepository; // Inject ProductRepository
+    @Value("${inventory.warning.threshold:20}")
+    private int stockThreshold;
 
     public List<Inventory> getInventoryByBranch(UUID branchId) {
         return inventoryRepository.findById_BranchId(branchId);
@@ -26,7 +33,7 @@ public class InventoryService {
 
     public Inventory updateStock(UUID branchId, UUID productId, Integer quantityChange) {
         // Kiểm tra Product và Branch có tồn tại không
-        productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product not found"));
+        productRepository.findById(productId).orElseThrow(() -> new AppException(ERROR_CODE.PRODUCT_NOT_FOUND));
         // (Tương tự, bạn sẽ gọi Feign client để kiểm tra Branch)
 
         InventoryId inventoryId = new InventoryId();
@@ -45,7 +52,7 @@ public class InventoryService {
         // Cập nhật số lượng
         int newQuantity = inventory.getQuantity() + quantityChange;
         if (newQuantity < 0) {
-            throw new RuntimeException("Stock cannot be negative.");
+            throw new AppException(ERROR_CODE.INSUFFICIENT_STOCK);
         }
         inventory.setQuantity(newQuantity);
 
@@ -93,8 +100,39 @@ public class InventoryService {
         inventoryId.setBranchId(branchId);
         inventoryId.setProductId(productId);
         return inventoryRepository.findById(inventoryId)
-                .orElse(null);
+                .orElseThrow(() -> new AppException(ERROR_CODE.INVENTORY_NOT_FOUND));
+    }
+    public Page<Inventory> searchInventoryByBranch(UUID branchId,
+                                                   Integer minQuantity,
+                                                   Integer maxQuantity,
+                                                   Boolean lowStockOnly,
+                                                   UUID productId,
+                                                   int page,
+                                                   int size,
+                                                   Sort sort) {
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        if (productId != null) {
+            return inventoryRepository.findById_BranchIdAndId_ProductId(branchId, productId, pageable);
+        }
+        if (lowStockOnly != null && lowStockOnly) {
+            return inventoryRepository.findById_BranchIdAndQuantityLessThan(branchId, stockThreshold, pageable);
+        }
+        if (minQuantity != null && maxQuantity != null) {
+            return inventoryRepository.findById_BranchIdAndQuantityBetween(branchId, minQuantity, maxQuantity, pageable);
+        }
+        return inventoryRepository.findById_BranchId(branchId, pageable);
     }
 
+    public Page<Inventory> searchLowStock(UUID branchId,
+                                          int page,
+                                          int size,
+                                          Sort sort) {
+        Pageable pageable = PageRequest.of(page, size, sort);
+        if (branchId != null) {
+            return inventoryRepository.findById_BranchIdAndQuantityLessThan(branchId, stockThreshold, pageable);
+        }
+        return inventoryRepository.findByQuantityLessThan(stockThreshold, pageable);
+    }
 
 }
