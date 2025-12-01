@@ -47,6 +47,9 @@ import com.service.sys_srv.repository.UserRepository;
 import jakarta.persistence.criteria.Join;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
@@ -58,6 +61,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final PatientProfileRepository patientProfileRepository;
     private final DoctorProfileRepository doctorProfileRepository;
+    private final ImageUploadService imageUploadService;
 
 
     public PatientProfile getPatientProfileByUserId(UUID userId) {
@@ -157,11 +161,13 @@ public class AuthService {
                 List.of(new SimpleGrantedAuthority(roleName))
         );
 
-        // claim chứa danh sách quyền và branchId (nếu có)
+        // claim chứa danh sách quyền, userId, và branchId (nếu có)
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("authorities", userDetails.getAuthorities().stream()
             .map(GrantedAuthority::getAuthority)
             .collect(Collectors.toList()));
+        // Thêm userId vào token
+        extraClaims.put("userId", user.getId().toString());
         // Nếu user thuộc chi nhánh (ví dụ staff/doctor), thêm branchId vào token
         if (user.getBranchId() != null) {
             extraClaims.put("branchId", user.getBranchId().toString());
@@ -212,6 +218,7 @@ public class AuthService {
         userDto.setPhoneNumber(user.getPhoneNumber());
         userDto.setRole(user.getRole());
         userDto.setActive(user.isActive());
+        userDto.setAvatarUrl(user.getAvatarUrl());
         return userDto;
     }
 
@@ -531,9 +538,7 @@ public class AuthService {
         } catch (IllegalArgumentException e) {
             // If role doesn't match, return empty list
             return List.of();
-        }
-    }
-
+        }}
     public Map<UUID, String> getPatientNames(List<UUID> ids) {
         return userRepository.findByIdInAndRole(ids, UserRole.patient)
             .stream()
@@ -541,5 +546,57 @@ public class AuthService {
                 User::getId,
                 User::getFullName
             ));
+    }
+
+    @Transactional
+    public UserDto updateUserAvatar(UUID userId, MultipartFile file) throws IOException {
+        // 1. Tìm user
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ERROR_CODE.USER_NOT_FOUND));
+
+        // 2. Validate mime type
+        String contentType = file.getContentType();
+        if (!isValidImageMimeType(contentType)) {
+            throw new AppException(ERROR_CODE.INVALID_FILE_TYPE);
+        }
+
+        // 3. Validate file size (5MB)
+        long maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.getSize() > maxSize) {
+            throw new AppException(ERROR_CODE.FILE_TOO_LARGE);
+        }
+
+        // 4. Xóa ảnh cũ nếu có
+        if (user.getAvatarPublicId() != null && !user.getAvatarPublicId().isEmpty()) {
+            try {
+                imageUploadService.deleteImage(user.getAvatarPublicId());
+            } catch (IOException e) {
+                // Log nhưng không fail request
+                System.err.println("Failed to delete old avatar: " + e.getMessage());
+            }
+        }
+
+        // 5. Upload ảnh mới lên Cloudinary
+        String uploadResult = imageUploadService.uploadImage(file, "avatars/" + userId, "image");
+        String[] parts = uploadResult.split("\\|");
+        String avatarUrl = parts[0];
+        String publicId = parts.length > 1 ? parts[1] : "";
+
+        // 6. Cập nhật user
+        user.setAvatarUrl(avatarUrl);
+        user.setAvatarPublicId(publicId);
+
+        User updatedUser = userRepository.save(user);
+        return convertToDto(updatedUser);
+    }
+
+    private boolean isValidImageMimeType(String mimeType) {
+        if (mimeType == null) return false;
+        return mimeType.equals("image/png") 
+            || mimeType.equals("image/jpeg") 
+            || mimeType.equals("image/webp")
+            || mimeType.equals("image/jpg");
+//               User::getFullName
+//            ));
     }
 }

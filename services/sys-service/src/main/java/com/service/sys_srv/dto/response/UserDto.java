@@ -12,4 +12,5 @@ public class UserDto {
     private String phoneNumber;
     private UserRole role;
     private boolean isActive;
+    private String avatarUrl;
 }

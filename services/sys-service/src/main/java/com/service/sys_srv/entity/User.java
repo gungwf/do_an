@@ -38,6 +38,10 @@ public class User {
 
     private boolean isActive = true;
 
+    private String avatarUrl;
+
+    private String avatarPublicId;
+
     @CreationTimestamp
     private Instant createdAt;
 

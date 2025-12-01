@@ -7,14 +7,18 @@ import com.service.sys_srv.dto.request.UpdateUserRequest;
 import com.service.sys_srv.dto.response.*;
 import com.service.sys_srv.entity.User;
 import com.service.sys_srv.service.AuthService;
+import com.service.sys_srv.service.JwtService;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/users")
@@ -22,6 +26,7 @@ import java.util.UUID;
 //@PreAuthorize("isAuthenticated()")
 public class UserController {
     private final AuthService authService;
+    private final JwtService jwtService;
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable UUID id) {
@@ -107,5 +112,36 @@ public class UserController {
     @GetMapping("/basic-info")
     public Map<UUID, String> getPatientNames(@RequestParam List<UUID> ids) {
         return authService.getPatientNames(ids);
+    }
+
+    @PostMapping("/avatar")
+    public ResponseEntity<UserDto> uploadAvatar(
+            @RequestParam("file") MultipartFile file,
+            HttpServletRequest request
+    ) {
+        try {
+            // Lấy token từ Authorization header
+            String authHeader = request.getHeader("Authorization");
+            String token = null;
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                token = authHeader.substring(7);
+            }
+            
+            // Lấy userId từ token
+            if (token == null) {
+                return ResponseEntity.status(401).body(null); // Unauthorized
+            }
+            
+            String userIdFromToken = jwtService.extractUserId(token);
+            if (userIdFromToken == null) {
+                return ResponseEntity.status(401).body(null); // Unauthorized
+            }
+            
+            UUID userId = UUID.fromString(userIdFromToken);
+            UserDto updatedUser = authService.updateUserAvatar(userId, file);
+            return ResponseEntity.ok(updatedUser);
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body(null);
+        }
     }
 }
