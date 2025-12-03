@@ -2,6 +2,7 @@ package com.service.sys_srv.controller;
 
 import com.service.sys_srv.dto.request.UpdateDoctorProfileRequest;
 import com.service.sys_srv.dto.response.SpecialtySimpleDto;
+import com.service.sys_srv.dto.response.MyDoctorProfileResponse;
 import com.service.sys_srv.dto.response.UserDto;
 import com.service.sys_srv.entity.DoctorProfile;
 import com.service.sys_srv.entity.PatientProfile;
@@ -48,17 +49,13 @@ public class DoctorProfileController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<DoctorProfile> getMyProfile(Authentication authentication) {
+    public ResponseEntity<MyDoctorProfileResponse> getMyProfile(Authentication authentication) {
 
-        // 1. Lấy email của bác sĩ từ token
         String userEmail = authentication.getName();
-
-        // 2. Lấy UserDto để có được userId
         UserDto userDto = authService.getUserByEmail(userEmail);
-
-        // 3. Dùng userId để lấy DoctorProfile
         DoctorProfile profile = authService.getDoctorProfileByUserId(userDto.getId());
 
-        return ResponseEntity.ok(profile);
+        MyDoctorProfileResponse response = new MyDoctorProfileResponse(userDto, profile);
+        return ResponseEntity.ok(response);
     }
 }

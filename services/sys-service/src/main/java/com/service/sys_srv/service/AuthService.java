@@ -219,6 +219,7 @@ public class AuthService {
         userDto.setRole(user.getRole());
         userDto.setActive(user.isActive());
         userDto.setAvatarUrl(user.getAvatarUrl());
+        userDto.setBranchId(user.getBranchId());
         return userDto;
     }
 

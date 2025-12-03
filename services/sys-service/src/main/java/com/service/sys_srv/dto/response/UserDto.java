@@ -13,4 +13,5 @@ public class UserDto {
     private UserRole role;
     private boolean isActive;
     private String avatarUrl;
+    private UUID branchId;
 }
