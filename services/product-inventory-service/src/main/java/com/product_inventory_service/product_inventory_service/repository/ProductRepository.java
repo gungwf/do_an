@@ -6,9 +6,13 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpecificationExecutor<Product>{
     @Query("SELECT DISTINCT p.category FROM Product p WHERE p.category IS NOT NULL AND p.category <> ''")
     List<String> findDistinctCategories();
+
+    Optional<Product> findByProductNameIgnoreCase(String productName);
+    List<Product> findByProductNameContainingIgnoreCase(String productName);
 }

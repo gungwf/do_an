@@ -114,10 +114,17 @@ spring:
           predicates:
             - Path=/doctor-profiles/**
 
-        - id: chatbot-service
+        - id: chatbot-service-chat
           uri: http://localhost:8000
           predicates:
-            - Path=/api/ai/**
+            - Path=/chat/**
+          filters:
+            - StripPrefix=0
+
+        - id: chatbot-service-health
+          uri: http://localhost:8000
+          predicates:
+            - Path=/health
           filters:
             - StripPrefix=0
 
