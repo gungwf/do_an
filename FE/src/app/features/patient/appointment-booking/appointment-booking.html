@@ -1,289 +1,431 @@
-<div class="container py-5">
-  <h1 class="mb-4 text-primary fw-bold">Đặt Lịch Khám Bệnh</h1>
-
-  <!-- 1. Thông tin bệnh nhân (Giữ nguyên) -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-header bg-primary text-white">
-      <h5 class="mb-0">Thông tin bệnh nhân</h5>
+<div class="appointment-booking-page">
+  <div class="container py-5">
+    
+    <!-- Modern Header -->
+    <div class="page-header mb-4" data-aos="fade-down">
+      <div class="header-content">
+        <div class="header-icon">
+          <i class="bi bi-calendar-check-fill"></i>
+        </div>
+        <div class="header-text">
+          <h1 class="page-title">Đặt Lịch Khám Bệnh</h1>
+          <p class="page-subtitle">Chọn bác sĩ và thời gian phù hợp với bạn</p>
+        </div>
+      </div>
     </div>
-    <div class="card-body">
-      <form [formGroup]="bookingForm">
-        <div class="row g-3">
-          <div class="col-md-6">
-            <label for="patientName" class="form-label">Họ và tên bệnh nhân</label>
-            <input type="text" id="patientName" class="form-control" formControlName="patientName">
-          </div>
-          <div class="col-md-6">
-            <label for="reason" class="form-label">Lý do khám / Triệu chứng <span class="text-danger">*</span></label>
-            <input type="text" id="reason" class="form-control" formControlName="reason" placeholder="Ví dụ: Đau đầu, chóng mặt..." [class.is-invalid]="bookingForm.get('reason')?.invalid && bookingForm.get('reason')?.touched">
-             <div *ngIf="bookingForm.get('reason')?.invalid && bookingForm.get('reason')?.touched" class="invalid-feedback">
+
+    <!-- 1. Thông tin bệnh nhân -->
+    <div class="info-card shadow-sm mb-4" data-aos="fade-up">
+      <div class="card-header">
+        <i class="bi bi-person-fill-check"></i>
+        <h5>Thông tin bệnh nhân</h5>
+      </div>
+      <div class="card-body">
+        <form [formGroup]="bookingForm">
+          <div class="row g-4">
+            <div class="col-md-6">
+              <label for="patientName" class="form-label">
+                <i class="bi bi-person-badge me-2"></i>
+                Họ và tên bệnh nhân
+              </label>
+              <input type="text" id="patientName" class="form-control" formControlName="patientName">
+            </div>
+            <div class="col-md-6">
+              <label for="reason" class="form-label">
+                <i class="bi bi-clipboard2-pulse me-2"></i>
+                Lý do khám / Triệu chứng 
+                <span class="required">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="reason" 
+                class="form-control" 
+                formControlName="reason" 
+                placeholder="Ví dụ: Đau đầu, chóng mặt..." 
+                [class.is-invalid]="bookingForm.get('reason')?.invalid && bookingForm.get('reason')?.touched">
+              <div *ngIf="bookingForm.get('reason')?.invalid && bookingForm.get('reason')?.touched" class="invalid-feedback">
+                <i class="bi bi-exclamation-circle me-1"></i>
                 Vui lòng nhập lý do khám.
+              </div>
             </div>
           </div>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- 2. Tìm kiếm bác sĩ (ĐÃ CẬP NHẬT) -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-header">
-      <h5 class="mb-0">Tìm kiếm bác sĩ</h5>
-    </div>
-    <div class="card-body">
-      <form [formGroup]="bookingForm">
-        <div class="row g-3 align-items-end">
-          <div class="col-md-4">
-            <label for="doctorNameFilter" class="form-label">Tìm theo tên bác sĩ</label>
-            <input type="text" id="doctorNameFilter" class="form-control" formControlName="doctorNameFilter" placeholder="Nhập tên bác sĩ...">
-          </div>
-          <div class="col-md-4">
-            <label for="branchFilter" class="form-label">Chọn chi nhánh</label>
-            <select id="branchFilter" class="form-select" formControlName="branchFilter">
-              <option value="">Tất cả chi nhánh</option>
-              <option *ngFor="let branch of branches$ | async" [value]="branch.id">{{ branch.branchName }}</option>
-            </select>
-          </div>
-          
-          <!-- (ĐÃ SỬA) Thay input bằng select chuyên khoa -->
-          <div class="col-md-4">
-            <label for="specialtyFilter" class="form-label">Chọn chuyên khoa</label>
-            <select id="specialtyFilter" class="form-select" formControlName="specialtyFilter">
-              <option value="">Tất cả chuyên khoa</option>
-              <!-- Lặp qua danh sách specialties$ -->
-              <option *ngFor="let spec of specialties$ | async" [value]="spec.name">
-                {{ spec.name }}
-              </option>
-            </select>
-          </div>
-          
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- 3. Danh sách bác sĩ (Giữ nguyên) -->
-  <div class="card shadow-sm">
-    <div class="card-header">
-      <h5 class="mb-0">Chọn bác sĩ</h5>
-    </div>
-    <div class="card-body">
-      <div *ngIf="isLoading" class="text-center p-4">
-        <!-- ... (Spinner tải bác sĩ) ... -->
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
-        <p class="mt-2">Đang tải danh sách bác sĩ...</p>
+        </form>
       </div>
+    </div>
 
-      <div *ngIf="!isLoading">
-        <div *ngIf="(filteredDoctors$ | async) as doctors; else noDoctors">
-          <div *ngIf="doctors.length > 0; else noDoctors">
-            <ul class="list-group list-group-flush">
+    <!-- 2. Tìm kiếm bác sĩ -->
+    <div class="search-card shadow-sm mb-4" data-aos="fade-up" data-aos-delay="100">
+      <div class="card-header">
+        <i class="bi bi-search"></i>
+        <h5>Tìm kiếm bác sĩ</h5>
+      </div>
+      <div class="card-body">
+        <form [formGroup]="bookingForm">
+          <div class="row g-4">
+            <div class="col-md-4">
+              <label for="doctorNameFilter" class="form-label">
+                <i class="bi bi-person-search me-2"></i>
+                Tìm theo tên bác sĩ
+              </label>
+              <div class="input-with-icon">
+                <i class="bi bi-search input-icon"></i>
+                <input 
+                  type="text" 
+                  id="doctorNameFilter" 
+                  class="form-control" 
+                  formControlName="doctorNameFilter" 
+                  placeholder="Nhập tên bác sĩ...">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label for="branchFilter" class="form-label">
+                <i class="bi bi-building me-2"></i>
+                Chọn chi nhánh
+              </label>
+              <select id="branchFilter" class="form-select" formControlName="branchFilter">
+                <option value="">Tất cả chi nhánh</option>
+                <option *ngFor="let branch of branches$ | async" [value]="branch.id">
+                  {{ branch.branchName }}
+                </option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="specialtyFilter" class="form-label">
+                <i class="bi bi-heart-pulse me-2"></i>
+                Chọn chuyên khoa
+              </label>
+              <select id="specialtyFilter" class="form-select" formControlName="specialtyFilter">
+                <option value="">Tất cả chuyên khoa</option>
+                <option *ngFor="let spec of specialties$ | async" [value]="spec.name">
+                  {{ spec.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
 
-              <!-- Bắt đầu vòng lặp bác sĩ -->
-              <li *ngFor="let doctor of doctors"
-                  class="list-group-item doctor-item"
-                  [class.active]="selectedDoctor?.id === doctor.id"
+    <!-- 3. Danh sách bác sĩ -->
+    <div class="doctors-card shadow-sm" data-aos="fade-up" data-aos-delay="200">
+      <div class="card-header">
+        <i class="bi bi-people-fill"></i>
+        <h5>Chọn bác sĩ</h5>
+      </div>
+      <div class="card-body">
+        
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="loading-state">
+          <div class="spinner-border" role="status"></div>
+          <p>Đang tải danh sách bác sĩ...</p>
+        </div>
+
+        <!-- Doctors List -->
+        <div *ngIf="!isLoading">
+          <div *ngIf="(filteredDoctors$ | async) as doctors; else noDoctors">
+            <div *ngIf="doctors.length > 0; else noDoctors">
+              
+              <div class="doctors-grid">
+                <div 
+                  *ngFor="let doctor of doctors"
+                  class="doctor-card"
+                  [class.selected]="selectedDoctor?.id === doctor.id"
                   (click)="selectDoctor(doctor)">
 
-                <!-- Thông tin cơ bản của bác sĩ (Giữ nguyên) -->
-                <div class="d-flex justify-content-between align-items-center flex-wrap">
-                  <div class="d-flex align-items-center mb-2 mb-md-0">
-                    <i class="bi bi-person-circle fs-2 me-3 text-secondary"></i>
-                    <div>
-                      <h6 class="mb-0 fw-bold">{{ doctor.fullName }}</h6>
-                      <small class="text-muted">
-                        <!-- (QUAN TRỌNG) Chờ backend cập nhật API /users/doctors để trả về specialty -->
-                        Chuyên khoa: {{ doctor.specialty || '...' }} | Giá khám: {{ (doctor.price || 300000) | currency:'VND':'đ' }}
-                      </small>
+                  <!-- Doctor Basic Info -->
+                  <div class="doctor-header">
+                    <div class="doctor-avatar">
+                      <i class="bi bi-person-circle"></i>
                     </div>
-                  </div>
-                  <div class="d-flex gap-2 mt-2 mt-md-0">
-                    <button class="btn btn-sm btn-success" (click)="$event.stopPropagation(); startChat(doctor.id)">
-                      <i class="bi bi-chat-dots me-1"></i>Liên hệ ngay
-                    </button>
-                    <button class="btn btn-sm btn-outline-primary">
-                      {{ selectedDoctor?.id === doctor.id ? 'Đang chọn' : 'Chọn' }}
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Khối lịch hẹn (Giữ nguyên logic hiển thị) -->
-                <div *ngIf="selectedDoctor?.id === doctor.id" class="schedule-container mt-4">
-
-                  <!-- 1. Chọn ngày (Giữ nguyên) -->
-                  <h6 class="fw-bold">Chọn ngày khám:</h6>
-                  <div class="date-selector mb-3">
-                    <button *ngFor="let day of calendarDays"
-                            class="date-btn"
-                            [class.active]="selectedDate === day.date"
-                            (click)="$event.stopPropagation(); selectDate(day.date)">
-                      <b>{{ day.dayOfWeek }}</b>
-                      <span class="small">{{ day.label }}</span>
-                    </button>
-                  </div>
-
-                  <!-- 2. Thông tin chi tiết & Chọn giờ (Giữ nguyên) -->
-                  <div *ngIf="selectedDate">
-                    <!-- Spinner tải giờ (Giữ nguyên) -->
-                    <div *ngIf="isLoadingSlots" class="text-center p-3">
-                      <div class="spinner-border spinner-border-sm text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
+                    <div class="doctor-info">
+                      <h6 class="doctor-name">{{ doctor.fullName }}</h6>
+                      <div class="doctor-meta">
+                        <span class="specialty">
+                          <i class="bi bi-heart-pulse-fill"></i>
+                          {{ doctor.specialty || 'Chuyên khoa...' }}
+                        </span>
+                        <span class="price">
+                          <i class="bi bi-cash-coin"></i>
+                          {{ (doctor.price || 300000) | currency:'VND':'symbol':'1.0-0' }}
+                        </span>
                       </div>
-                      <p class="mt-2 mb-0 small">Đang tải giờ trống...</p>
+                    </div>
+                    <button class="select-btn" [class.selected]="selectedDoctor?.id === doctor.id">
+                      <i class="bi" [class.bi-check-circle-fill]="selectedDoctor?.id === doctor.id" [class.bi-circle]="selectedDoctor?.id !== doctor.id"></i>
+                      {{ selectedDoctor?.id === doctor.id ? 'Đã chọn' : 'Chọn' }}
+                    </button>
+                  </div>
+
+                  <!-- Schedule Section (when selected) -->
+                  <div *ngIf="selectedDoctor?.id === doctor.id" class="schedule-section">
+                    
+                    <!-- Date Selection -->
+                    <div class="schedule-block">
+                      <h6 class="block-title">
+                        <i class="bi bi-calendar3"></i>
+                        Chọn ngày khám
+                      </h6>
+                      <div class="date-selector">
+                        <button 
+                          *ngFor="let day of calendarDays"
+                          class="date-btn"
+                          [class.active]="selectedDate === day.date"
+                          (click)="$event.stopPropagation(); selectDate(day.date)">
+                          <span class="day-name">{{ day.dayOfWeek }}</span>
+                          <span class="day-date">{{ day.label }}</span>
+                        </button>
+                      </div>
                     </div>
 
-                    <div *ngIf="!isLoadingSlots">
-                      <!-- Thông tin địa chỉ (Giữ nguyên) -->
-                      <div class="schedule-details mb-3 p-3 bg-light rounded">
-                        <div *ngIf="getBranchDetails(doctor.branchId) as branch">
-                          <h6 class="fw-bold text-primary mb-2">{{ branch.branchName }}</h6>
-                          <p class="mb-1 small">
-                            <i class="bi bi-geo-alt-fill me-2"></i>
-                            {{ branch.address || 'Không có thông tin địa chỉ.' }}
-                          </p>
+                    <!-- Time Slots & Details (when date selected) -->
+                    <div *ngIf="selectedDate" class="appointment-details">
+                      
+                      <!-- Loading Slots -->
+                      <div *ngIf="isLoadingSlots" class="slots-loading">
+                        <div class="spinner-border spinner-border-sm"></div>
+                        <span>Đang tải giờ trống...</span>
+                      </div>
+
+                      <div *ngIf="!isLoadingSlots">
+                        
+                        <!-- Branch Details -->
+                        <div class="branch-details" *ngIf="getBranchDetails(doctor.branchId) as branch">
+                          <div class="detail-row">
+                            <i class="bi bi-hospital-fill"></i>
+                            <div class="detail-content">
+                              <strong>{{ branch.branchName }}</strong>
+                              <span>{{ branch.address || 'Không có thông tin địa chỉ.' }}</span>
+                            </div>
+                          </div>
+                          <div class="detail-row">
+                            <i class="bi bi-person-badge-fill"></i>
+                            <div class="detail-content">
+                              <strong>Chuyên khoa</strong>
+                              <span>{{ doctor.specialty || 'Chuyên khoa...' }}</span>
+                            </div>
+                          </div>
+                          <div class="detail-row highlight">
+                            <i class="bi bi-cash-coin"></i>
+                            <div class="detail-content">
+                              <strong>Giá khám</strong>
+                              <span class="price-value">{{ (doctor.price || 300000) | currency:'VND':'symbol':'1.0-0' }}</span>
+                            </div>
+                          </div>
                         </div>
-                        <p class="mb-1 small">
-                          <i class="bi bi-person-badge-fill me-2"></i>
-                          Chuyên khoa: {{ doctor.specialty || '...' }}
-                        </p>
-                        <p class="mb-0 small text-danger fw-bold">
-                          <i class="bi bi-cash-coin me-2"></i>
-                          Giá khám: {{ (doctor.price || 300000) | currency:'VND':'đ' }}
-                        </p>
-                      </div>
 
-                      <!-- Danh sách giờ (Giữ nguyên) -->
-                      <h6 class="fw-bold">Chọn giờ khám:</h6>
-                      <div class="slot-container">
-                        <!-- 
-                          LƯU Ý: Code này giả định backend chỉ trả về giờ CÒN TRỐNG.
-                          Để hiển thị "Hết chỗ", backend cần trả về TẤT CẢ giờ 
-                          kèm trạng thái { time: '...', available: false }
-                        -->
-                        <div *ngIf="availableSlots.length > 0; else noSlots">
-                          <button *ngFor="let time of availableSlots"
+                        <!-- Time Slots -->
+                        <div class="schedule-block">
+                          <h6 class="block-title">
+                            <i class="bi bi-clock-fill"></i>
+                            Chọn giờ khám
+                          </h6>
+
+                          <!-- Morning Slots -->
+                          <div class="time-period-section" *ngIf="getMorningSlots().length > 0 || getAfternoonSlots().length > 0">
+                            <div class="period-header">
+                              <i class="bi bi-sunrise-fill"></i>
+                              <span>Buổi sáng (7:00 - 12:59)</span>
+                            </div>
+                            <div class="slots-container">
+                              <ng-container *ngIf="getMorningSlots().length > 0; else noMorningSlots">
+                                <button 
+                                  *ngFor="let slot of getMorningSlots()"
                                   class="slot-btn"
-                                  [class.active]="selectedTime === time"
-                                  (click)="$event.stopPropagation(); selectTime(time)">
-                            {{ time | slice:0:5 }}
+                                  [class.active]="selectedTime === slot.time"
+                                  [disabled]="slot.isBooked"
+                                  (click)="$event.stopPropagation(); selectTime(slot.time, slot.isBooked)">
+                                  <i class="bi" [class.bi-clock]="!slot.isBooked" [class.bi-lock-fill]="slot.isBooked"></i>
+                                  <span class="slot-time">{{ slot.time | slice:0:5 }}</span>
+                                  <span *ngIf="slot.isBooked" class="booked-badge">Đã đặt</span>
+                                </button>
+                              </ng-container>
+                              <ng-template #noMorningSlots>
+                                <div class="no-slots-period">
+                                  <i class="bi bi-moon-stars"></i>
+                                  <p>Không có ca trống buổi sáng</p>
+                                </div>
+                              </ng-template>
+                            </div>
+                          </div>
+
+                          <!-- Afternoon Slots -->
+                          <div class="time-period-section" *ngIf="getMorningSlots().length > 0 || getAfternoonSlots().length > 0">
+                            <div class="period-header">
+                              <i class="bi bi-sunset-fill"></i>
+                              <span>Buổi chiều (13:00 - 18:00)</span>
+                            </div>
+                            <div class="slots-container">
+                              <ng-container *ngIf="getAfternoonSlots().length > 0; else noAfternoonSlots">
+                                <button 
+                                  *ngFor="let slot of getAfternoonSlots()"
+                                  class="slot-btn"
+                                  [class.active]="selectedTime === slot.time"
+                                  [disabled]="slot.isBooked"
+                                  (click)="$event.stopPropagation(); selectTime(slot.time, slot.isBooked)">
+                                  <i class="bi" [class.bi-clock]="!slot.isBooked" [class.bi-lock-fill]="slot.isBooked"></i>
+                                  <span class="slot-time">{{ slot.time | slice:0:5 }}</span>
+                                  <span *ngIf="slot.isBooked" class="booked-badge">Đã đặt</span>
+                                </button>
+                              </ng-container>
+                              <ng-template #noAfternoonSlots>
+                                <div class="no-slots-period">
+                                  <i class="bi bi-moon-stars"></i>
+                                  <p>Không có ca trống buổi chiều</p>
+                                </div>
+                              </ng-template>
+                            </div>
+                          </div>
+
+                          <!-- No Slots at All -->
+                          <div *ngIf="getMorningSlots().length === 0 && getAfternoonSlots().length === 0" class="no-slots">
+                            <i class="bi bi-calendar-x"></i>
+                            <p>Không có ca trống cho ngày này</p>
+                          </div>
+                        </div>
+
+                        <!-- Confirm Button -->
+                        <div class="confirm-section">
+                          <button 
+                            class="btn-confirm"
+                            [disabled]="!selectedTime || isLoadingSlots"
+                            (click)="$event.stopPropagation(); openConfirmModal()">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span *ngIf="selectedTime">Xác nhận đặt lịch ({{ selectedTime | slice:0:5 }})</span>
+                            <span *ngIf="!selectedTime">Vui lòng chọn giờ khám</span>
                           </button>
                         </div>
-                        <ng-template #noSlots>
-                          <p class="small text-muted">Không có ca trống cho ngày này.</p>
-                        </ng-template>
+
                       </div>
-
-                      <!-- Nút xác nhận (Giữ nguyên) -->
-                      <hr class="my-4">
-                      <button class="btn btn-success w-100"
-                              [disabled]="!selectedTime || isLoadingSlots"
-                              (click)="$event.stopPropagation(); openConfirmModal()"> <!-- Đổi hàm gọi sang openConfirmModal() -->
-                        Xác nhận đặt lịch {{ selectedTime ? '(' + (selectedTime | slice:0:5) + ')' : '' }}
-                      </button>
                     </div>
-                  </div>
-                </div> <!-- ===== KẾT THÚC KHỐI LỊCH HẸN ===== -->
 
-              </li> <!-- Kết thúc vòng lặp bác sĩ -->
-            </ul>
+                  </div>
+                </div>
+              </div>
+
+            </div>
           </div>
+          
+          <ng-template #noDoctors>
+            <div class="no-results">
+              <i class="bi bi-search"></i>
+              <h5>Không tìm thấy bác sĩ phù hợp</h5>
+              <p>Vui lòng thử lại với các tiêu chí khác</p>
+            </div>
+          </ng-template>
         </div>
-         <ng-template #noDoctors>
-            <p class="text-center text-muted p-3">Không tìm thấy bác sĩ phù hợp.</p>
-         </ng-template>
+
       </div>
     </div>
+
   </div>
 </div>
 
-<!-- ===== (MỚI) DIALOG TÓM TẮT ĐẶT LỊCH ===== -->
-<div *ngIf="isConfirmModalOpen">
-  <!-- Backdrop (lớp mờ) -->
-  <div class="confirm-modal-backdrop" (click)="closeConfirmModal()"></div>
-
-  <!-- Panel (thanh trượt bên phải) -->
-  <div class="confirm-modal-panel">
-    <div class="confirm-modal-header">
-      <h4 class="fw-bold text-primary mb-0">Tóm tắt lịch khám</h4>
-      <button type="button" class="btn-close" (click)="closeConfirmModal()"></button>
+<!-- Confirmation Modal -->
+<div *ngIf="isConfirmModalOpen" class="modal-wrapper">
+  <div class="modal-backdrop" (click)="closeConfirmModal()"></div>
+  
+  <div class="modal-panel">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="bi bi-clipboard-check-fill"></i>
+        <h4>Xác nhận đặt lịch khám</h4>
+      </div>
+      <button class="btn-close" (click)="closeConfirmModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
 
-    <!-- Nội dung tóm tắt -->
-    <div class="confirm-modal-body" *ngIf="selectedDoctor && currentUser && selectedDate && selectedTime">
+    <div class="modal-body" *ngIf="selectedDoctor && currentUser && selectedDate && selectedTime">
       
-      <!-- Thông tin Bác sĩ -->
-      <div class="d-flex align-items-center mb-3">
-        <i class="bi bi-person-circle fs-1 me-3 text-secondary"></i>
-        <div>
-          <h5 class="mb-0 fw-bold">{{ selectedDoctor.fullName }}</h5>
-          <p class="mb-0 text-muted">{{ selectedDoctor.specialty || 'Chuyên khoa...' }}</p>
+      <!-- Doctor Info -->
+      <div class="summary-section">
+        <div class="doctor-summary">
+          <i class="bi bi-person-circle"></i>
+          <div class="doctor-summary-info">
+            <h5>{{ selectedDoctor.fullName }}</h5>
+            <p>{{ selectedDoctor.specialty || 'Chuyên khoa...' }}</p>
+          </div>
         </div>
       </div>
 
-      <hr>
+      <div class="divider"></div>
 
-      <!-- Thông tin Lịch hẹn -->
-      <div class="d-flex flex-column gap-3">
-        <div class="d-flex align-items-start">
-          <i class="bi bi-calendar-event fs-5 me-3 text-primary"></i>
-          <div class="confirm-item-value">
-            <span class="fw-bold fs-5 text-danger">{{ selectedTime | slice:0:5 }}</span>
-            <span>{{ selectedDate | date:'EEEE, dd/MM/yyyy':'':'vi-VN' }}</span>
+      <!-- Appointment Details -->
+      <div class="summary-section">
+        <div class="summary-item">
+          <div class="item-icon">
+            <i class="bi bi-calendar-event-fill"></i>
+          </div>
+          <div class="item-content">
+            <label>Thời gian khám</label>
+            <div class="item-value">
+              <strong>{{ selectedTime | slice:0:5 }}</strong>
+              <span>{{ selectedDate | date:'EEEE, dd/MM/yyyy':'':'vi-VN' }}</span>
+            </div>
           </div>
         </div>
 
-        <div class="d-flex align-items-start" *ngIf="getBranchDetails(selectedDoctor.branchId) as branch">
-          <i class="bi bi-hospital fs-5 me-3 text-primary"></i>
-          <div class="confirm-item-value">
-            <span class="fw-bold">{{ branch.branchName }}</span>
-            <span>{{ branch.address }}</span>
+        <div class="summary-item" *ngIf="getBranchDetails(selectedDoctor.branchId) as branch">
+          <div class="item-icon">
+            <i class="bi bi-hospital-fill"></i>
+          </div>
+          <div class="item-content">
+            <label>Địa điểm</label>
+            <div class="item-value">
+              <strong>{{ branch.branchName }}</strong>
+              <span>{{ branch.address }}</span>
+            </div>
           </div>
         </div>
 
-        <div class="d-flex align-items-start">
-          <i class="bi bi-person-fill fs-5 me-3 text-primary"></i>
-          <div class="confirm-item-value">
-            <span class="fw-bold">Bệnh nhân</span>
-            <span>{{ currentUser.fullName }}</span>
+        <div class="summary-item">
+          <div class="item-icon">
+            <i class="bi bi-person-fill"></i>
+          </div>
+          <div class="item-content">
+            <label>Bệnh nhân</label>
+            <div class="item-value">
+              <strong>{{ currentUser.fullName }}</strong>
+            </div>
           </div>
         </div>
 
-        <div class="d-flex align-items-start">
-          <i class="bi bi-card-text fs-5 me-3 text-primary"></i>
-          <div class="confirm-item-value">
-            <span class="fw-bold">Lý do khám</span>
-            <span>{{ bookingForm.get('reason')?.value || 'Không có ghi chú' }}</span>
+        <div class="summary-item">
+          <div class="item-icon">
+            <i class="bi bi-card-text"></i>
+          </div>
+          <div class="item-content">
+            <label>Lý do khám</label>
+            <div class="item-value">
+              <span>{{ bookingForm.get('reason')?.value || 'Không có ghi chú' }}</span>
+            </div>
           </div>
         </div>
 
-        <div class="d-flex align-items-start">
-          <i class="bi bi-cash-coin fs-5 me-3 text-primary"></i>
-          <div class="confirm-item-value">
-            <span class="fw-bold">Giá khám</span>
-            <span class="text-danger fw-bold fs-5">{{ (selectedDoctor.price || 300000) | currency:'VND':'đ' }}</span>
+        <div class="summary-item price-item">
+          <div class="item-icon">
+            <i class="bi bi-cash-coin"></i>
+          </div>
+          <div class="item-content">
+            <label>Chi phí khám</label>
+            <div class="item-value">
+              <strong class="price-highlight">{{ (selectedDoctor.price || 300000) | currency:'VND':'symbol':'1.0-0' }}</strong>
+            </div>
           </div>
         </div>
       </div>
       
     </div>
 
-    <!-- Nút xác nhận cuối cùng -->
-    <div class="confirm-modal-footer">
-      <button class="btn btn-warning w-100 btn-lg" 
-              [disabled]="isBooking" 
-              (click)="onBookAppointment()">
-        
-        <span *ngIf="isBooking" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
-        <span *ngIf="isBooking">Đang xử lý...</span>
-        
-        <span *ngIf="!isBooking">
-          <i class="bi bi-check-circle-fill me-2"></i>
-          Xác nhận đặt khám
-        </span>
+    <div class="modal-footer">
+      <button 
+        class="btn-submit" 
+        [disabled]="isBooking" 
+        (click)="onBookAppointment()">
+        <span *ngIf="isBooking" class="spinner-border spinner-border-sm"></span>
+        <i *ngIf="!isBooking" class="bi bi-check-circle-fill"></i>
+        <span>{{ isBooking ? 'Đang xử lý...' : 'Xác nhận đặt khám' }}</span>
       </button>
     </div>
   </div>
 </div>
-

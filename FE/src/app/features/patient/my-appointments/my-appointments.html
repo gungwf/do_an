@@ -1,41 +1,282 @@
-<div class="container mt-4">
-  <h2 class="mb-4">🗓️ Lịch hẹn của tôi</h2>
+<div class="my-appointments-page">
+  <div class="container py-5">
+    
+    <!-- Modern Header -->
+    <div class="page-header mb-4" data-aos="fade-down">
+      <div class="header-content">
+        <div class="header-icon">
+          <i class="bi bi-calendar-check-fill"></i>
+        </div>
+        <div class="header-text">
+          <h1 class="page-title">Lịch hẹn của tôi</h1>
+          <p class="page-subtitle">Quản lý và theo dõi các lịch khám bệnh</p>
+        </div>
+      </div>
+    </div>
 
-  <!-- Loading -->
-  <div *ngIf="isLoading" class="text-center py-4">
-    <div class="spinner-border text-primary" role="status"></div>
-    <p class="mt-2">Đang tải dữ liệu...</p>
+    <!-- Stats Cards -->
+    <div class="stats-section mb-4" *ngIf="!isLoading && appointments.length > 0" data-aos="fade-up">
+      <div class="row g-3">
+        <div class="col-md-3 col-6">
+          <div class="stat-card pending">
+            <div class="stat-icon">
+              <i class="bi bi-hourglass-split"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ getCountByStatus('PENDING') }}</div>
+              <div class="stat-label">Chờ xác nhận</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 col-6">
+          <div class="stat-card confirmed">
+            <div class="stat-icon">
+              <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ getCountByStatus('CONFIRMED') }}</div>
+              <div class="stat-label">Đã xác nhận</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 col-6">
+          <div class="stat-card completed">
+            <div class="stat-icon">
+              <i class="bi bi-clipboard-check-fill"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ getCountByStatus('COMPLETED') }}</div>
+              <div class="stat-label">Đã hoàn thành</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 col-6">
+          <div class="stat-card cancelled">
+            <div class="stat-icon">
+              <i class="bi bi-x-circle-fill"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ getCountByStatus('CANCELLED') + getCountByStatus('CANCELED') }}</div>
+              <div class="stat-label">Đã hủy</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs mb-4" *ngIf="!isLoading && appointments.length > 0" data-aos="fade-up">
+      <button 
+        class="filter-btn" 
+        [class.active]="statusFilter === 'ALL'"
+        (click)="filterByStatus('ALL')">
+        <i class="bi bi-list-ul"></i>
+        Tất cả
+      </button>
+      <button 
+        class="filter-btn" 
+        [class.active]="statusFilter === 'PENDING'"
+        (click)="filterByStatus('PENDING')">
+        <i class="bi bi-hourglass-split"></i>
+        Chờ xác nhận
+      </button>
+      <button 
+        class="filter-btn" 
+        [class.active]="statusFilter === 'CONFIRMED'"
+        (click)="filterByStatus('CONFIRMED')">
+        <i class="bi bi-check-circle"></i>
+        Đã xác nhận
+      </button>
+      <button 
+        class="filter-btn" 
+        [class.active]="statusFilter === 'COMPLETED'"
+        (click)="filterByStatus('COMPLETED')">
+        <i class="bi bi-clipboard-check"></i>
+        Hoàn thành
+      </button>
+      <button 
+        class="filter-btn" 
+        [class.active]="statusFilter === 'CANCELLED'"
+        (click)="filterByStatus('CANCELLED')">
+        <i class="bi bi-x-circle"></i>
+        Đã hủy
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state" data-aos="fade-up">
+      <div class="spinner-border" role="status"></div>
+      <p>Đang tải danh sách lịch hẹn...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="loadError && !isLoading" class="error-state" data-aos="fade-up">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <h4>Không thể tải dữ liệu</h4>
+      <p>Đã xảy ra lỗi khi tải danh sách lịch hẹn. Vui lòng thử lại.</p>
+      <button class="btn-retry" (click)="loadAppointments()">
+        <i class="bi bi-arrow-clockwise"></i>
+        Thử lại
+      </button>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && filteredAppointments.length === 0 && !loadError" class="empty-state" data-aos="fade-up">
+      <i class="bi bi-calendar-x"></i>
+      <h4>{{ statusFilter === 'ALL' ? 'Chưa có lịch hẹn nào' : 'Không tìm thấy lịch hẹn' }}</h4>
+      <p>{{ statusFilter === 'ALL' ? 'Bạn chưa đặt lịch khám nào. Hãy đặt lịch ngay!' : 'Không có lịch hẹn nào với trạng thái này.' }}</p>
+      <button class="btn-book-now" routerLink="/patient/book-appointment">
+        <i class="bi bi-calendar-plus"></i>
+        Đặt lịch khám
+      </button>
+    </div>
+
+    <!-- Appointments List -->
+    <div *ngIf="!isLoading && filteredAppointments.length > 0" class="appointments-list" data-aos="fade-up">
+      <div class="appointment-card" *ngFor="let appointment of filteredAppointments">
+        
+        <!-- Card Header -->
+        <div class="card-header">
+          <div class="header-left">
+            <div class="doctor-avatar">
+              <i class="bi bi-person-circle"></i>
+            </div>
+            <div class="doctor-info">
+              <h5 class="doctor-name">{{ appointment.doctor.fullName }}</h5>
+              <p class="doctor-specialty">
+                <i class="bi bi-heart-pulse"></i>
+                {{ appointment.doctor.specialty || 'Bác sĩ đa khoa' }}
+              </p>
+            </div>
+          </div>
+          <div class="header-right">
+            <span class="status-badge" [ngClass]="getStatusClass(appointment.status)">
+              <i [class]="getStatusIcon(appointment.status)"></i>
+              {{ getStatusText(appointment.status) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body">
+          <div class="info-grid">
+            
+            <!-- Date & Time -->
+            <div class="info-item">
+              <div class="info-icon datetime">
+                <i class="bi bi-calendar-event-fill"></i>
+              </div>
+              <div class="info-content">
+                <label>Thời gian</label>
+                <strong>{{ appointment.appointmentTime | date:'HH:mm' }}</strong>
+                <span>{{ appointment.appointmentTime | date:'EEEE, dd/MM/yyyy':'':'vi-VN' }}</span>
+              </div>
+            </div>
+
+            <!-- Branch -->
+            <div class="info-item">
+              <div class="info-icon branch">
+                <i class="bi bi-hospital-fill"></i>
+              </div>
+              <div class="info-content">
+                <label>Chi nhánh</label>
+                <strong>{{ appointment.branch.branchName }}</strong>
+                <span>{{ appointment.branch.address }}</span>
+              </div>
+            </div>
+
+            <!-- Price -->
+            <div class="info-item">
+              <div class="info-icon payment">
+                <i class="bi bi-cash-coin"></i>
+              </div>
+              <div class="info-content">
+                <label>Giá khám</label>
+                <strong class="price-highlight">{{ appointment.priceAtBooking | number:'1.0-0' }}đ</strong>
+              </div>
+            </div>
+
+            <!-- Payment Status -->
+            <div class="info-item">
+              <div class="info-icon payment-status">
+                <i class="bi bi-credit-card-2-front-fill"></i>
+              </div>
+              <div class="info-content">
+                <label>Trạng thái thanh toán</label>
+                <span class="payment-status-badge" [class.paid]="appointment.status === 'CONFIRMED'">
+                  <i class="bi" [ngClass]="appointment.status === 'CONFIRMED' ? 'bi-check-circle-fill' : 'bi-clock-history'"></i>
+                  {{ appointment.status === 'CONFIRMED' ? 'Đã thanh toán' : 'Chờ thanh toán' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Patient -->
+            <div class="info-item">
+              <div class="info-icon patient">
+                <i class="bi bi-person-badge"></i>
+              </div>
+              <div class="info-content">
+                <label>Bệnh nhân</label>
+                <strong>{{ appointment.patient.fullName }}</strong>
+                <span>{{ appointment.patient.email }}</span>
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="info-item full-width" *ngIf="appointment.notes">
+              <div class="info-icon notes">
+                <i class="bi bi-card-text"></i>
+              </div>
+              <div class="info-content">
+                <label>Ghi chú / Triệu chứng</label>
+                <span>{{ appointment.notes }}</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Card Footer (Actions) -->
+        <div class="card-footer" *ngIf="appointment.status === 'PENDING' || appointment.status === 'CONFIRMED'">
+          
+          <!-- Xem chi tiết - Hiện với cả PENDING và CONFIRMED -->
+          <button 
+            class="btn-action primary" 
+            (click)="viewDetails(appointment)">
+            <i class="bi bi-eye-fill"></i>
+            Xem chi tiết
+          </button>
+          
+          <!-- ✅ Thanh toán - CHỈ hiện với status PENDING -->
+          <button 
+            class="btn-action success" 
+            *ngIf="appointment.status === 'PENDING'"
+            (click)="payNow(appointment)">
+            <i class="bi bi-credit-card-fill"></i>
+            Thanh toán ngay
+          </button>
+          
+          <!-- ✅ Badge "Đã thanh toán" - CHỈ hiện với status CONFIRMED -->
+          <div 
+            class="payment-badge paid"
+            *ngIf="appointment.status === 'CONFIRMED'">
+            <i class="bi bi-check-circle-fill"></i>
+            Đã thanh toán
+          </div>
+          
+          <!-- ✅ Hủy lịch hẹn - CHỈ hiện với status PENDING -->
+          <button 
+            class="btn-action danger" 
+            *ngIf="appointment.status === 'PENDING'"
+            (click)="cancelAppointment(appointment)">
+            <i class="bi bi-x-circle-fill"></i>
+            Hủy lịch hẹn
+          </button>
+          
+        </div>
+
+      </div>
+    </div>
+
   </div>
-
-  <!-- Error -->
-  <div *ngIf="loadError && !isLoading" class="alert alert-danger">
-    Không thể tải danh sách lịch hẹn. Vui lòng thử lại sau.
-  </div>
-
-  <!-- No data -->
-  <div *ngIf="!isLoading && appointments.length === 0 && !loadError" class="alert alert-warning">
-    Bạn chưa có lịch hẹn nào.
-  </div>
-
-  <!-- Data -->
-  <table *ngIf="!isLoading && appointments.length > 0" class="table table-hover table-bordered mt-3">
-    <thead class="table-primary">
-      <tr>
-        <th>Bác sĩ</th>
-        <th>Chi nhánh</th>
-        <th>Ngày & Giờ</th>
-        <th>Ghi chú</th>
-        <th>Trạng thái</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let a of appointments">
-        <td>{{ a.doctor?.fullName }}</td>
-        <td>{{ a.branch?.branchName }}</td>
-        <td>{{ a.appointmentTime | date:'dd/MM/yyyy, HH:mm' }}</td>
-        <td>{{ a.notes || '-' }}</td>
-        <td><span [ngClass]="getStatusClass(a.status)">{{ getStatusText(a.status) }}</span></td>
-      </tr>
-    </tbody>
-  </table>
 </div>

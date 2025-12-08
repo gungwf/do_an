@@ -18,7 +18,8 @@ interface ViewAppointment extends AppointmentResponseDto {
   selector: 'app-medical-records',
   standalone: true,
   imports: [CommonModule, FormsModule, DatePipe, MedicalRecordViewDialogComponent],
-  templateUrl: './medical-record.html'
+  templateUrl: './medical-record.html',
+  styleUrls: ['./medical-record.scss']
 })
 export class MedicalRecord implements OnInit {
   loading = false;
@@ -65,19 +66,45 @@ export class MedicalRecord implements OnInit {
   goPage(p: number): void { if (p<0 || p>=this.totalPages) return; this.searchDto.page = p; this.loadData(); }
   reload(): void { this.loadData(); }
 
-  badgeClass(status?: string): string {
-    if (!status) return 'bg-secondary';
-    const s = status.toUpperCase();
-    if (s === 'PENDING_BILLING') return 'bg-info';
-    if (s === 'PAID_SERVICE') return 'bg-success';
-    if (s === 'CONFIRMED') return 'bg-primary';
-    if (s === 'COMPLETED') return 'bg-success';
-    if (s === 'PENDING') return 'bg-warning';
-    if (s === 'PAID') return 'bg-success';
-    if (s.includes('CANCEL')) return 'bg-danger';
+  badgeClass(status: string | undefined): string {
+  // ✅ Xử lý undefined
+  if (!status) {
     return 'bg-secondary';
   }
 
+  const map: { [key: string]: string } = {
+    'PENDING': 'bg-warning',
+    'CONFIRMED': 'bg-info',
+    'PENDING_BILLING': 'bg-danger',
+    'PAID_SERVICE': 'bg-success',
+    'COMPLETED': 'bg-success',
+    'PAID': 'bg-success',
+    'CANCELLED': 'bg-secondary',
+    'CANCELED': 'bg-secondary'
+  };
+  
+  return map[status] || 'bg-secondary';
+}
+
   openRecord(appointmentId: string): void { this.viewingAppointmentId = appointmentId; }
   closeDialog(): void { this.viewingAppointmentId = null; }
+  getStatusText(status: string | undefined): string {
+  // ✅ Xử lý undefined
+  if (!status) {
+    return 'Không rõ';
+  }
+
+  const statusMap: { [key: string]: string } = {
+    'PENDING': 'Chờ xác nhận',
+    'CONFIRMED': 'Đã xác nhận',
+    'PENDING_BILLING': 'Chờ thanh toán',
+    'PAID_SERVICE': 'Đã thanh toán',
+    'COMPLETED': 'Hoàn thành',
+    'PAID': 'Đã thanh toán',
+    'CANCELLED': 'Đã hủy',
+    'CANCELED': 'Đã hủy'
+  };
+  
+  return statusMap[status] || status;
+}
 }

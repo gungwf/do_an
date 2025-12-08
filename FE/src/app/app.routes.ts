@@ -5,6 +5,7 @@ import { adminGuard } from './core/guards/admin-guard';
 import { DoctorLayout } from './layouts/doctor-layout/doctor-layout';
 import { doctorGuard } from './core/guards/doctor.guard';
 import { PaymentReturn } from './features/staff/payment-return/payment-return';
+import { staffGuard } from './core/guards/staff.guard'; // ✅ Import staff guard (nếu có)
 
 export const routes: Routes = [
   // ===== PATIENT ROUTES (Home) =====
@@ -24,18 +25,20 @@ export const routes: Routes = [
       import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
   },
 
-  // ===== DOCTOR ROUTES ===== ✅ VERIFIED
+  // ===== DOCTOR ROUTES =====
   {
     path: 'doctor',
     component: DoctorLayout,
-    canActivate: [doctorGuard], // ✅ Guard is applied
+    canActivate: [doctorGuard],
     loadChildren: () => 
       import('./features/doctor/doctor.routes').then(m => m.DOCTOR_ROUTES)
   },
 
-  // ===== STAFF ROUTES =====
+  // ===== ✅ STAFF ROUTES - CẬP NHẬT =====
   {
     path: 'staff',
+    // ✅ Thêm guard nếu có (optional)
+    // canActivate: [staffGuard],
     loadChildren: () =>
       import('./features/staff/staff.routes').then(m => m.staffRoutes),
   },
