@@ -1,0 +1,373 @@
+<div class="forecast-dashboard">
+  <div class="container-fluid px-4 py-4">
+    
+    <!-- Header -->
+    <div class="page-header mb-4" data-aos="fade-down">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+          <h2 class="page-title mb-2">
+            <i class="bi bi-graph-up-arrow text-primary me-2"></i>
+            Dự Báo Nhu Cầu Nhập Kho
+          </h2>
+          <p class="text-muted mb-0">
+            Dự đoán nhu cầu tiêu thụ và đề xuất số lượng cần nhập kho
+          </p>
+        </div>
+        
+        <!-- ✅ Action Buttons -->
+        <div class="d-flex gap-2 align-items-center">
+          <!-- Selected Count Badge -->
+          <span 
+            *ngIf="selectedCount > 0"
+            class="badge bg-primary px-3 py-2"
+            style="font-size: 0.95rem;">
+            <i class="bi bi-check2-square me-1"></i>
+            {{ selectedCount }} đã chọn
+          </span>
+
+          <!-- Select All Button -->
+          <button 
+            class="btn btn-outline-primary"
+            [disabled]="isLoadingInventory || filteredResults.length === 0"
+            (click)="selectAllVisible()">
+            <i class="bi" [class.bi-check-square]="allVisibleSelected" [class.bi-square]="!allVisibleSelected"></i>
+            <span class="ms-2">{{ allVisibleSelected ? 'Bỏ chọn tất cả' : 'Chọn tất cả' }}</span>
+          </button>
+
+          <!-- Forecast Button -->
+          <button 
+            class="btn btn-primary btn-lg"
+            [disabled]="isForecastingAll || isLoadingInventory || selectedCount === 0"
+            (click)="forecastSelectedProducts()">
+            <span *ngIf="!isForecastingAll">
+              <i class="bi bi-magic me-2"></i>
+              Dự Báo ({{ selectedCount }})
+            </span>
+            <span *ngIf="isForecastingAll">
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              Đang dự báo...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-section mb-4" *ngIf="totalProducts > 0">
+      <div class="row g-3">
+        
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="0">
+          <div class="stat-card stat-primary">
+            <div class="stat-icon">
+              <i class="bi bi-boxes"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ totalProducts }}</h3>
+              <p>Tổng sản phẩm</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+          <div class="stat-card stat-warning">
+            <div class="stat-icon">
+              <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ needRestock }}</h3>
+              <p>Cần nhập kho</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+          <div class="stat-card stat-danger">
+            <div class="stat-icon">
+              <i class="bi bi-shield-exclamation"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ criticalProducts }}</h3>
+              <p>Khẩn cấp</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+          <div class="stat-card stat-success">
+            <div class="stat-icon">
+              <i class="bi bi-cart-plus"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ totalSuggestedOrder }}</h3>
+              <p>Tổng đề xuất nhập</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="filters-section mb-4" data-aos="fade-up">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="row g-3">
+            
+            <!-- Search -->
+            <div class="col-lg-4 col-md-6">
+              <div class="search-wrapper">
+                <i class="bi bi-search"></i>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  placeholder="Tìm kiếm sản phẩm..."
+                  [(ngModel)]="searchTerm">
+                <button 
+                  *ngIf="searchTerm"
+                  class="clear-btn"
+                  (click)="searchTerm = ''">
+                  <i class="bi bi-x-circle"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter Urgency -->
+            <div class="col-lg-3 col-md-6">
+              <select class="form-select" [(ngModel)]="filterUrgency">
+                <option value="all">Tất cả mức độ</option>
+                <option value="critical">🚨 Khẩn cấp</option>
+                <option value="warning">⚠️ Cảnh báo</option>
+                <option value="ok">✅ Ổn định</option>
+              </select>
+            </div>
+
+            <!-- Sort -->
+            <div class="col-lg-3 col-md-6">
+              <select class="form-select" [(ngModel)]="sortBy">
+                <option value="urgency">Sắp xếp: Mức độ</option>
+                <option value="name">Sắp xếp: Tên A-Z</option>
+                <option value="stock">Sắp xếp: Tồn kho</option>
+                <option value="forecast">Sắp xếp: Đề xuất</option>
+              </select>
+            </div>
+
+            <!-- History Days -->
+            <div class="col-lg-2 col-md-6">
+              <select class="form-select" [(ngModel)]="historyDays">
+                <option [value]="90">3 tháng</option>
+                <option [value]="180">6 tháng</option>
+                <option [value]="365">1 năm</option>
+                <option [value]="730">2 năm</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoadingInventory" class="text-center py-5">
+      <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
+      <p class="text-muted">Đang tải dữ liệu kho...</p>
+    </div>
+
+    <!-- Forecast Results -->
+    <div *ngIf="!isLoadingInventory && filteredResults.length > 0" class="results-section">
+      
+      <div class="forecast-list">
+        <div 
+          *ngFor="let product of filteredResults; let i = index"
+          class="forecast-item"
+          [class.loading]="product.status === 'loading'"
+          [class.error]="product.status === 'error'"
+          [class.selected]="product.selected"
+          data-aos="fade-up"
+          [attr.data-aos-delay]="(i % 10) * 50">
+          
+          <!-- ✅ Checkbox -->
+          <div class="product-checkbox">
+            <input 
+              type="checkbox"
+              class="form-check-input"
+              [checked]="product.selected"
+              (change)="toggleProductSelection(product)"
+              [id]="'product-' + product.productId">
+            <label [for]="'product-' + product.productId" class="visually-hidden">
+              Chọn {{ product.productName }}
+            </label>
+          </div>
+
+          <!-- Product Image -->
+          <div class="product-thumbnail" (click)="toggleProductSelection(product)">
+            <img 
+              [src]="product.imageUrl || 'assets/images/default-product.png'" 
+              [alt]="product.productName"
+              (error)="$event.target.src='assets/images/default-product.png'">
+          </div>
+
+          <!-- Product Info -->
+          <div class="product-info">
+            <h5 class="product-name">{{ product.productName }}</h5>
+            
+            <div class="product-metrics">
+              <div class="metric">
+                <span class="metric-label">Tồn kho:</span>
+                <span class="metric-value">{{ product.currentStock }}</span>
+              </div>
+              
+              <div class="metric" *ngIf="product.status === 'success'">
+                <span class="metric-label">Dự báo 7 ngày:</span>
+                <span class="metric-value text-info">{{ product.forecast7Days }}</span>
+              </div>
+              
+              <div class="metric" *ngIf="product.status === 'success'">
+                <span class="metric-label">TB/ngày:</span>
+                <span class="metric-value">{{ product.avgDailyDemand }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status & Actions -->
+          <div class="product-actions">
+            
+            <!-- Loading -->
+            <div *ngIf="product.status === 'loading'" class="status-loading">
+              <div class="spinner-border spinner-border-sm text-primary"></div>
+              <span class="ms-2 text-muted">Đang dự báo...</span>
+            </div>
+
+            <!-- Error -->
+            <div *ngIf="product.status === 'error'" class="status-error">
+              <i class="bi bi-exclamation-circle text-danger"></i>
+              <span class="ms-2 text-danger small">{{ product.errorMessage }}</span>
+            </div>
+
+            <!-- Success -->
+            <div *ngIf="product.status === 'success'" class="status-success">
+              
+              <!-- Urgency Badge -->
+              <span 
+                class="urgency-badge"
+                [class.urgency-critical]="product.urgency === 'critical'"
+                [class.urgency-warning]="product.urgency === 'warning'"
+                [class.urgency-ok]="product.urgency === 'ok'">
+                <i 
+                  class="bi"
+                  [class.bi-shield-exclamation]="product.urgency === 'critical'"
+                  [class.bi-exclamation-triangle]="product.urgency === 'warning'"
+                  [class.bi-check-circle]="product.urgency === 'ok'"></i>
+                <span *ngIf="product.urgency === 'critical'">Khẩn cấp</span>
+                <span *ngIf="product.urgency === 'warning'">Cảnh báo</span>
+                <span *ngIf="product.urgency === 'ok'">Ổn định</span>
+              </span>
+
+              <!-- Suggested Order -->
+              <div class="suggested-order">
+                <span class="label">Đề xuất nhập:</span>
+                <span class="value">
+                  <strong>{{ product.suggestedOrder }}</strong>
+                </span>
+              </div>
+
+              <!-- Trend -->
+              <div class="trend-indicator">
+                <i 
+                  class="bi"
+                  [class.bi-graph-up-arrow]="product.trend === 'up'"
+                  [class.bi-graph-down-arrow]="product.trend === 'down'"
+                  [class.bi-arrow-right]="product.trend === 'stable'"
+                  [class.text-success]="product.trend === 'up'"
+                  [class.text-danger]="product.trend === 'down'"
+                  [class.text-secondary]="product.trend === 'stable'"></i>
+              </div>
+
+              <!-- Detail Button -->
+              <button 
+                class="btn btn-sm btn-outline-primary"
+                (click)="viewForecastDetail(product)">
+                <i class="bi bi-bar-chart-line me-1"></i>
+                Chi tiết
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoadingInventory && filteredResults.length === 0 && totalProducts === 0" 
+         class="empty-state text-center py-5">
+      <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+      <h4 class="text-muted">Chưa có dữ liệu dự báo</h4>
+      <p class="text-muted">Chọn sản phẩm và nhấn nút "Dự Báo" để bắt đầu</p>
+    </div>
+
+    <div *ngIf="!isLoadingInventory && filteredResults.length === 0 && totalProducts > 0" 
+         class="empty-state text-center py-5">
+      <i class="bi bi-filter-circle display-1 text-muted mb-3"></i>
+      <h4 class="text-muted">Không tìm thấy kết quả</h4>
+      <p class="text-muted">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
+      <button class="btn btn-primary mt-3" (click)="searchTerm = ''; filterUrgency = 'all'">
+        <i class="bi bi-arrow-counterclockwise me-2"></i>
+        Xóa bộ lọc
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Chart Modal (không thay đổi) -->
+<div class="modal-backdrop" *ngIf="showChartModal" (click)="closeChartModal()"></div>
+<div class="modal-dialog-chart" *ngIf="showChartModal && selectedProduct">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title">
+        <i class="bi bi-bar-chart-line me-2"></i>
+        Chi Tiết Dự Báo
+      </h5>
+      <button class="btn-close" (click)="closeChartModal()"></button>
+    </div>
+    <div class="modal-body">
+      <h6 class="mb-3">{{ selectedProduct.productName }}</h6>
+      
+      <div class="forecast-details">
+        <div class="detail-row">
+          <span>Tồn kho hiện tại:</span>
+          <strong>{{ selectedProduct.currentStock }}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Dự báo 7 ngày:</span>
+          <strong class="text-info">{{ selectedProduct.forecast7Days }}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Trung bình/ngày:</span>
+          <strong>{{ selectedProduct.avgDailyDemand }}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Đề xuất nhập:</span>
+          <strong class="text-success">{{ selectedProduct.suggestedOrder }}</strong>
+        </div>
+      </div>
+
+      <div class="forecast-chart mt-4" *ngIf="selectedProduct.forecastData">
+        <h6 class="text-muted mb-3">Dự báo 7 ngày tới:</h6>
+        <div class="chart-bars">
+          <div 
+            *ngFor="let day of selectedProduct.forecastData"
+            class="chart-bar-wrapper">
+            <div class="chart-bar" [style.height.%]="(day.yhat / 20) * 100">
+              <span class="bar-value">{{ day.yhat }}</span>
+            </div>
+            <span class="bar-label">{{ day.ds | date:'dd/MM' }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

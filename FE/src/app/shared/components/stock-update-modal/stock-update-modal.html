@@ -1,0 +1,153 @@
+<div class="modal-backdrop" *ngIf="isVisible" (click)="onClose()"></div>
+
+<div class="modal-dialog" *ngIf="isVisible && item" (click)="$event.stopPropagation()">
+  <div class="modal-content">
+    
+    <!-- Header -->
+    <div class="modal-header">
+      <h5 class="modal-title">
+        <i class="bi bi-box-arrow-in-down me-2"></i>
+        {{ actionType }}
+      </h5>
+      <button type="button" class="btn-close" (click)="onClose()"></button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      
+      <!-- Product Info -->
+      <div class="product-info-card mb-3">
+        <img 
+          [src]="item.imageUrl || 'assets/images/default-product.png'" 
+          [alt]="item.productName"
+          class="product-thumbnail">
+        <div class="product-details">
+          <h6 class="product-name mb-1">{{ item.productName }}</h6>
+          <p class="text-muted small mb-0">
+            Tồn kho hiện tại: <strong>{{ item.quantity }}</strong>
+          </p>
+        </div>
+      </div>
+
+      <!-- Quantity Input -->
+      <div class="quantity-section">
+        <label class="form-label fw-semibold">
+          Số lượng thay đổi
+          <span class="text-muted small">(Nhập số dương để nhập kho, số âm để xuất kho)</span>
+        </label>
+        
+        <div class="quantity-input-wrapper">
+          <button 
+            class="btn btn-outline-secondary"
+            (click)="quantityChange = quantityChange - 1">
+            <i class="bi bi-dash-lg"></i>
+          </button>
+          
+          <input 
+            type="number" 
+            class="form-control text-center"
+            [(ngModel)]="quantityChange"
+            placeholder="0">
+          
+          <button 
+            class="btn btn-outline-secondary"
+            (click)="quantityChange = quantityChange + 1">
+            <i class="bi bi-plus-lg"></i>
+          </button>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions mt-3">
+          <button 
+            class="btn btn-sm btn-outline-danger"
+            (click)="setQuickValue(-10)">
+            -10
+          </button>
+          <button 
+            class="btn btn-sm btn-outline-danger"
+            (click)="setQuickValue(-5)">
+            -5
+          </button>
+          <button 
+            class="btn btn-sm btn-outline-secondary"
+            (click)="setQuickValue(0)">
+            0
+          </button>
+          <button 
+            class="btn btn-sm btn-outline-success"
+            (click)="setQuickValue(5)">
+            +5
+          </button>
+          <button 
+            class="btn btn-sm btn-outline-success"
+            (click)="setQuickValue(10)">
+            +10
+          </button>
+          <button 
+            class="btn btn-sm btn-outline-success"
+            (click)="setQuickValue(50)">
+            +50
+          </button>
+          <button 
+            class="btn btn-sm btn-outline-success"
+            (click)="setQuickValue(100)">
+            +100
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div class="preview-section mt-4">
+        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+          <div>
+            <small class="text-muted d-block">Số lượng sau khi cập nhật</small>
+            <h4 class="mb-0" [class]="actionClass">
+              {{ newQuantity }}
+            </h4>
+          </div>
+          <div class="text-end">
+            <small class="text-muted d-block">Thay đổi</small>
+            <h5 class="mb-0" [class]="actionClass">
+              <span *ngIf="quantityChange > 0">+</span>{{ quantityChange }}
+            </h5>
+          </div>
+        </div>
+
+        <!-- Warning -->
+        <div class="alert alert-warning mt-3 mb-0" *ngIf="!isValidQuantity">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          Số lượng không thể âm!
+        </div>
+
+        <div class="alert alert-danger mt-3 mb-0" *ngIf="newQuantity === 0 && quantityChange < 0">
+          <i class="bi bi-exclamation-circle me-2"></i>
+          Sản phẩm sẽ hết hàng sau khi xuất!
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button 
+        type="button" 
+        class="btn btn-secondary"
+        (click)="onClose()">
+        <i class="bi bi-x-circle me-2"></i>
+        Hủy
+      </button>
+      <button 
+        type="button" 
+        class="btn"
+        [class.btn-success]="quantityChange > 0"
+        [class.btn-danger]="quantityChange < 0"
+        [class.btn-secondary]="quantityChange === 0"
+        [disabled]="quantityChange === 0 || !isValidQuantity"
+        (click)="onConfirm()">
+        <i class="bi bi-check-circle me-2"></i>
+        Xác nhận {{ actionType }}
+      </button>
+    </div>
+
+  </div>
+</div>

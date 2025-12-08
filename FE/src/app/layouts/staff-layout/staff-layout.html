@@ -33,6 +33,19 @@
           <i class="bi bi-person-badge"></i>
           <span class="nav-text">Bác sĩ</span>
         </a>
+        <a routerLink="/staff/profile" routerLinkActive="active" class="nav-item">
+          <i class="bi bi-person-circle"></i>
+          <span class="nav-text">Hồ sơ cá nhân</span>
+        </a>
+        <!-- ✅ NEW: Forecast Menu Item -->
+        <a routerLink="/staff/forecast" routerLinkActive="active" class="nav-item">
+          <i class="bi bi-graph-up-arrow"></i>
+          <span *ngIf="!isSidebarCollapsed">Dự Báo Nhập Kho</span>
+        </a>
+        <a routerLink="/staff/inventory" routerLinkActive="active" class="nav-item">
+          <i class="bi bi-box-seam"></i>
+          <span class="nav-text">Quản lý Kho</span>
+        </a>
       </div>
     </nav>
   </aside>
@@ -63,18 +76,19 @@
             </div>
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
-            <li>
-              <span class="dropdown-item disabled">
-                <i class="bi bi-person-fill me-2"></i>{{ displayName }}
-              </span>
-            </li>
-            <li><hr class="dropdown-divider" /></li>
-            <li>
-              <a class="dropdown-item text-danger" (click)="logout()" style="cursor:pointer">
-                <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
-              </a>
-            </li>
-          </ul>
+          <!-- ✅ NEW: Profile Link -->
+          <li>
+            <a class="dropdown-item" routerLink="/staff/profile">
+              <i class="bi bi-person-fill me-2"></i> Hồ sơ cá nhân
+            </a>
+          </li>
+          <li><hr class="dropdown-divider" /></li>
+          <li>
+            <a class="dropdown-item text-danger" (click)="logout()" style="cursor: pointer">
+              <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+            </a>
+          </li>
+        </ul>
         </div>
       </div>
     </header>

@@ -1,307 +1,732 @@
-<div id="myCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
-  <div class="carousel-indicators">
-    <button
-      type="button"
-      data-bs-target="#myCarousel"
-      data-bs-slide-to="0"
-      class="active"
-      aria-label="Slide 1"
-      aria-current="true"
-    ></button>
-    <button
-      type="button"
-      data-bs-target="#myCarousel"
-      data-bs-slide-to="1"
-      aria-label="Slide 2"
-      class=""
-    ></button>
-    <button
-      type="button"
-      data-bs-target="#myCarousel"
-      data-bs-slide-to="2"
-      aria-label="Slide 3"
-      class=""
-    ></button>
-  </div>
-  <div class="carousel-inner">
-    <div class="carousel-item active">
-      <img src="assets/images/slide1.jpg" alt="Nhà thuốc online" />
-      <div class="container">
-        <div class="carousel-caption text-start">
-          <h1 class="display-4 fw-bold">Nhà thuốc Online Toàn diện</h1>
-          <p class="fs-4">
-            An toàn - Tiện lợi - Nhanh chóng. Mua thuốc, đặt lịch hẹn và xem
-            bệnh án.
-          </p>
+<!-- ===== HERO SECTION ===== -->
+<section id="hero" class="hero section">
+  <!-- ✅ Ảnh Hero background -->
+  <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=1920&q=80" alt="Healthcare Hero" data-aos="fade-in">
+  <div class="container position-relative">
+    <div class="welcome position-relative" data-aos="fade-down" data-aos-delay="100">
+      <h2>CHÀO MỪNG ĐÉN VỚI HEALTHCARE</h2>
+      <p>Chúng tôi cam kết mang đến dịch vụ y tế chất lượng cao với đội ngũ bác sĩ giàu kinh nghiệm</p>
+    </div>
+
+    <div class="content row gy-4">
+      <div class="col-lg-4 d-flex align-items-stretch">
+        <div class="why-box" data-aos="zoom-out" data-aos-delay="200">
+          <h3>Tại sao chọn Healthcare?</h3>
           <p>
-            <button class="btn btn-lg btn-light" (click)="scrollToProducts()">
-              Khám phá sản phẩm
-            </button>
+            Healthcare Pharmacy cung cấp dịch vụ y tế toàn diện với đội ngũ chuyên môn cao, 
+            trang thiết bị hiện đại và cam kết chăm sóc sức khỏe tận tâm cho mọi bệnh nhân.
           </p>
+          <div class="text-center">
+            <a href="#about" class="more-btn">
+              <span>Tìm hiểu thêm</span> <i class="bi bi-chevron-right"></i>
+            </a>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="carousel-item">
-      <img src="assets/images/slide2.jpeg" alt="Đặt lịch hẹn" />
-      <div class="container">
-        <div class="carousel-caption">
-          <h1 class="display-4 fw-bold">Đặt lịch hẹn với Bác sĩ</h1>
-          <p class="fs-4">Nhanh chóng, chủ động, không cần chờ đợi.</p>
-          <p>
-            <a routerLink="/auth/login" class="btn btn-lg btn-primary"
-              >Đặt lịch ngay</a
-            >
-          </p>
-        </div>
-      </div>
-    </div>
-    <div class="carousel-item">
-      <img src="assets/images/slide3.png" alt="Xem hồ sơ bệnh án" />
-      <div class="container">
-        <div class="carousel-caption text-end">
-          <h1 class="display-4 fw-bold">Truy cập Hồ sơ Bệnh án</h1>
-          <p class="fs-4">
-            Xem lại đơn thuốc và lịch sử khám bệnh mọi lúc, mọi nơi.
-          </p>
-          <p>
-            <a routerLink="/auth/login" class="btn btn-lg btn-primary"
-              >Xem hồ sơ ngay</a
-            >
-          </p>
+
+      <div class="col-lg-8 d-flex align-items-stretch">
+        <div class="d-flex flex-column justify-content-center">
+          <div class="row gy-4">
+
+            <div class="col-xl-4 d-flex align-items-stretch">
+              <div class="icon-box" data-aos="zoom-out" data-aos-delay="300">
+                <i class="bi bi-clipboard-data"></i>
+                <h4>Dịch vụ toàn diện</h4>
+                <p>Khám bệnh, xét nghiệm, mua thuốc và theo dõi sức khỏe tại một nơi</p>
+              </div>
+            </div>
+
+            <div class="col-xl-4 d-flex align-items-stretch">
+              <div class="icon-box" data-aos="zoom-out" data-aos-delay="400">
+                <i class="bi bi-gem"></i>
+                <h4>Chất lượng đảm bảo</h4>
+                <p>Sản phẩm chính hãng, có nguồn gốc xuất xứ rõ ràng và được kiểm định</p>
+              </div>
+            </div>
+
+            <div class="col-xl-4 d-flex align-items-stretch">
+              <div class="icon-box" data-aos="zoom-out" data-aos-delay="500">
+                <i class="bi bi-inboxes"></i>
+                <h4>Giao hàng nhanh</h4>
+                <p>Giao hàng tận nơi trong 24h với dịch vụ chuyên nghiệp và chu đáo</p>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
     </div>
   </div>
-  <button
-    class="carousel-control-prev"
-    type="button"
-    data-bs-target="#myCarousel"
-    data-bs-slide="prev"
-  >
-    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Previous</span>
-  </button>
-  <button
-    class="carousel-control-next"
-    type="button"
-    data-bs-target="#myCarousel"
-    data-bs-slide="next"
-  >
-    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Next</span>
-  </button>
-</div>
-<div class="container-fluid py-5 bg-light">
+</section>
+
+<!-- ===== ABOUT SECTION ===== -->
+<section id="about" class="about section">
   <div class="container">
-    <div class="row text-center">
-      <div class="col-lg-4">
-        <i class="bi bi-patch-check-fill fs-1 text-success"></i>
-        <h2 class="fw-normal mt-3">Sản phẩm chính hãng</h2>
-        <p>
-          Trung tâm Thuốc đảm bảo cung cấp sản phẩm chính hãng, chất lượng và an
-          toàn cho khách hàng.
-        </p>
+    <div class="row gy-4 gx-5">
+
+      <div class="col-lg-6 position-relative align-self-start" data-aos="fade-up" data-aos-delay="200">
+        <!-- ✅ Ảnh About section -->
+        <img src="https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?w=800&q=80" class="img-fluid rounded-4" alt="About Healthcare">
+        <a href="https://www.youtube.com/watch?v=LXb3EKWsInQ" class="glightbox play-btn"></a>
       </div>
-      <div class="col-lg-4">
-        <i class="bi bi-headset fs-1 text-primary"></i>
-        <h2 class="fw-normal mt-3">Phục vụ tận tâm</h2>
+
+      <div class="col-lg-6 content" data-aos="fade-up" data-aos-delay="100">
+        <h3 class="text-primary">Về Healthcare Pharmacy</h3>
         <p>
-          Dịch vụ chăm sóc tận tâm, luôn sẵn sàng giải đáp mọi thắc mắc, băn
-          khoăn trong việc sử dụng sản phẩm.
+          Chúng tôi tự hào là đơn vị tiên phong trong việc kết hợp công nghệ với dịch vụ y tế, 
+          mang đến trải nghiệm chăm sóc sức khỏe hiện đại và tiện lợi nhất.
         </p>
+        <ul>
+          <li>
+            <i class="bi bi-diagram-3"></i>
+            <div>
+              <h5>Đội ngũ bác sĩ chuyên môn cao</h5>
+              <p>Hơn 50+ bác sĩ có kinh nghiệm từ 10-20 năm trong các chuyên khoa</p>
+            </div>
+          </li>
+          <li>
+            <i class="bi bi-fullscreen-exit"></i>
+            <div>
+              <h5>Trang thiết bị hiện đại</h5>
+              <p>Đầu tư hệ thống máy móc, thiết bị y tế tiên tiến nhất từ Mỹ và Châu Âu</p>
+            </div>
+          </li>
+          <li>
+            <i class="bi bi-broadcast"></i>
+            <div>
+              <h5>Hệ thống quản lý thông minh</h5>
+              <p>Ứng dụng công nghệ 4.0 giúp theo dõi sức khỏe mọi lúc mọi nơi</p>
+            </div>
+          </li>
+        </ul>
       </div>
-      <div class="col-lg-4">
-        <i class="bi bi-tags-fill fs-1 text-warning"></i>
-        <h2 class="fw-normal mt-3">Giá tốt nhất</h2>
-        <p>
-          Giá cả luôn cạnh tranh nhất - Tốt nhất giúp khách hàng tiết kiệm chi
-          phí khi mua hàng.
-        </p>
-      </div>
+
     </div>
   </div>
-</div>
-<div class="container col-xxl-8 px-4 py-5">
-  <div class="row flex-lg-row-reverse align-items-center g-5 py-5">
-    <div class="col-10 col-sm-8 col-lg-6">
-      <img
-        src="assets/images/about.jpg"
-        class="d-block mx-lg-auto img-fluid rounded shadow"
-        alt="Về nhà thuốc Healthcare"
-        width="700"
-        height="500"
-        loading="lazy"
-      />
+</section>
+
+<!-- ===== STATS SECTION ===== -->
+<section id="stats" class="stats section light-background">
+  <div class="container" data-aos="fade-up" data-aos-delay="100">
+    <div class="row gy-4">
+
+      <div class="col-lg-3 col-md-6 d-flex flex-column align-items-center">
+        <!-- <i class="bi bi-emoji-smile"></i> -->
+        <div class="stats-item">
+          <span class="purecounter">50,000+</span>
+          <p>Khách hàng hài lòng</p>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-md-6 d-flex flex-column align-items-center">
+        <!-- <i class="bi bi-journal-richtext"></i> -->
+        <div class="stats-item">
+          <span class="purecounter">3,521</span>
+          <p>Đơn thuốc đã kê</p>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-md-6 d-flex flex-column align-items-center">
+        <!-- <i class="bi bi-headset"></i> -->
+        <div class="stats-item">
+          <span class="purecounter">24/7</span>
+          <p>Hỗ trợ khách hàng</p>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-md-6 d-flex flex-column align-items-center">
+        <!-- <i class="bi bi-people"></i> -->
+        <div class="stats-item">
+          <span class="purecounter">50+</span>
+          <p>Bác sĩ chuyên khoa</p>
+        </div>
+      </div>
+
     </div>
-    <div class="col-lg-6">
-      <h1 class="display-5 fw-bold text-body-emphasis lh-1 mb-3">
-        Về Nhà thuốc Healthcare
-      </h1>
-      <p class="lead">
-        Với đội ngũ dược sĩ giàu kinh nghiệm và tận tâm, Healthcare Pharmacy cam kết mang đến những sản phẩm chính hãng, chất lượng cao cùng dịch vụ tư vấn chuyên nghiệp. Sức khỏe của bạn và gia đình là ưu tiên hàng đầu của chúng tôi.
-      </p>
-      <div class="d-grid gap-2 d-md-flex justify-content-md-start">
-        <button type="button" class="btn btn-primary btn-lg px-4 me-md-2">
-          Về chúng tôi
+  </div>
+</section>
+
+<!-- ===== SERVICES SECTION - REDESIGNED ===== -->
+<section id="services" class="services section">
+  <div class="container section-title" data-aos="fade-up">
+    <div class="title-badge">Dịch vụ</div>
+    <h2>Các dịch vụ y tế <span class="text-primary">chuyên nghiệp của chúng tôi</span></h2>
+
+    <!-- <h2>Dịch vụ</h2>
+    <p>Các dịch vụ y tế chuyên nghiệp của chúng tôi</p> -->
+  </div>
+
+  <div class="container">
+    <div class="row gy-4">
+
+      <!-- Service Card 1 - Khám bệnh -->
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+        <div class="service-card">
+          <div class="service-img">
+            <img src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=400&q=80" class="img-fluid" alt="Khám tổng quát">
+            <div class="service-icon">
+              <i class="bi bi-heart-pulse"></i>
+            </div>
+          </div>
+          <div class="service-content">
+            <h3>Khám tổng quát</h3>
+            <p>Khám sức khỏe định kỳ với bác sĩ giàu kinh nghiệm, phát hiện sớm các vấn đề về sức khỏe và tư vấn điều trị kịp thời.</p>
+            <a href="#products" class="read-more">
+              Tìm hiểu thêm <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Service Card 2 - Chẩn đoán -->
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+        <div class="service-card">
+          <div class="service-img">
+            <img src="https://images.unsplash.com/photo-1581594549595-35f6edc7b762?w=400&q=80" class="img-fluid" alt="Chẩn đoán hình ảnh">
+            <div class="service-icon">
+              <i class="bi bi-clipboard-pulse"></i>
+            </div>
+          </div>
+          <div class="service-content">
+            <h3>Chẩn đoán hình ảnh</h3>
+            <p>X-Quang, siêu âm, CT, MRI với máy móc hiện đại nhất. Kết quả nhanh chóng, chính xác và tư vấn chi tiết từ chuyên gia.</p>
+            <a href="#products" class="read-more">
+              Tìm hiểu thêm <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Service Card 3 - Phẫu thuật -->
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+        <div class="service-card">
+          <div class="service-img">
+            <img src="https://images.unsplash.com/photo-1551190822-a9333d879b1f?w=400&q=80" class="img-fluid" alt="Phẫu thuật">
+            <div class="service-icon">
+              <i class="bi bi-prescription2"></i>
+            </div>
+          </div>
+          <div class="service-content">
+            <h3>Phẫu thuật chỉnh hình</h3>
+            <p>Chuyên khoa xương khớp với đội ngũ bác sĩ giàu kinh nghiệm, trang thiết bị phẫu thuật hiện đại và chăm sóc hậu phẫu chu đáo.</p>
+            <a href="#products" class="read-more">
+              Tìm hiểu thêm <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Service Card 4 - Xét nghiệm -->
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+        <div class="service-card">
+          <div class="service-img">
+            <img src="https://images.unsplash.com/photo-1582719471137-c3967ffb1c42?w=400&q=80" class="img-fluid" alt="Xét nghiệm">
+            <div class="service-icon">
+              <i class="bi bi-eyedropper"></i>
+            </div>
+          </div>
+          <div class="service-content">
+            <h3>Xét nghiệm</h3>
+            <p>Xét nghiệm máu, nước tiểu, sinh hóa với trang thiết bị hiện đại. Kết quả chính xác trong thời gian ngắn nhất.</p>
+            <a href="#products" class="read-more">
+              Tìm hiểu thêm <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Service Card 5 - Điều trị ung thư -->
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+        <div class="service-card">
+          <div class="service-img">
+            <img src="https://images.unsplash.com/photo-1581093588401-fbb62a02f120?w=400&q=80" class="img-fluid" alt="Điều trị">
+            <div class="service-icon">
+              <i class="bi bi-activity"></i>
+            </div>
+          </div>
+          <div class="service-content">
+            <h3>Điều trị chuyên sâu</h3>
+            <p>Phác đồ điều trị tiên tiến với đội ngũ bác sĩ chuyên môn cao và hỗ trợ tâm lý cho bệnh nhân trong suốt quá trình điều trị.</p>
+            <a href="#products" class="read-more">
+              Tìm hiểu thêm <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Service Card 6 - Phòng thí nghiệm -->
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+        <div class="service-card">
+          <div class="service-img">
+            <img src="https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=400&q=80" class="img-fluid" alt="Phòng thí nghiệm">
+            <div class="service-icon">
+              <i class="bi bi-microscope"></i>
+            </div>
+          </div>
+          <div class="service-content">
+            <h3>Dịch vụ phòng thí nghiệm</h3>
+            <p>Phòng thí nghiệm hiện đại với các xét nghiệm chuyên sâu, đáp ứng mọi nhu cầu chẩn đoán và theo dõi bệnh lý.</p>
+            <a href="#products" class="read-more">
+              Tìm hiểu thêm <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== DOCTORS SECTION ===== -->
+<section id="doctors" class="doctors section">
+  <div class="container section-title" data-aos="fade-up">
+    <div class="title-badge">ĐỘI NGŨ BÁC SĨ</div>
+    <h2>Đội ngũ bác sĩ <span class="text-primary">giàu kinh nghiệm và tâm huyết</span></h2>
+  </div>
+
+  <div class="container">
+    <div class="row gy-4">
+
+      <!-- ✅ Bác sĩ 1 - Sử dụng doc1.jpg -->
+      <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+        <div class="team-member">
+          <div class="member-img">
+            <img src="assets/images/doc1.jpg" class="img-fluid" alt="BS. Lê Thị Hương">
+            <div class="social">
+              <a href=""><i class="bi bi-twitter"></i></a>
+              <a href=""><i class="bi bi-facebook"></i></a>
+              <a href=""><i class="bi bi-instagram"></i></a>
+              <a href=""><i class="bi bi-linkedin"></i></a>
+            </div>
+          </div>
+          <div class="member-info text-center">
+            <h4>BS. Lê Thị Hương</h4>
+            <span>Chuyên khoa Tiêu hóa</span>
+            <p>Kinh nghiệm 15 năm trong điều trị các bệnh lý tiêu hóa</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ Bác sĩ 2 - Sử dụng doc2.jpg -->
+      <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+        <div class="team-member">
+          <div class="member-img">
+            <img src="assets/images/doc2.jpg" class="img-fluid" alt="BS. Phạm Thị Dương">
+            <div class="social">
+              <a href=""><i class="bi bi-twitter"></i></a>
+              <a href=""><i class="bi bi-facebook"></i></a>
+              <a href=""><i class="bi bi-instagram"></i></a>
+              <a href=""><i class="bi bi-linkedin"></i></a>
+            </div>
+          </div>
+          <div class="member-info text-center">
+            <h4>BS. Phạm Thị Dương</h4>
+            <span>Chuyên khoa Da liễu</span>
+            <p>Chuyên gia hàng đầu về các bệnh lý da liễu và thẩm mỹ</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ Bác sĩ 3 - Sử dụng doc3.jpg -->
+      <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+        <div class="team-member">
+          <div class="member-img">
+            <img src="assets/images/doc3.jpg" class="img-fluid" alt="BS. Nguyễn Văn An">
+            <div class="social">
+              <a href=""><i class="bi bi-twitter"></i></a>
+              <a href=""><i class="bi bi-facebook"></i></a>
+              <a href=""><i class="bi bi-instagram"></i></a>
+              <a href=""><i class="bi bi-linkedin"></i></a>
+            </div>
+          </div>
+          <div class="member-info text-center">
+            <h4>BS. Nguyễn Văn An</h4>
+            <span>Chuyên khoa Tim mạch</span>
+            <p>Tiến sĩ về tim mạch, từng công tác tại Bệnh viện Chợ Rẫy</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ Bác sĩ 4 - Sử dụng doc4.webp -->
+      <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
+        <div class="team-member">
+          <div class="member-img">
+            <img src="assets/images/doc4.webp" class="img-fluid" alt="BS. Trần Văn Bình">
+            <div class="social">
+              <a href=""><i class="bi bi-twitter"></i></a>
+              <a href=""><i class="bi bi-facebook"></i></a>
+              <a href=""><i class="bi bi-instagram"></i></a>
+              <a href=""><i class="bi bi-linkedin"></i></a>
+            </div>
+          </div>
+          <div class="member-info text-center">
+            <h4>BS. Trần Văn Bình</h4>
+            <span>Chuyên khoa Hô hấp</span>
+            <p>20 năm kinh nghiệm điều trị các bệnh phổi và hen suyễn</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== TESTIMONIALS SECTION ===== -->
+<section id="testimonials" class="testimonials section">
+  
+  <!-- Section Title -->
+  <div class="container section-title" data-aos="fade-up">
+    <div class="title-badge">PHẢN HỒI</div>
+    <h2>Khách hàng <span class="text-primary">chúng tôi nói gì</span></h2>
+  </div>
+
+  <div class="container" data-aos="fade-up" data-aos-delay="100">
+    
+    <!-- Testimonials Grid -->
+    <div class="row g-4">
+      <div class="col-lg-4 col-md-6" *ngFor="let testimonial of displayedTestimonials; let i = index" 
+           [attr.data-aos]="'fade-up'" 
+           [attr.data-aos-delay]="(i + 1) * 100">
+        
+        <div class="testimonial-card">
+          
+          <!-- Quote Text -->
+          <div class="quote-text">
+            <i class="bi bi-quote quote-icon-left"></i>
+            <p>{{ testimonial.quote }}</p>
+            <i class="bi bi-quote quote-icon-right"></i>
+          </div>
+
+          <!-- Author Info -->
+          <div class="author-info">
+            <img [src]="testimonial.image" [alt]="testimonial.name" class="author-img">
+            <div class="author-details">
+              <h4>{{ testimonial.name }}</h4>
+              <p>{{ testimonial.profession }}</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination Dots -->
+    <div class="testimonial-pagination" data-aos="fade-up" data-aos-delay="400">
+      <button 
+        *ngFor="let item of allTestimonials; let i = index"
+        type="button"
+        class="pagination-dot"
+        [class.active]="i === currentTestimonialIndex"
+        (click)="goToTestimonial(i)">
+      </button>
+    </div>
+
+  </div>
+
+</section>
+
+<!-- ===== FAQ SECTION ===== -->
+<section id="faq" class="faq section">
+
+  <!-- Section Title -->
+  <div class="container section-title" data-aos="fade-up">
+    <div class="title-badge">Câu hỏi thường gặp</div>
+    <h2>Những thắc mắc phổ biến từ khách hàng của chúng tôi </h2>
+
+    <!-- <p>Những thắc mắc phổ biến từ khách hàng của chúng tôi</p> -->
+  </div>
+
+  <div class="container">
+
+    <!-- ✅ FAQ Tabs Navigation -->
+    <div class="faq-tabs" data-aos="fade-up" data-aos-delay="100">
+      <button 
+        class="faq-tab"
+        [class.active]="activeFaqTab === 'general'"
+        (click)="changeFaqTab('general')">
+        <i class="bi bi-question-circle"></i>
+        <span>General</span>
+      </button>
+      <button 
+        class="faq-tab"
+        [class.active]="activeFaqTab === 'pricing'"
+        (click)="changeFaqTab('pricing')">
+        <i class="bi bi-credit-card"></i>
+        <span>Pricing</span>
+      </button>
+      <button 
+        class="faq-tab"
+        [class.active]="activeFaqTab === 'support'"
+        (click)="changeFaqTab('support')">
+        <i class="bi bi-headset"></i>
+        <span>Support</span>
+      </button>
+    </div>
+
+    <!-- ✅ FAQ Content based on active tab -->
+    <div class="faq-content" data-aos="fade-up" data-aos-delay="200">
+
+      <!-- General FAQs -->
+      <div class="faq-list" *ngIf="activeFaqTab === 'general'">
+        <div 
+          class="faq-item"
+          *ngFor="let faq of generalFaqs; let i = index"
+          [class.faq-active]="faq.isOpen"
+          (click)="toggleFaq('general', i)"
+          [attr.data-aos]="'fade-up'"
+          [attr.data-aos-delay]="(i + 1) * 100">
+          
+          <div class="faq-header">
+            <div class="faq-number">{{ i + 1 }}</div>
+            <h3>{{ faq.question }}</h3>
+            <i class="faq-toggle" [class.bi-x]="faq.isOpen" [class.bi-plus]="!faq.isOpen"></i>
+          </div>
+          
+          <div class="faq-answer" *ngIf="faq.isOpen">
+            <p>{{ faq.answer }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing FAQs -->
+      <div class="faq-list" *ngIf="activeFaqTab === 'pricing'">
+        <div 
+          class="faq-item"
+          *ngFor="let faq of pricingFaqs; let i = index"
+          [class.faq-active]="faq.isOpen"
+          (click)="toggleFaq('pricing', i)"
+          [attr.data-aos]="'fade-up'"
+          [attr.data-aos-delay]="(i + 1) * 100">
+          
+          <div class="faq-header">
+            <div class="faq-number">{{ i + 1 }}</div>
+            <h3>{{ faq.question }}</h3>
+            <i class="faq-toggle" [class.bi-x]="faq.isOpen" [class.bi-plus]="!faq.isOpen"></i>
+          </div>
+          
+          <div class="faq-answer" *ngIf="faq.isOpen">
+            <p>{{ faq.answer }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Support FAQs -->
+      <div class="faq-list" *ngIf="activeFaqTab === 'support'">
+        <div 
+          class="faq-item"
+          *ngFor="let faq of supportFaqs; let i = index"
+          [class.faq-active]="faq.isOpen"
+          (click)="toggleFaq('support', i)"
+          [attr.data-aos]="'fade-up'"
+          [attr.data-aos-delay]="(i + 1) * 100">
+          
+          <div class="faq-header">
+            <div class="faq-number">{{ i + 1 }}</div>
+            <h3>{{ faq.question }}</h3>
+            <i class="faq-toggle" [class.bi-x]="faq.isOpen" [class.bi-plus]="!faq.isOpen"></i>
+          </div>
+          
+          <div class="faq-answer" *ngIf="faq.isOpen">
+            <p>{{ faq.answer }}</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ✅ Contact Support CTA -->
+    <div class="faq-cta" data-aos="fade-up" data-aos-delay="300">
+      <div class="cta-content">
+        <p>Still have questions? We're here to help!</p>
+        <button class="btn-contact-support" (click)="scrollToContact()">
+          <i class="bi bi-headset me-2"></i>
+          Contact Support
         </button>
-        <button type="button" class="btn btn-outline-secondary btn-lg px-4">
-          Liên hệ
-        </button>
       </div>
     </div>
-  </div>
-</div>
-<div class="container-fluid py-5 bg-light">
-    <div class="container">
-        <div class="text-center mx-auto mb-5" style="max-width: 600px;">
-            <p class="d-inline-block border rounded-pill py-1 px-4 text-primary">Đội ngũ</p>
-            <h1 class="mw-bold">Đội ngũ Bác sĩ giàu kinh nghiệm</h1>
-        </div>
-        <div class="row g-4">
-            <div class="col-lg-3 col-md-6">
-                <div class="team-item position-relative rounded overflow-hidden shadow-sm">
-                    <div class="overflow-hidden">
-                        <img class="img-fluid" src="assets/images/doc1.jpg" alt="Bác sĩ">
-                    </div>
-                    <div class="team-text bg-white text-center p-4">
-                        <h5>BS. Nguyễn Văn An</h5>
-                        <p class="text-primary">Chuyên khoa Tim mạch</p>
-                        <div class="team-social text-center">
-                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-facebook"></i></a>
-                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-twitter"></i></a>
-                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-instagram"></i></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="team-item position-relative rounded overflow-hidden shadow-sm">
-                    <div class="overflow-hidden">
-                        <img class="img-fluid" src="assets/images/doc2.jpg" alt="Bác sĩ">
-                    </div>
-                    <div class="team-text bg-white text-center p-4">
-                        <h5>BS. Trần Văn Bình</h5>
-                        <p class="text-primary">Chuyên khoa Hô hấp</p>
-                        <div class="team-social text-center">
-                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-facebook"></i></a>
-                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-twitter"></i></a>
-                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-instagram"></i></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="team-item position-relative rounded overflow-hidden shadow-sm">
-                    <div class="overflow-hidden">
-                        <img class="img-fluid" src="assets/images/doc3.jpg" alt="Bác sĩ">
-                    </div>
-                    <div class="team-text bg-white text-center p-4">
-                        <h5>BS. Lê Thị Hương</h5>
-                        <p class="text-primary">Chuyên khoa Tiêu hóa</p>
-                        <div class="team-social text-center">
-                           <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-facebook"></i></a>
-                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-twitter"></i></a>
-                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-instagram"></i></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="team-item position-relative rounded overflow-hidden shadow-sm">
-                    <div class="overflow-hidden">
-                        <img class="img-fluid" src="assets/images/doc4.webp" alt="Bác sĩ">
-                    </div>
-                    <div class="team-text bg-white text-center p-4">
-                        <h5>BS. Phạm Thị Dương</h5>
-                        <p class="text-primary">Chuyên khoa Da liễu</p>
-                        <div class="team-social text-center">
-                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-facebook"></i></a>
-                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-twitter"></i></a>
-                            <a class="btn btn-square btn-outline-primary border-0 m-1" href=""><i class="bi bi-instagram"></i></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="container mt-5 mb-5">
-  <div class="text-center mb-4">
-    <h2 class="fw-bold text-success d-inline-block">Sản phẩm</h2>
+
   </div>
 
-  <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
-    <button
-      *ngFor="let category of categories"
-      class="btn rounded-pill"
-      [class.btn-success]="category === selectedCategory"
-      [class.btn-outline-success]="category !== selectedCategory"
-      (click)="filterByCategory(category)"
-    >
-      {{ category }}
-    </button>
+</section>
+
+<!-- ===== CONTACT SECTION ===== -->
+<section id="contact" class="contact section">
+
+  <!-- Section Title -->
+  <div class="container section-title" data-aos="fade-up">
+    <h2>Liên hệ</h2>
+    <p>Liên hệ với chúng tôi</p>
   </div>
 
-  <div
-    *ngIf="!isLoading && displayedProducts.length > 0; else noProductsOrLoading"
-    class="product-slider-wrapper"
-  >
-    <button class="slider-arrow left" (click)="scroll('left')">
-      <i class="bi bi-chevron-left"></i>
-    </button>
-    <div class="product-scroller" #productScroller>
-      <div *ngFor="let product of displayedProducts" class="product-slide">
-        <app-product-card
-          [product]="product"
-          (addToCart)="addToCart($event)"
-        >
-        </app-product-card>
+  <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+    <div class="row gy-4">
+
+      <!-- ✅ LEFT SIDE - Google Map & Contact Info -->
+      <div class="col-lg-6">
+        
+        <!-- Google Map -->
+        <div class="map-container" data-aos="fade-right">
+          <iframe 
+            class="google-map"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.096743914435!2d105.78031897503205!3d21.028770980629355!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ab86cece8ae5%3A0xf857d30aa8cdcf23!2zVHLGsOG7nW5nIMSQ4bqhaSBo4buNYyBQaGVuaWthYQ!5e0!3m2!1svi!2s!4v1701234567890!5m2!1svi!2s"
+            frameborder="0" 
+            allowfullscreen="" 
+            loading="lazy" 
+            referrerpolicy="no-referrer-when-downgrade">
+          </iframe>
+        </div>
+
+        <!-- Contact Info Cards -->
+        <div class="info-cards mt-4">
+          
+          <!-- Location Card -->
+          <div class="info-card" data-aos="fade-up" data-aos-delay="200">
+            <div class="icon-box">
+              <i class="bi bi-geo-alt  text-primary"></i>
+            </div>
+            <div class="info-content">
+              <h3>Location</h3>
+              <p>96 Định Công, Hoàng Mai, Hà Nội</p>
+            </div>
+          </div>
+
+          <!-- Email Card -->
+          <div class="info-card" data-aos="fade-up" data-aos-delay="300">
+            <div class="icon-box">
+              <i class="bi bi-envelope  text-primary"></i>
+            </div>
+            <div class="info-content">
+              <h3>Email</h3>
+              <p>healthcare@example.com</p>
+            </div>
+          </div>
+
+          <!-- Call Card -->
+          <div class="info-card" data-aos="fade-up" data-aos-delay="400">
+            <div class="icon-box">
+              <i class="bi bi-telephone text-primary"></i>
+            </div>
+            <div class="info-content">
+              <h3>Call</h3>
+              <p>+84 (24) 555-7890</p>
+            </div>
+          </div>
+
+          <!-- Open Hours Card -->
+          <div class="info-card" data-aos="fade-up" data-aos-delay="500">
+            <div class="icon-box">
+              <i class="bi bi-clock  text-primary"></i>
+            </div>
+            <div class="info-content">
+              <h3>Open Hours</h3>
+              <p>Monday-Friday: 8AM - 6PM<br>Saturday: 8AM - 2PM</p>
+            </div>
+          </div>
+
+        </div>
+
       </div>
-    </div>
-    <button class="slider-arrow right" (click)="scroll('right')">
-      <i class="bi bi-chevron-right"></i>
-    </button>
-  </div>
-</div>
-<div class="container-fluid py-5 bg-light">
-    <div class="container">
-        <div class="text-center mx-auto mb-5" style="max-width: 600px;">
-            <h1 class="fw-bold mb-5">Khách hàng của chúng tôi </h1>
-        </div>
 
-        <div *ngIf="displayedTestimonials.length > 0" class="row g-4">
-            <div *ngFor="let testimonial of displayedTestimonials" class="col-lg-4">
-                <div class="testimonial-item text-center">
-                    <img class="bg-white rounded-circle p-2 mx-auto mb-3" [src]="testimonial.image" style="width: 80px; height: 80px;">
-                    <h5 class="mb-0">{{ testimonial.name }}</h5>
-                    <p class="text-muted">{{ testimonial.profession }}</p>
-                    <div class="testimonial-text bg-white text-center p-4 mt-3 rounded shadow-sm">
-                        <p class="mb-0 fst-italic">"{{ testimonial.quote }}"</p>
-                    </div>
-                </div>
+      <!-- ✅ RIGHT SIDE - Get in Touch Form -->
+      <div class="col-lg-6">
+        
+        <div class="contact-form-wrapper" data-aos="fade-left">
+          
+          <!-- Form Header -->
+          <div class="form-header">
+            <h3>Get in Touch</h3>
+            <p>Để lại thông tin của bạn, chúng tôi sẽ liên hệ lại trong thời gian sớm nhất.</p>
+          </div>
+
+          <!-- Contact Form -->
+          <form class="contact-form" #contactForm="ngForm" (ngSubmit)="onSubmitContact(contactForm)">
+            
+            <!-- Name & Email Row -->
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  name="name"
+                  placeholder="Your Name"
+                  [(ngModel)]="contactData.name"
+                  required>
+              </div>
+              <div class="col-md-6">
+                <input 
+                  type="email" 
+                  class="form-control" 
+                  name="email"
+                  placeholder="Your Email"
+                  [(ngModel)]="contactData.email"
+                  required>
+              </div>
             </div>
+
+            <!-- Subject -->
+            <div class="mb-3">
+              <input 
+                type="text" 
+                class="form-control" 
+                name="subject"
+                placeholder="Subject"
+                [(ngModel)]="contactData.subject"
+                required>
+            </div>
+
+            <!-- Message -->
+            <div class="mb-4">
+              <textarea 
+                class="form-control" 
+                name="message"
+                rows="6" 
+                placeholder="Message"
+                [(ngModel)]="contactData.message"
+                required></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <button 
+              type="submit" 
+              class="btn-send-message"
+              [disabled]="!contactForm.valid || isSubmittingContact">
+    
+              <span *ngIf="!isSubmittingContact" class="text-primary fw-bold">
+                  <i class="bi bi-send me-2"></i> 
+                  Send Message
+              </span>
+
+              <span *ngIf="isSubmittingContact" class="text-primary">
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                  Đang gửi...
+              </span>
+            </button>
+
+          </form>
+
+          <!-- Social Links -->
+          <div class="social-links mt-4">
+            <a href="#" class="social-link" target="_blank">
+              <i class="bi bi-twitter"></i>
+            </a>
+            <a href="#" class="social-link" target="_blank">
+              <i class="bi bi-facebook"></i>
+            </a>
+            <a href="#" class="social-link" target="_blank">
+              <i class="bi bi-instagram"></i>
+            </a>
+            <a href="#" class="social-link" target="_blank">
+              <i class="bi bi-linkedin"></i>
+            </a>
+          </div>
+
         </div>
 
-        <div class="testimonial-indicators d-flex justify-content-center gap-2 mt-4">
-          <button
-              *ngFor="let item of allTestimonials; let i = index"
-              type="button"
-              (click)="goToTestimonial(i)"
-              [class.active]="i === currentTestimonialIndex">
-          </button>
-        </div>
-        </div>
-</div>
-<ng-template #noProductsOrLoading>
-  <div *ngIf="isLoading; else noProducts" class="text-center p-5">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Loading...</span>
+      </div>
+
     </div>
-    <p class="mt-2">Đang tải sản phẩm...</p>
+
   </div>
-  <ng-template #noProducts>
-    <div class="text-center p-5 text-muted">
-      <p>Không tìm thấy sản phẩm nào cho danh mục này.</p>
-    </div>
-  </ng-template>
-</ng-template>
+
+</section>

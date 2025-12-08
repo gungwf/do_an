@@ -1,24 +1,31 @@
-// src/app/features/doctor/doctor.routes.ts
-
 import { Routes } from '@angular/router';
 import { Dashboard } from './dashboard/dashboard';
-
-// 1. Import component bạn đã tạo
 import { Appoitments } from './appoitments/appoitments';
+import { DoctorProfile } from './doctor-profile/doctor-profile';
 
 export const DOCTOR_ROUTES: Routes = [
+  // ===== DASHBOARD =====
   {
     path: 'dashboard',
     component: Dashboard,
     title: 'Bảng điều khiển'
   },
+
+  // ===== APPOINTMENTS =====
   {
-    // 2. Kích hoạt route này
-    // Đường dẫn 'appointments' sẽ khớp với routerLink trong layout.html
     path: 'appointments', 
-    component: Appoitments, // Trỏ đến component bạn đã tạo
+    component: Appoitments,
     title: 'Quản lý Lịch hẹn'
   },
+
+  // ===== PROFILE =====
+  {
+    path: 'profile',
+    component: DoctorProfile,
+    title: 'Hồ sơ cá nhân'
+  },
+
+  // ===== DEFAULT REDIRECT =====
   {
     path: '', 
     redirectTo: 'dashboard',

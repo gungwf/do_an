@@ -38,5 +38,11 @@ export const PATIENT_ROUTES: Routes = [
     loadComponent: () =>
       import('./products/products').then(m => m.ProductsComponent),
   },
+  {
+    path: 'profile',
+    loadComponent: () => 
+      import('./patient-profile/patient-profile').then(m => m.PatientProfile),
+    title: 'Hồ sơ cá nhân'
+  },
   
 ];

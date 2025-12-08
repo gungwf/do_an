@@ -1,3 +1,13 @@
+/* ✅ SỬA 4: Thêm class màu sắc thương hiệu */
+.text-brand {
+  color: #3fbbc0 !important;
+}
+
+/* Kế thừa hover cho link active nếu cần */
+.nav-link.router-link-active {
+    color: #3fbbc0 !important;
+}
+
 .cart-container {
   position: relative;
   display: inline-block;

@@ -1,58 +1,67 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-/** Kiểu dữ liệu của một sản phẩm */
 export interface Product {
   id: string;
   productName: string;
   description: string;
   price: number;
-  productType: string;
-  category: string;
-  imageUrl: string;
-  active: boolean;
+  stockQuantity: number;
+  image?: string; // ✅ THÊM LẠI field này
+  imageUrl?: string; // ✅ Field từ backend
+  categoryName?: string;
+  categoryId?: string;
 }
 
-/** Kiểu dữ liệu phản hồi khi tìm kiếm sản phẩm */
 export interface ProductSearchResponse {
-  totalElements: number;
+  content: Product[];
   totalPages: number;
+  totalElements: number;
   size: number;
   number: number;
-  content: Product[];
-  first: boolean;
-  last: boolean;
-  empty: boolean;
 }
-
-export interface Category {
-  id: string;
-  name: string;
-}
-
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ProductService {
-  private baseUrl = 'http://localhost:8080/products'; // URL gốc của backend
+  private BASE_URL = 'http://localhost:8080/products';
 
   constructor(private http: HttpClient) {}
 
-  /** Gọi API lấy danh sách danh mục sản phẩm */
-  getCategories(): Observable<{ id: string; name: string }[]> {
-  return this.http.get<{ id: string; name: string }[]>(`${this.baseUrl}/categories`);  }
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      return new HttpHeaders({
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      });
+    }
+    return new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+  }
 
-  /** Gọi API tìm kiếm + phân trang sản phẩm */
-  searchProducts(body: {
-    search?: string;
-    category?: string | null;
-    sort?: string;
-    page?: number;
-    size?: number;
-  }): Observable<ProductSearchResponse> {
-    return this.http.post<ProductSearchResponse>(`${this.baseUrl}/search`, body);
+  searchProducts(body: any): Observable<ProductSearchResponse> {
+    return this.http.post<ProductSearchResponse>(
+      `${this.BASE_URL}/search`,
+      body,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  getCategories(): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.BASE_URL}/categories`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  getProductById(id: string): Observable<Product> {
+    return this.http.get<Product>(
+      `${this.BASE_URL}/${id}`,
+      { headers: this.getAuthHeaders() }
+    );
   }
 }
-

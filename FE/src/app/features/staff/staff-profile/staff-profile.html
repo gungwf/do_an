@@ -1,0 +1,238 @@
+<div class="staff-profile-page">
+  <!-- Breadcrumb -->
+  <div class="breadcrumb-section mb-4">
+    <h2 class="page-title">Profile</h2>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a routerLink="/staff">Home</a></li>
+        <li class="breadcrumb-item active">Profile</li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-3 text-muted">Đang tải thông tin...</p>
+  </div>
+
+  <!-- Profile Content -->
+  <div *ngIf="!isLoading" class="row g-4">
+    
+    <!-- LEFT SIDEBAR: Avatar & Basic Info -->
+    <div class="col-lg-4">
+      <div class="profile-card">
+        
+        <!-- Avatar Section -->
+        <div class="avatar-section">
+          <div class="avatar-wrapper" (click)="onAvatarClick()">
+            <img 
+              [src]="avatarUrl" 
+              [alt]="fullName"
+              (error)="onAvatarError($event)"
+              class="profile-avatar">
+            
+            <!-- Upload Overlay -->
+            <div class="avatar-overlay">
+              <i class="bi bi-camera-fill"></i>
+              <span>Thay đổi</span>
+            </div>
+
+            <!-- Upload Spinner -->
+            <div class="avatar-spinner" *ngIf="isUploadingAvatar">
+              <div class="spinner-border text-light"></div>
+            </div>
+          </div>
+
+          <!-- Hidden File Input -->
+          <input 
+            id="avatarInput"
+            type="file" 
+            accept="image/*"
+            style="display: none"
+            (change)="onAvatarSelected($event)">
+        </div>
+
+        <!-- Basic Info -->
+        <div class="profile-info text-center mt-4">
+          <h3 class="profile-name">{{ fullName }}</h3>
+          <p class="profile-role">
+            <i class="bi bi-briefcase me-2"></i>
+            {{ position }}
+          </p>
+
+          <!-- Social Links (Optional) -->
+          <div class="social-links mt-3">
+            <a href="#" class="social-icon">
+              <i class="bi bi-twitter"></i>
+            </a>
+            <a href="#" class="social-icon">
+              <i class="bi bi-facebook"></i>
+            </a>
+            <a href="#" class="social-icon">
+              <i class="bi bi-instagram"></i>
+            </a>
+            <a href="#" class="social-icon">
+              <i class="bi bi-linkedin"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT CONTENT: Profile Details -->
+    <div class="col-lg-8">
+      <div class="profile-details-card">
+        
+        <!-- Tabs Navigation -->
+        <ul class="nav nav-tabs profile-tabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button 
+              class="nav-link"
+              [class.active]="activeTab === 'overview'"
+              (click)="setActiveTab('overview')">
+              <i class="bi bi-person-circle me-2"></i>
+              Overview
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button 
+              class="nav-link"
+              [class.active]="activeTab === 'edit'"
+              (click)="setActiveTab('edit')">
+              <i class="bi bi-pencil-square me-2"></i>
+              Edit Profile
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button 
+              class="nav-link"
+              [class.active]="activeTab === 'settings'"
+              (click)="setActiveTab('settings')">
+              <i class="bi bi-gear me-2"></i>
+              Settings
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button 
+              class="nav-link"
+              [class.active]="activeTab === 'password'"
+              (click)="setActiveTab('password')">
+              <i class="bi bi-shield-lock me-2"></i>
+              Change Password
+            </button>
+          </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content p-4">
+          
+          <!-- OVERVIEW TAB -->
+          <div *ngIf="activeTab === 'overview'" class="tab-pane-content">
+            <div class="section-header">
+              <h4 class="section-title">About</h4>
+            </div>
+            <p class="text-muted">
+              Nhân viên {{ position }} tại {{ branchName }}. 
+              Chịu trách nhiệm quản lý và hỗ trợ các hoạt động hành chính, đặt lịch hẹn và chăm sóc khách hàng.
+            </p>
+
+            <div class="section-header mt-4">
+              <h4 class="section-title">Profile Details</h4>
+            </div>
+
+            <div class="profile-details-table">
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-person-fill me-2"></i>
+                  Full Name
+                </div>
+                <div class="detail-value">{{ fullName }}</div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-briefcase-fill me-2"></i>
+                  Chức vụ
+                </div>
+                <div class="detail-value">{{ position }}</div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-shield-check me-2"></i>
+                  Vai trò
+                </div>
+                <div class="detail-value">
+                  <span class="badge bg-info">{{ role }}</span>
+                </div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-telephone-fill me-2"></i>
+                  Phone
+                </div>
+                <div class="detail-value">{{ phoneNumber }}</div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-envelope-fill me-2"></i>
+                  Email
+                </div>
+                <div class="detail-value">{{ email }}</div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-building me-2"></i>
+                  Chi nhánh
+                </div>
+                <div class="detail-value">
+                  <span *ngIf="staffProfile?.branchName; else loadingBranch">
+                    {{ branchName }}
+                  </span>
+                  <ng-template #loadingBranch>
+                    <span class="text-muted">
+                      <i class="bi bi-hourglass-split me-1"></i>
+                      Đang tải...
+                    </span>
+                  </ng-template>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- EDIT PROFILE TAB -->
+          <div *ngIf="activeTab === 'edit'" class="tab-pane-content">
+            <div class="section-header">
+              <h4 class="section-title">Edit Profile</h4>
+            </div>
+            <p class="text-muted">Chức năng chỉnh sửa thông tin sẽ được cập nhật sau.</p>
+          </div>
+
+          <!-- SETTINGS TAB -->
+          <div *ngIf="activeTab === 'settings'" class="tab-pane-content">
+            <div class="section-header">
+              <h4 class="section-title">Settings</h4>
+            </div>
+            <p class="text-muted">Chức năng cài đặt sẽ được cập nhật sau.</p>
+          </div>
+
+          <!-- CHANGE PASSWORD TAB -->
+          <div *ngIf="activeTab === 'password'" class="tab-pane-content">
+            <div class="section-header">
+              <h4 class="section-title">Change Password</h4>
+            </div>
+            <p class="text-muted">Chức năng đổi mật khẩu sẽ được cập nhật sau.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

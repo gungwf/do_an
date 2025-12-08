@@ -34,12 +34,16 @@ export interface PaymentResponse {
   paymentUrl: string;
 }
 
+// ✅ CẬP NHẬT: Thêm 3 field mới cho prescription dialog
 export interface AppointmentResponseDto {
   id: string;
   appointmentTime: string; 
   status: 'PENDING' | 'CONFIRMED' | 'CANCELED' | 'COMPLETED' | 'PENDING_PAYMENT' | 'CREATED_MEDICAL_RECORD' | 'PENDING_BILLING' | 'PAID_SERVICE';
   notes: string;
   priceAtBooking: number;
+  medicalRecordId?: string;  // ✅ THÊM MỚI - ID của bệnh án
+  diagnosis?: string;          // ✅ THÊM MỚI - Chẩn đoán hiện tại
+  icd10Code?: string;          // ✅ THÊM MỚI - Mã ICD-10 hiện tại
   patient: { id: string; fullName: string; email: string; };
   doctor: { id: string; fullName: string; };
   branch: { id: string; branchName: string; address: string; };
@@ -66,7 +70,7 @@ export interface AppointmentSearchResponse {
   // ... các trường phân trang khác
 }
 
-// === 1. THÊM DTO MỚI CHO DOCTOR SEARCH REQUEST ===
+// === 1. DTO CHO DOCTOR SEARCH REQUEST ===
 export interface DoctorAppointmentSearchDto {
   page: number;
   size: number;
@@ -75,7 +79,7 @@ export interface DoctorAppointmentSearchDto {
   status: string | null;
 }
 
-// === 2. THÊM DTO MỚI CHO DOCTOR SEARCH RESPONSE (Page) ===
+// === 2. DTO CHO DOCTOR SEARCH RESPONSE (Page) ===
 export interface PagedAppointmentResponse {
   content: AppointmentResponseDto[];
   totalPages: number;
@@ -102,7 +106,6 @@ export class AppointmentService {
 
   // ------------------------------------
   // --- CÁC HÀM GET DỮ LIỆU CHUNG ---
-  // (Giữ nguyên không đổi)
   // ------------------------------------
 
   getBranchesSimple(): Observable<BranchSimpleDto[]> {
@@ -126,7 +129,6 @@ export class AppointmentService {
 
   // ------------------------------------
   // --- CÁC HÀM CỦA BỆNH NHÂN ---
-  // (Giữ nguyên không đổi)
   // ------------------------------------
 
   bookAppointment(payload: any): Observable<any> { 
@@ -156,7 +158,7 @@ export class AppointmentService {
   }
   
   // ------------------------------------
-  // --- 3. CẬP NHẬT HÀM CỦA BÁC SĨ ---
+  // --- HÀM CỦA BÁC SĨ ---
   // ------------------------------------
 
   /**
@@ -165,10 +167,8 @@ export class AppointmentService {
    */
   getDoctorAppointments(
     doctorId: string, 
-    payload: DoctorAppointmentSearchDto // <-- Sửa tham số
-  ): Observable<PagedAppointmentResponse> { // <-- Sửa kiểu trả về
-    
-    // Sửa từ .get() thành .post() và cập nhật URL
+    payload: DoctorAppointmentSearchDto
+  ): Observable<PagedAppointmentResponse> {
     return this.http.post<PagedAppointmentResponse>(
       `${this.BASE_URL}/appointments/doctor/${doctorId}/appointments`, 
       payload
@@ -177,7 +177,6 @@ export class AppointmentService {
 
   // ------------------------------------
   // --- HÀM CỦA ADMIN ---
-  // (Giữ nguyên không đổi)
   // ------------------------------------
   
   /**
@@ -190,8 +189,8 @@ export class AppointmentService {
 
   // ------------------------------------
   // --- HÀM CHUNG ---
-  // (Giữ nguyên không đổi)
   // ------------------------------------
+  
   getAppointmentById(appointmentId: string): Observable<AppointmentResponseDto> {
     return this.http.get<AppointmentResponseDto>(`${this.BASE_URL}/appointments/${appointmentId}`);
   }
