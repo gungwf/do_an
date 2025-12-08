@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, EventEmitter, Output } from '@angular/core';
 import { CommonModule, formatDate } from '@angular/common'; 
 // (MỚI) Thêm switchMap để nối chuỗi API
 import { Observable, forkJoin, map, startWith, of, tap, catchError, switchMap } from 'rxjs'; 
@@ -7,6 +7,7 @@ import { AuthService, UserDto } from '../../../core/services/auth';
 // (SỬA) Sửa lại tên file import (AppointmentService -> appointment)
 import { AppointmentService, BranchSimpleDto, DoctorDto, SpecialtyDto } from '../../../core/services/AppointmentService'; 
 import { ToastrService } from 'ngx-toastr';
+import { ChatService } from '../../../core/services/chat.service';
 
 @Component({
   selector: 'app-appointment-booking',
@@ -16,6 +17,7 @@ import { ToastrService } from 'ngx-toastr';
   styleUrl: './appointment-booking.scss'
 })
 export class AppointmentBooking implements OnInit {
+  @Output() chatWithDoctor = new EventEmitter<string>();
 
   currentUser: UserDto | null = null;
   allBranchesList: BranchSimpleDto[] = [];
@@ -51,7 +53,8 @@ export class AppointmentBooking implements OnInit {
   constructor(
     private authService: AuthService,
     private appointmentService: AppointmentService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private chatService: ChatService
   ) {}
 
   ngOnInit(): void {
@@ -293,5 +296,14 @@ export class AppointmentBooking implements OnInit {
       // Nếu là null (do catchError), không làm gì cả (lỗi đã được hiển thị)
     });
     // --- (KẾT THÚC LOGIC MỚI) ---
+  }
+
+  /**
+   * Bắt đầu chat với bác sĩ
+   */
+  startChat(doctorId: string): void {
+    // Trigger mở chat bubble và tạo room với bác sĩ
+    this.chatService.triggerOpenChatWith(doctorId);
+    this.toastr.success('Đang mở cửa sổ chat...');
   }
 }

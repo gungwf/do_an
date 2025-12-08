@@ -126,6 +126,22 @@ services:
     networks:
       - clinic-network
 
+  chatbot-service:
+    build: ./chatbot-service
+    container_name: chatbot-service
+    restart: always
+    ports:
+      - "8001:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL}
+      - OPENAI_MODEL=gpt-4o-mini
+      - API_GATEWAY_URL=http://api-gateway:8080
+    depends_on:
+      - api-gateway
+    networks:
+      - clinic-network
+
 # Định nghĩa một mạng ảo chung cho tất cả các container
 networks:
   clinic-network:

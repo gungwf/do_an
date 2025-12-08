@@ -74,3 +74,6 @@
     </main>
   </div>
 </div>
+
+<!-- Chat bubble cho bác sĩ -->
+<app-chat-bubble *ngIf="authService.isAuthenticated()" [userRole]="'DOCTOR'"></app-chat-bubble>

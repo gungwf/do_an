@@ -181,4 +181,8 @@
     </footer>
   </div>
 </div>
+
+<!-- Chat bubble chỉ hiển thị khi đã đăng nhập -->
+<app-chat-bubble *ngIf="authService.isAuthenticated()" [userRole]="'PATIENT'"></app-chat-bubble>
+
 <app-auth-modal *ngIf="isAuthModalOpen" (closeModal)="isAuthModalOpen = false"></app-auth-modal>

@@ -34,9 +34,9 @@ public class ChatRestController {
   }
 
 
-  @GetMapping("/doctors/online")
-  public Set<Long> getOnlineDoctors() {
-// Simplified: returns online userIds; in real app filter role=DOCTOR by querying user service or participant table
-    return presenceService.getOnlineUserIds();
-  }
+//   @GetMapping("/doctors/online")
+//   public Set<Long> getOnlineDoctors() {
+// // Simplified: returns online userIds; in real app filter role=DOCTOR by querying user service or participant table
+//     return presenceService.getOnlineUserIds();
+//   }
 }

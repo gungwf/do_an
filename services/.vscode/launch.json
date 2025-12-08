@@ -63,6 +63,16 @@
             "projectName": "product-inventory-service",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-ReportingServiceApplication<reporting-service>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.reporting_service.reporting_service.ReportingServiceApplication",
+            "projectName": "reporting-service",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }
