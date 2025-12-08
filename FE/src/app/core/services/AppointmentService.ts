@@ -34,19 +34,33 @@ export interface PaymentResponse {
   paymentUrl: string;
 }
 
-// ✅ CẬP NHẬT: Thêm 3 field mới cho prescription dialog
+// ✅ Interface cho Patient Appointments
 export interface AppointmentResponseDto {
   id: string;
   appointmentTime: string; 
   status: 'PENDING' | 'CONFIRMED' | 'CANCELED' | 'COMPLETED' | 'PENDING_PAYMENT' | 'CREATED_MEDICAL_RECORD' | 'PENDING_BILLING' | 'PAID_SERVICE';
   notes: string;
   priceAtBooking: number;
-  medicalRecordId?: string;  // ✅ THÊM MỚI - ID của bệnh án
-  diagnosis?: string;          // ✅ THÊM MỚI - Chẩn đoán hiện tại
-  icd10Code?: string;          // ✅ THÊM MỚI - Mã ICD-10 hiện tại
-  patient: { id: string; fullName: string; email: string; };
-  doctor: { id: string; fullName: string; };
-  branch: { id: string; branchName: string; address: string; };
+  medicalRecordId?: string;
+  diagnosis?: string;
+  icd10Code?: string;
+  createdAt?: string;
+  paymentStatus?: string;
+  patient: { 
+    id: string; 
+    fullName: string; 
+    email: string; 
+  };
+  doctor: { 
+    id: string; 
+    fullName: string;
+    specialty?: string;
+  };
+  branch: { 
+    id: string; 
+    branchName: string; 
+    address: string; 
+  };
 }
 
 // --- INTERFACE CHO ADMIN SEARCH ---
@@ -67,7 +81,6 @@ export interface AppointmentSearchResponse {
   content: AppointmentResponseDto[]; 
   totalElements: number;
   totalPages: number;
-  // ... các trường phân trang khác
 }
 
 // === 1. DTO CHO DOCTOR SEARCH REQUEST ===
@@ -85,14 +98,16 @@ export interface PagedAppointmentResponse {
   totalPages: number;
   totalElements: number;
   size: number;
-  number: number; // Trang hiện tại (bắt đầu từ 0)
-  // (Bạn có thể thêm 'first', 'last', 'empty' nếu cần)
+  number: number;
 }
-
 
 // ------------------------------------
 // --- SERVICE CHÍNH ---
 // ------------------------------------
+export interface TimeSlotDto {
+  time: string;
+  isBooked: boolean;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -127,6 +142,13 @@ export class AppointmentService {
     return this.http.get<string[]>(`${this.BASE_URL}/slots/available`, { params });
   }
 
+  getBookedSlots(doctorId: string, date: string): Observable<string[]> {
+    let params = new HttpParams()
+      .set('doctorId', doctorId)
+      .set('date', date);
+    return this.http.get<string[]>(`${this.BASE_URL}/slots/booked`, { params });
+  }
+
   // ------------------------------------
   // --- CÁC HÀM CỦA BỆNH NHÂN ---
   // ------------------------------------
@@ -153,10 +175,24 @@ export class AppointmentService {
     return this.http.get(`${this.BASE_URL}/api/v1/payment/vnpay-return`, { params });
   }
 
+  /**
+   * ✅ Lấy danh sách lịch hẹn của bệnh nhân
+   * API: GET /appointments/patient/{patientId}
+   */
   getMyAppointments(patientId: string): Observable<AppointmentResponseDto[]> {
     return this.http.get<AppointmentResponseDto[]>(`${this.BASE_URL}/appointments/patient/${patientId}`);
   }
-  
+
+  /**
+   * ✅ Hủy lịch hẹn
+   * API: PUT /appointments/{appointmentId}/cancel
+   * @param appointmentId ID của appointment cần hủy
+   * @returns Observable<void>
+   */
+  cancelAppointment(appointmentId: string): Observable<void> {
+    return this.http.put<void>(`${this.BASE_URL}/appointments/${appointmentId}/cancel`, {});
+  }
+
   // ------------------------------------
   // --- HÀM CỦA BÁC SĨ ---
   // ------------------------------------

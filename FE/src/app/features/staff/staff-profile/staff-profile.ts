@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { AuthService, UserDto } from '../../../core/services/auth';
 import { BranchService, Branch } from '../../../core/services/branch.service';
 import { ToastrService } from 'ngx-toastr';
+import { switchMap } from 'rxjs/operators';
 
 interface StaffProfileExtended extends UserDto {
   branchId?: string;
@@ -37,7 +38,6 @@ export class StaffProfile implements OnInit {
     private branchService: BranchService,
     private toastr: ToastrService
   ) {
-    // ✅ Set default avatar immediately
     this.defaultAvatar = this.authService.getDefaultAvatar('staff');
     this.currentAvatarUrl = this.defaultAvatar;
   }
@@ -46,47 +46,51 @@ export class StaffProfile implements OnInit {
     this.loadStaffProfile();
   }
 
-  // ===== LOAD PROFILE =====
+  // ===== ✅ CẬP NHẬT: LOAD PROFILE USING NEW API =====
   loadStaffProfile(): void {
     this.isLoading = true;
+    console.log('🔄 [StaffProfile] Loading profile using getUserIdFromToken()...');
 
-    // ✅ Staff uses getCurrentUser() (not getCurrentDoctor)
-    this.authService.getCurrentUser().subscribe({
-      next: (user) => {
-        if (user) {
-          this.staffProfile = user as StaffProfileExtended;
-          console.log('✅ Staff profile loaded:', user);
+    // ✅ Step 1: Get userId from token (GET /users/getId)
+    this.authService.getUserIdFromToken().pipe(
+      switchMap(userId => {
+        console.log('✅ [StaffProfile] Got userId:', userId);
+        // ✅ Step 2: Get user details by ID (GET /users/{id})
+        return this.authService.getUserById(userId);
+      })
+    ).subscribe({
+      next: (user: UserDto) => {
+        console.log('✅ [StaffProfile] User details loaded:', user);
+        
+        this.staffProfile = user as StaffProfileExtended;
 
-          // ✅ Set avatar URL with fallback
-          if (user.avatarUrl) {
-            this.currentAvatarUrl = user.avatarUrl;
-            this.avatarLoadError = false;
-          } else {
-            this.currentAvatarUrl = this.defaultAvatar;
-            this.avatarLoadError = false;
-          }
-
-          // ✅ Set default position
-          if (!this.staffProfile.position) {
-            this.staffProfile.position = 'Nhân viên';
-          }
-
-          // ✅ Load branch info if branchId exists
-          // TODO: Backend cần thêm branchId vào staff profile
-          // Tạm thời set default
-          if (this.staffProfile.branchId) {
-            this.loadBranchInfo(this.staffProfile.branchId);
-          } else {
-            console.warn('⚠️ Staff profile does not have branchId');
-            this.staffProfile.branchName = 'Chưa có thông tin chi nhánh';
-          }
+        // ✅ Set avatar URL with fallback
+        if (user.avatarUrl) {
+          this.currentAvatarUrl = user.avatarUrl;
+          this.avatarLoadError = false;
         } else {
-          this.toastr.error('Không thể tải thông tin nhân viên', 'Lỗi');
+          this.currentAvatarUrl = this.defaultAvatar;
+          this.avatarLoadError = false;
         }
+
+        // ✅ Set default position
+        if (!this.staffProfile.position) {
+          this.staffProfile.position = 'Nhân viên';
+        }
+
+        // ✅ Load branch info if branchId exists
+        if (this.staffProfile.branchId) {
+          console.log('🔍 [StaffProfile] Loading branch info for branchId:', this.staffProfile.branchId);
+          this.loadBranchInfo(this.staffProfile.branchId);
+        } else {
+          console.warn('⚠️ [StaffProfile] No branchId found in user profile');
+          this.staffProfile.branchName = 'Chưa có thông tin chi nhánh';
+        }
+
         this.isLoading = false;
       },
-      error: (error) => {
-        console.error('❌ Error loading staff profile:', error);
+      error: (error: any) => {
+        console.error('❌ [StaffProfile] Error loading profile:', error);
         this.toastr.error('Không thể tải thông tin nhân viên', 'Lỗi');
         this.isLoading = false;
         this.currentAvatarUrl = this.defaultAvatar;
@@ -96,17 +100,17 @@ export class StaffProfile implements OnInit {
 
   // ✅ Load Branch Info
   loadBranchInfo(branchId: string): void {
-    console.log('🔍 Loading branch info for ID:', branchId);
+    console.log('🔍 [StaffProfile] Loading branch info for ID:', branchId);
     
     this.branchService.getBranchById(branchId).subscribe({
       next: (branch: Branch) => {
         if (this.staffProfile) {
           this.staffProfile.branchName = branch.branchName;
-          console.log('✅ Branch loaded:', branch.branchName);
+          console.log('✅ [StaffProfile] Branch loaded:', branch.branchName);
         }
       },
-      error: (error) => {
-        console.error('❌ Error loading branch:', error);
+      error: (error: any) => {
+        console.error('❌ [StaffProfile] Error loading branch:', error);
         if (this.staffProfile) {
           this.staffProfile.branchName = 'Chưa xác định';
         }
@@ -159,7 +163,7 @@ export class StaffProfile implements OnInit {
         this.toastr.success('Cập nhật ảnh đại diện thành công!', 'Thành công');
         event.target.value = '';
       },
-      error: (error) => {
+      error: (error: any) => {
         this.isUploadingAvatar = false;
         this.currentAvatarUrl = this.staffProfile?.avatarUrl || this.defaultAvatar;
         this.avatarLoadError = false;
@@ -172,7 +176,7 @@ export class StaffProfile implements OnInit {
 
   onAvatarError(event: any): void {
     if (!this.avatarLoadError) {
-      console.warn('⚠️ Avatar failed to load, using default');
+      console.warn('⚠️ [StaffProfile] Avatar failed to load, using default');
       this.avatarLoadError = true;
       event.target.src = this.defaultAvatar;
     }
@@ -210,5 +214,13 @@ export class StaffProfile implements OnInit {
 
   get role(): string {
     return this.staffProfile?.role || 'STAFF';
+  }
+
+  get isActive(): boolean {
+    return this.staffProfile?.active !== false;
+  }
+
+  get userId(): string {
+    return this.staffProfile?.id || '';
   }
 }

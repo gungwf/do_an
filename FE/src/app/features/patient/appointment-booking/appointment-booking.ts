@@ -1,13 +1,17 @@
 import { Component, OnInit, EventEmitter, Output } from '@angular/core';
 import { CommonModule, formatDate } from '@angular/common'; 
-// (MỚI) Thêm switchMap để nối chuỗi API
-import { Observable, forkJoin, map, startWith, of, tap, catchError, switchMap } from 'rxjs'; 
+import { Observable, forkJoin, map, startWith, of, tap, catchError, switchMap, finalize } from 'rxjs'; 
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { AuthService, UserDto } from '../../../core/services/auth';
-// (SỬA) Sửa lại tên file import (AppointmentService -> appointment)
 import { AppointmentService, BranchSimpleDto, DoctorDto, SpecialtyDto } from '../../../core/services/AppointmentService'; 
 import { ToastrService } from 'ngx-toastr';
 import { ChatService } from '../../../core/services/chat.service';
+
+// ✅ THÊM MỚI: Interface cho slot với trạng thái booked
+interface TimeSlot {
+  time: string;
+  isBooked: boolean;
+}
 
 @Component({
   selector: 'app-appointment-booking',
@@ -24,31 +28,31 @@ export class AppointmentBooking implements OnInit {
   branches$: Observable<BranchSimpleDto[]> = of([]);
   allDoctors: DoctorDto[] = [];
   filteredDoctors$: Observable<DoctorDto[]> = of([]);
-  
-  // (MỚI) Thêm Observable cho chuyên khoa
   specialties$: Observable<SpecialtyDto[]> = of([]); 
 
   bookingForm = new FormGroup({
     patientName: new FormControl({ value: '', disabled: true }, Validators.required),
-    reason: new FormControl('', Validators.required), // notes
+    reason: new FormControl('', Validators.required),
     doctorNameFilter: new FormControl(''),
     branchFilter: new FormControl(''),
-    specialtyFilter: new FormControl(''), // (MỚI) Thêm filter chuyên khoa
+    specialtyFilter: new FormControl(''),
   });
 
-  isLoading = true; // Tải ban đầu
+  isLoading = true;
 
   // Trạng thái logic lịch hẹn
   selectedDoctor: DoctorDto | null = null;
-  calendarDays: { date: string, label: string, dayOfWeek: string }[] = []; // Lịch 7 ngày
+  calendarDays: { date: string, label: string, dayOfWeek: string }[] = [];
   selectedDate: string | null = null; 
-  isLoadingSlots = false; // Spinner khi tải giờ
-  availableSlots: string[] = []; // Giờ trống cho ngày đã chọn
+  isLoadingSlots = false;
+  
+  // ✅ ĐỔI: Từ string[] sang TimeSlot[]
+  availableSlots: TimeSlot[] = [];
   selectedTime: string | null = null; 
 
   // Trạng thái dialog
   isConfirmModalOpen: boolean = false;
-  isBooking: boolean = false; // Trạng thái "đang đặt lịch" cho spinner
+  isBooking: boolean = false;
 
   constructor(
     private authService: AuthService,
@@ -58,13 +62,12 @@ export class AppointmentBooking implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // (Giữ nguyên logic ngOnInit)
     this.isLoading = true;
     forkJoin({
       user: this.authService.getCurrentUser(),
       branches: this.appointmentService.getBranchesSimple(), 
       doctors: this.appointmentService.getDoctors(),
-      specialties: this.appointmentService.getSpecialties() // (MỚI) Tải chuyên khoa
+      specialties: this.appointmentService.getSpecialties()
     }).subscribe({
       next: ({ user, branches, doctors, specialties }) => {
         this.currentUser = user;
@@ -75,11 +78,9 @@ export class AppointmentBooking implements OnInit {
         this.branches$ = of(branches);
         this.allDoctors = doctors;
         
-        // (MỚI) Xử lý chuyên khoa (lọc trùng lặp)
         const uniqueSpecialties = this.filterUniqueSpecialties(specialties);
         this.specialties$ = of(uniqueSpecialties);
 
-        // Lắng nghe thay đổi form để lọc bác sĩ (giờ đã bao gồm specialtyFilter)
         this.filteredDoctors$ = this.bookingForm.valueChanges.pipe(
           startWith(this.bookingForm.value),
           map(formValue => this.applyFilters(formValue))
@@ -95,11 +96,8 @@ export class AppointmentBooking implements OnInit {
     });
   }
 
-  
   private filterUniqueSpecialties(specialties: SpecialtyDto[]): SpecialtyDto[] {
-    // (Giữ nguyên logic filterUniqueSpecialties)
     const seen = new Set<string>();
-    // Dựa trên response API của bạn, 'name' là trường chúng ta muốn
     return specialties.filter(spec => {
       const isDuplicate = seen.has(spec.name);
       seen.add(spec.name);
@@ -107,33 +105,24 @@ export class AppointmentBooking implements OnInit {
     });
   }
 
-  
   applyFilters(filters: any): DoctorDto[] {
-    // (Giữ nguyên logic applyFilters)
     let doctors = [...this.allDoctors];
 
-    // Lọc theo tên
     if (filters.doctorNameFilter) {
       const nameLower = filters.doctorNameFilter.toLowerCase();
       doctors = doctors.filter(doc => doc.fullName.toLowerCase().includes(nameLower));
     }
-    // Lọc theo chi nhánh
     if (filters.branchFilter) {
       doctors = doctors.filter(doc => doc.branchId === filters.branchFilter);
     }
-    // (MỚI) Lọc theo chuyên khoa
     if (filters.specialtyFilter) {
-      // Giả định API /users/doctors trả về specialty là string (ví dụ: "Nha khoa Tổng quát")
-      // Và giá trị của filter là spec.name (ví dụ: "Nha khoa Tổng quát")
       doctors = doctors.filter(doc => doc.specialty === filters.specialtyFilter);
     }
 
     return doctors;
   }
 
-  
   selectDoctor(doctor: DoctorDto) {
-    // (Giữ nguyên logic selectDoctor)
     if (this.selectedDoctor?.id === doctor.id) return;
     this.selectedDoctor = doctor;
     this.selectedDate = null; 
@@ -143,9 +132,7 @@ export class AppointmentBooking implements OnInit {
     console.log("Đã chọn bác sĩ:", doctor);
   }
 
-  
   generateCalendarDays(numberOfDays: number): { date: string, label: string, dayOfWeek: string }[] {
-    // (Giữ nguyên logic generateCalendarDays)
     const days = [];
     const today = new Date();
     const locale = 'vi-VN'; 
@@ -161,9 +148,8 @@ export class AppointmentBooking implements OnInit {
     return days;
   }
 
-  
+  // ✅ CẬP NHẬT: Load cả available và booked slots
   selectDate(date: string) {
-    // (Giữ nguyên logic selectDate)
     if (!this.selectedDoctor || this.selectedDate === date) return;
 
     this.selectedDate = date;
@@ -171,38 +157,66 @@ export class AppointmentBooking implements OnInit {
     this.availableSlots = [];
     this.isLoadingSlots = true;
 
-    console.log(`Đã chọn ngày ${formatDate(date, 'dd/MM/yyyy', 'en-US')}, đang tải giờ trống...`);
+    console.log(`Đã chọn ngày ${formatDate(date, 'dd/MM/yyyy', 'en-US')}, đang tải giờ...`);
 
-    this.appointmentService.getAvailableSlots(this.selectedDoctor.id, date)
-      .pipe(
-        catchError(err => {
-          this.toastr.error(`Không thể tải giờ trống cho ngày ${formatDate(date, 'dd/MM/yyyy', 'en-US')}.`);
-          console.error("Lỗi getAvailableSlots:", err);
-          return of([]);
-        })
-      )
-      .subscribe(slots => {
-        this.availableSlots = slots; 
-        this.isLoadingSlots = false;
-        console.log(`Giờ trống cho ngày ${formatDate(date, 'dd/MM/yyyy', 'en-US')}:`, slots);
-      });
+    // Gọi song song 2 API: available và booked
+    forkJoin({
+      available: this.appointmentService.getAvailableSlots(this.selectedDoctor.id, date),
+      booked: this.appointmentService.getBookedSlots(this.selectedDoctor.id, date)
+    }).pipe(
+      finalize(() => this.isLoadingSlots = false),
+      catchError(err => {
+        this.toastr.error(`Không thể tải giờ trống cho ngày ${formatDate(date, 'dd/MM/yyyy', 'en-US')}.`);
+        console.error("Lỗi load slots:", err);
+        return of({ available: [], booked: [] });
+      })
+    ).subscribe(({ available, booked }) => {
+      console.log('Available slots:', available);
+      console.log('Booked slots:', booked);
+
+      // Tạo Set để check nhanh
+      const bookedSet = new Set(booked);
+
+      // Map thành TimeSlot[] với trạng thái isBooked
+      this.availableSlots = available.map(time => ({
+        time,
+        isBooked: bookedSet.has(time)
+      }));
+
+      console.log('Processed slots:', this.availableSlots);
+    });
   }
 
-  
-  selectTime(time: string) {
-    // (Giữ nguyên logic selectTime)
+  // ✅ THÊM MỚI: Lấy slots buổi sáng (7:00 - 12:59)
+  getMorningSlots(): TimeSlot[] {
+    return this.availableSlots.filter(slot => {
+      const hour = parseInt(slot.time.split(':')[0]);
+      return hour >= 7 && hour < 13;
+    });
+  }
+
+  // ✅ THÊM MỚI: Lấy slots buổi chiều (13:00 - 18:00)
+  getAfternoonSlots(): TimeSlot[] {
+    return this.availableSlots.filter(slot => {
+      const hour = parseInt(slot.time.split(':')[0]);
+      return hour >= 13 && hour <= 18;
+    });
+  }
+
+  // ✅ CẬP NHẬT: Chỉ cho phép chọn slot chưa bị book
+  selectTime(time: string, isBooked: boolean) {
+    if (isBooked) {
+      this.toastr.warning('Khung giờ này đã có người đặt. Vui lòng chọn giờ khác.', 'Thông báo');
+      return;
+    }
     this.selectedTime = time;
   }
 
-  
   getBranchDetails(branchId: string): BranchSimpleDto | undefined {
-    // (Giữ nguyên logic getBranchDetails)
     return this.allBranchesList.find(b => b.id === branchId);
   }
-  
-  
+
   openConfirmModal() {
-    // (Giữ nguyên logic openConfirmModal)
     if (!this.currentUser || !this.selectedDoctor || !this.selectedDate || !this.selectedTime) {
       this.toastr.error('Vui lòng chọn đầy đủ thông tin bác sĩ, ngày và giờ khám.');
       return;
@@ -216,17 +230,12 @@ export class AppointmentBooking implements OnInit {
     console.log("Mở dialog tóm tắt.");
   }
 
-  
   closeConfirmModal() {
-    // (Giữ nguyên logic closeConfirmModal)
     if (!this.isBooking) { 
       this.isConfirmModalOpen = false;
     }
   }
 
-  /**
-   * (ĐÃ CẬP NHẬT) Gọi API đặt lịch VÀ API thanh toán
-   */
   onBookAppointment() {
     if (!this.selectedDoctor || !this.selectedDate || !this.selectedTime) return;
 
@@ -244,58 +253,44 @@ export class AppointmentBooking implements OnInit {
 
     console.log('Bước 1: Chuẩn bị đặt lịch PENDING:', payload);
 
-    // --- (LOGIC MỚI) ---
-    // Bước 1: Gọi API tạo lịch hẹn (PENDING)
     this.appointmentService.bookAppointment(payload).pipe(
       tap(bookResponse => {
         console.log('Bước 1: Đặt lịch PENDING thành công:', bookResponse);
         this.toastr.info('Đang tạo link thanh toán...');
       }),
-      // Chuyển sang Bước 2: Dùng ID từ Bước 1 để gọi API thanh toán
       switchMap(bookResponse => {
-        const appointmentId = bookResponse.id; // Lấy ID từ phản hồi
+        const appointmentId = bookResponse.id;
         if (!appointmentId) {
-          // Ném lỗi để catchError bắt
           throw new Error('Không nhận được ID lịch hẹn từ backend.');
         }
         console.log(`Bước 2: Gọi API createPayment với ID: ${appointmentId}`);
-        // Gọi hàm createPayment (đã thêm ở service)
         return this.appointmentService.createPayment(appointmentId); 
       }),
-      // Xử lý lỗi (cho cả 2 bước)
       catchError(err => {
-        this.isBooking = false; // Tắt spinner
+        this.isBooking = false;
         
-        // (SỬA LỖI PARSING) Xử lý trường hợp API trả về text (URL) nhưng HttpClient cố parse JSON
-        // (Đây là lỗi 'SyntaxError: Unexpected token 'h'...' từ screenshot image_528dfe.png)
         if (err.status === 200 && err.error?.text && err.statusText === 'OK') {
            console.warn('Lỗi parsing đã được xử lý (API trả về text), đang lấy URL từ text...');
-           return of(err.error.text); // Trả về chuỗi text (URL)
+           return of(err.error.text);
         }
 
-        // Nếu là lỗi thật (400, 500...)
         const errorMsg = err.error?.message || err.error?.error || err.message || 'Lỗi không xác định';
         this.toastr.error(`Xử lý thất bại: ${errorMsg}`);
         console.error('Lỗi trong chuỗi đặt lịch/thanh toán:', err);
-        return of(null); // Dừng chuỗi, trả về null
+        return of(null);
       })
-    ).subscribe((paymentUrl: string | null) => { // (SỬA) Nhận về string hoặc null
-      // (CHỈ CHẠY NẾU CẢ 2 BƯỚC THÀNH CÔNG)
+    ).subscribe((paymentUrl: string | null) => {
       this.isBooking = false;
       
       if (paymentUrl && typeof paymentUrl === 'string' && paymentUrl.startsWith('http')) {
-        // Bước 3: Chuyển hướng đến trang thanh toán
         console.log('Bước 3: Nhận được link thanh toán. Đang chuyển hướng...');
         this.toastr.success('Đã tạo lịch, đang chuyển đến trang thanh toán.');
-        window.location.href = paymentUrl; // Chuyển hướng
+        window.location.href = paymentUrl;
       } else if (paymentUrl) {
-         // Vẫn thành công nhưng không có URL (lỗi logic)
         console.error('Lỗi: API createPayment thành công nhưng không trả về URL hợp lệ.', paymentUrl);
         this.toastr.error('Không thể lấy link thanh toán, vui lòng thử lại.');
       }
-      // Nếu là null (do catchError), không làm gì cả (lỗi đã được hiển thị)
     });
-    // --- (KẾT THÚC LOGIC MỚI) ---
   }
 
   /**

@@ -15,7 +15,7 @@ export const staffRoutes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'dashboard',
+        redirectTo: 'medical-records',
         pathMatch: 'full'
       },
       {

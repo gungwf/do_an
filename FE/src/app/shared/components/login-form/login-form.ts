@@ -73,8 +73,8 @@ export class LoginForm {
               console.log('🔄 Redirecting to /doctor/dashboard');
               this.router.navigate(['/doctor/dashboard']);
             } else if (this.authService.isStaff()) {
-              console.log('🔄 Redirecting to /staff/dashboard');
-              this.router.navigate(['/staff/dashboard']);
+              console.log('🔄 Redirecting to /staff/medical-records');
+              this.router.navigate(['/staff/medical-records']);
             } else {
               console.log('🔄 Redirecting to home');
               this.router.navigate(['/']);

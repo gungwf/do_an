@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError, of } from 'rxjs';
 import { tap, catchError, map, switchMap } from 'rxjs/operators';
-import { BranchService, Branch } from './branch.service'; // ✅ Import BranchService
+import { BranchService, Branch } from './branch.service';
 
 // ===== DTOs =====
 export interface UserDto {
@@ -43,7 +43,7 @@ export interface PatientProfileDto {
 
 export interface DoctorProfileDto extends DoctorDto {
   user?: UserDto;
-  branch?: Branch; // ✅ Add branch property
+  branch?: Branch;
 }
 
 export interface AvatarUploadResponse {
@@ -73,7 +73,7 @@ export class AuthService {
   constructor(
     private router: Router,
     private http: HttpClient,
-    private branchService: BranchService // ✅ Inject BranchService
+    private branchService: BranchService
   ) {}
 
   // ===== REGISTER =====
@@ -113,7 +113,48 @@ export class AuthService {
     );
   }
 
-  // ===== GET CURRENT USER =====
+  // ===== ✅ THÊM MỚI: GET USER ID FROM TOKEN =====
+  /**
+   * Gọi API GET /users/getId để lấy userId từ accessToken
+   * @returns Observable<string> - userId
+   */
+  getUserIdFromToken(): Observable<string> {
+    return this.http.get(`${this.apiUrl}/users/getId`, { responseType: 'text' }).pipe(
+      tap(userId => {
+        console.log('✅ [getUserIdFromToken] userId:', userId);
+        if (userId) {
+          this.saveUserIdSilent(userId);
+        }
+      }),
+      catchError(err => {
+        console.error('❌ [getUserIdFromToken] Error:', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  // ===== ✅ THÊM MỚI: GET USER BY ID =====
+  /**
+   * Gọi API GET /users/{id} để lấy thông tin user
+   * @param userId - ID của user
+   * @returns Observable<UserDto>
+   */
+  getUserById(userId: string): Observable<UserDto> {
+    return this.http.get<UserDto>(`${this.apiUrl}/users/${userId}`).pipe(
+      tap(user => {
+        console.log('✅ [getUserById] user:', user);
+        if (user?.id) {
+          this.saveUserIdSilent(user.id);
+        }
+      }),
+      catchError(err => {
+        console.error('❌ [getUserById] Error:', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  // ===== ✅ CẬP NHẬT: GET CURRENT USER - Dùng cho STAFF/ADMIN =====
   getCurrentUser(): Observable<UserDto | null> {
     const token = this.getTokenSilent();
     if (!token) return of(null);
@@ -128,10 +169,15 @@ export class AuthService {
       return this.getCurrentPatientUser();
     }
     
+    // ✅ STAFF/ADMIN: Dùng getUserIdFromToken() -> getUserById()
     if (this.isStaff() || this.isAdmin()) {
-      return this.getUserByToken();
+      return this.getUserIdFromToken().pipe(
+        switchMap(userId => this.getUserById(userId)),
+        catchError(() => of(null))
+      );
     }
     
+    // Fallback: Try old method
     return this.getUserByToken();
   }
 
@@ -161,7 +207,7 @@ export class AuthService {
     );
   }
 
-  // ===== GET USER BY TOKEN =====
+  // ===== GET USER BY TOKEN (OLD METHOD - Fallback) =====
   private getUserByToken(): Observable<UserDto | null> {
     return this.http.get<UserDto>(`${this.apiUrl}/users/me`).pipe(
       tap(user => {
@@ -205,7 +251,6 @@ export class AuthService {
           user: response.user
         };
 
-        // ✅ Fetch branch if branchId exists
         if (response.user.branchId) {
           return this.branchService.getBranchById(response.user.branchId).pipe(
             map(branch => ({
