@@ -8,6 +8,7 @@ public class ChatMessageDto {
   private Long id;
   private Long roomId;
   private String senderId;
+  private String senderName; // Name of the sender (loaded from User)
   private String content;
   private String messageType;
   private String metadata;

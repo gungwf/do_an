@@ -6,6 +6,7 @@ import java.util.List;
 public interface ChatService {
   ChatMessageDto saveMessage(ChatMessageDto dto);
   List<ChatMessageDto> getRecentMessages(Long roomId, int limit);
+  List<ChatMessageDto> getMessagesByRoom(Long roomId, int page, int size);
 
   ChatMessageDto markDelivered(Long messageId, String deliveredByUserId);
   ChatMessageDto markRead(Long messageId, String readByUserId);

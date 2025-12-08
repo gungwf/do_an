@@ -1,8 +1,10 @@
 package com.service.sys_srv.chat.controller;
 
+import com.service.sys_srv.chat.dto.ChatMessageDto;
 import com.service.sys_srv.chat.entity.ChatParticipant;
 import com.service.sys_srv.chat.entity.ChatRoom;
 import com.service.sys_srv.chat.service.ChatRoomService;
+import com.service.sys_srv.chat.service.ChatService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +15,11 @@ import java.util.List;
 public class ChatRoomController {
 
   private final ChatRoomService chatRoomService;
+  private final ChatService chatService;
 
-  public ChatRoomController(ChatRoomService chatRoomService) {
+  public ChatRoomController(ChatRoomService chatRoomService, ChatService chatService) {
     this.chatRoomService = chatRoomService;
+    this.chatService = chatService;
   }
 
   /**
@@ -50,5 +54,14 @@ public class ChatRoomController {
   @GetMapping("/by-user/{userId}")
   public ResponseEntity<List<ChatRoom>> listRoomsForUser(@PathVariable String userId) {
     return ResponseEntity.ok(chatRoomService.findRoomsByUserId(userId));
+  }
+
+  @GetMapping("/{roomId}/messages")
+  public ResponseEntity<List<ChatMessageDto>> getMessages(
+      @PathVariable Long roomId,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "50") int size) {
+    // Inject ChatService to get messages
+    return ResponseEntity.ok(chatService.getMessagesByRoom(roomId, page, size));
   }
 }

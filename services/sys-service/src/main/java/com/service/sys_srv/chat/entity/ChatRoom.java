@@ -1,13 +1,9 @@
 package com.service.sys_srv.chat.entity;
 
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.Data;
 
 @Data
@@ -25,5 +21,9 @@ public class ChatRoom {
 
   @Column(name = "created_at")
   private LocalDateTime createdAt = LocalDateTime.now();
+
+  // Transient field for participants (not stored in DB, loaded manually)
+  @Transient
+  private List<ChatParticipant> participants;
 
 }
