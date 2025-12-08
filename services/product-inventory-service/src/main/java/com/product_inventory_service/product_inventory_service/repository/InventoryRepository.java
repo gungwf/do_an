@@ -26,4 +26,7 @@ public interface InventoryRepository extends JpaRepository<Inventory, InventoryI
 
     // Lọc theo productId cụ thể (hữu ích khi gom trong cùng endpoint)
     Page<Inventory> findById_BranchIdAndId_ProductId(UUID branchId, UUID productId, Pageable pageable);
+
+    // Lọc theo danh sách productId
+    Page<Inventory> findById_BranchIdAndId_ProductIdIn(UUID branchId, List<UUID> productIds, Pageable pageable);
 }

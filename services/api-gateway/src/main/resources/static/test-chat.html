@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Chat Test Fixed</title>
+
+  <!-- SockJS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+
+  <!-- STOMP.js đúng CDN (đã fix lỗi 404) -->
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+
+  <style>
+    body { font-family: Arial, Helvetica, monospace; padding: 12px; }
+    #log { white-space: pre-wrap; background:#111; color:#b3ffb3; padding:10px; height:360px; overflow:auto; }
+    .input { margin:6px 0; }
+  </style>
+</head>
+<body>
+<h3>Chat Test (STOMP + SockJS) — CDN FIXED</h3>
+
+<div class="input">
+  WS base (no query):
+  <input id="wsbase" value="http://localhost:8080/ws-chat" size="40">
+</div>
+
+<div class="input">
+  Token: <input id="token" size="80" placeholder="paste access_token here">
+</div>
+
+<div class="input">
+  RoomId: <input id="roomId" value="2" size="6">
+  UserId (optional): <input id="userId" size="36">
+</div>
+
+<button onclick="connect()">CONNECT</button>
+<button onclick="disconnect()">DISCONNECT</button>
+
+<hr>
+
+<input id="msg" size="60" placeholder="message">
+<button onclick="sendMessage()">SEND</button>
+
+<h4>Log</h4>
+<div id="log"></div>
+
+<script>
+  const logEl = document.getElementById('log');
+  function log(s){
+    const t = typeof s === 'object' ? JSON.stringify(s) : s;
+    logEl.textContent += t + '\n';
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  let stompClient = null;
+  let subscription = null;
+
+  function connect(){
+    const base = document.getElementById('wsbase').value.trim();
+    const token = document.getElementById('token').value.trim();
+    const roomId = document.getElementById('roomId').value.trim();
+
+    if(!token){ alert('paste token'); return; }
+
+    const sockUrl = base + '?access_token=' + encodeURIComponent(token);
+    log('[CONNECT] SockJS -> ' + sockUrl);
+
+    const socket = new SockJS(sockUrl);
+
+    stompClient = new StompJs.Client({
+      webSocketFactory: () => socket,
+      reconnectDelay: 3000,
+      debug: (m) => log('[STOMP] ' + m),
+
+      onConnect: () => {
+        log('[CONNECTED]');
+
+        // subscribe
+        const dest = '/topic/chat.' + roomId;
+        subscription = stompClient.subscribe(dest, (msg) => {
+          log('[RECV] ' + msg.body);
+
+          const body = JSON.parse(msg.body);
+
+          // auto ACK delivered + read
+          if(body && body.id && body.messageType){
+            log('[AUTO] DELIVERED -> ' + body.id);
+            stompClient.publish({
+              destination: '/app/chat.delivered',
+              body: JSON.stringify({ messageId: body.id })
+            });
+
+            setTimeout(() => {
+              log('[AUTO] READ -> ' + body.id);
+              stompClient.publish({
+                destination: '/app/chat.read',
+                body: JSON.stringify({ messageId: body.id })
+              });
+            }, 1200);
+          }
+        });
+
+        log('[SUBSCRIBED] ' + dest);
+      },
+
+      onStompError: (frame) => log('[STOMP ERROR] ' + JSON.stringify(frame)),
+      onWebSocketClose: (evt) => log('[WS CLOSED]')
+    });
+
+    stompClient.activate();
+  }
+
+  function disconnect(){
+    if(stompClient){
+      stompClient.deactivate();
+      log('[DISCONNECTED]');
+    }
+  }
+
+  function sendMessage(){
+    if(!stompClient || !stompClient.active){
+      alert('NOT CONNECTED'); return;
+    }
+
+    const roomId = Number(document.getElementById('roomId').value.trim());
+    const content = document.getElementById('msg').value;
+
+    const payload = { roomId: roomId, content: content };
+
+    log('[SEND] ' + JSON.stringify(payload));
+
+    stompClient.publish({
+      destination: '/app/chat.send',
+      body: JSON.stringify(payload)
+    });
+
+    document.getElementById('msg').value = '';
+  }
+</script>
+
+</body>
+</html>

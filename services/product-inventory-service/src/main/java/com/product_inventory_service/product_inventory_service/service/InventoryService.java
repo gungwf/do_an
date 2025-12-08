@@ -124,6 +124,28 @@ public class InventoryService {
         return inventoryRepository.findById_BranchId(branchId, pageable);
     }
 
+    public Page<Inventory> searchInventoryByBranchWithProductIds(UUID branchId,
+                                                                 Integer minQuantity,
+                                                                 Integer maxQuantity,
+                                                                 Boolean lowStockOnly,
+                                                                 List<UUID> productIds,
+                                                                 int page,
+                                                                 int size,
+                                                                 Sort sort) {
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        if (productIds != null && !productIds.isEmpty()) {
+            return inventoryRepository.findById_BranchIdAndId_ProductIdIn(branchId, productIds, pageable);
+        }
+        if (lowStockOnly != null && lowStockOnly) {
+            return inventoryRepository.findById_BranchIdAndQuantityLessThan(branchId, stockThreshold, pageable);
+        }
+        if (minQuantity != null && maxQuantity != null) {
+            return inventoryRepository.findById_BranchIdAndQuantityBetween(branchId, minQuantity, maxQuantity, pageable);
+        }
+        return inventoryRepository.findById_BranchId(branchId, pageable);
+    }
+
     public Page<Inventory> searchLowStock(UUID branchId,
                                           int page,
                                           int size,

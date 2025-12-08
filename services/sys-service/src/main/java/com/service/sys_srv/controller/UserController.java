@@ -19,6 +19,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @RequestMapping("/users")
@@ -144,4 +147,27 @@ public class UserController {
             return ResponseEntity.internalServerError().body(null);
         }
     }
+
+    @GetMapping("/getId")
+    public ResponseEntity<String> getMethodName(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        String token = null;
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                token = authHeader.substring(7);
+            }
+
+        // Lấy userId từ token
+            if (token == null) {
+                return ResponseEntity.status(401).body(null); // Unauthorized
+            }
+            
+            String userIdFromToken = jwtService.extractUserId(token);
+            if (userIdFromToken == null) {
+                return ResponseEntity.status(401).body(null); // Unauthorized
+            }
+            
+            UUID userId = UUID.fromString(userIdFromToken);
+        return ResponseEntity.ok(userId.toString());
+    }
+    
 }

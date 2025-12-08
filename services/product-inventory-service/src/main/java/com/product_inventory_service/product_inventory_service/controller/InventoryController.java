@@ -74,6 +74,7 @@ public class InventoryController {
             inventory.getId().getBranchId(),
             inventory.getId().getProductId(),
             productName,
+            productRepository.findById(inventory.getId().getProductId()).map(Product::getImageUrl).orElse(null),
             inventory.getQuantity()
         );
         var resp = ApiResponse.<InventoryResponseDto>builder()
@@ -99,6 +100,7 @@ public class InventoryController {
             inventory.getId().getBranchId(),
             inventory.getId().getProductId(),
             productName,
+            productRepository.findById(inventory.getId().getProductId()).map(Product::getImageUrl).orElse(null),
             inventory.getQuantity()
         );
         var resp = ApiResponse.<InventoryResponseDto>builder()
@@ -134,16 +136,43 @@ public class InventoryController {
         Sort sort = Sort.by(sortBy);
         sort = "DESC".equalsIgnoreCase(sortDir) ? sort.descending() : sort.ascending();
 
-        Page<Inventory> pageData = inventoryService.searchInventoryByBranch(
-            branchId,
-            request.getMinQuantity(),
-            request.getMaxQuantity(),
-            request.getLowStockOnly(),
-            request.getProductId(),
-            page,
-            size,
-            sort
-        );
+        List<UUID> filterProductIds = null;
+        boolean hasNameFilter = request.getProductName() != null && !request.getProductName().isBlank();
+        if (hasNameFilter) {
+            var matches = productRepository.findByProductNameContainingIgnoreCase(request.getProductName());
+            filterProductIds = matches.stream().map(Product::getId).collect(Collectors.toList());
+            if (filterProductIds.isEmpty()) {
+            Page<InventoryResponseDto> empty = Page.empty();
+            ApiResponse<Page<InventoryResponseDto>> resp = ApiResponse.<Page<InventoryResponseDto>>builder()
+                .code(0)
+                .message("OK")
+                .result(empty)
+                .build();
+            return ResponseEntity.ok(resp);
+            }
+        }
+
+        Page<Inventory> pageData = (filterProductIds != null)
+            ? inventoryService.searchInventoryByBranchWithProductIds(
+                branchId,
+                request.getMinQuantity(),
+                request.getMaxQuantity(),
+                request.getLowStockOnly(),
+                filterProductIds,
+                page,
+                size,
+                sort
+            )
+            : inventoryService.searchInventoryByBranch(
+                branchId,
+                request.getMinQuantity(),
+                request.getMaxQuantity(),
+                request.getLowStockOnly(),
+                null,
+                page,
+                size,
+                sort
+            );
 
         Page<InventoryResponseDto> dtoPage = pageData.map(inv -> {
             var pid = inv.getId().getProductId();
@@ -152,6 +181,7 @@ public class InventoryController {
                 inv.getId().getBranchId(),
                 pid,
                 pName,
+                productRepository.findById(pid).map(Product::getImageUrl).orElse(null),
                 inv.getQuantity()
             );
         });
@@ -187,12 +217,13 @@ public class InventoryController {
         Page<InventoryResponseDto> dtoPage = pageData.map(inv -> {
             var pid = inv.getId().getProductId();
             String pName = productRepository.findById(pid).map(Product::getProductName).orElse(null);
-            return new InventoryResponseDto(
+                return new InventoryResponseDto(
                     inv.getId().getBranchId(),
                     pid,
                     pName,
+                    productRepository.findById(pid).map(Product::getImageUrl).orElse(null),
                     inv.getQuantity()
-            );
+                );
         });
 
         ApiResponse<Page<InventoryResponseDto>> resp = ApiResponse.<Page<InventoryResponseDto>>builder()
@@ -232,26 +263,54 @@ public class InventoryController {
         Sort sort = Sort.by(sortBy);
         sort = "DESC".equalsIgnoreCase(sortDir) ? sort.descending() : sort.ascending();
 
-        Page<Inventory> pageData = inventoryService.searchInventoryByBranch(
+        List<UUID> filterProductIds2 = null;
+        boolean hasNameFilter2 = request.getProductName() != null && !request.getProductName().isBlank();
+        if (hasNameFilter2) {
+            var matches2 = productRepository.findByProductNameContainingIgnoreCase(request.getProductName());
+            filterProductIds2 = matches2.stream().map(Product::getId).collect(Collectors.toList());
+            if (filterProductIds2.isEmpty()) {
+            Page<InventoryResponseDto> empty = Page.empty();
+            ApiResponse<Page<InventoryResponseDto>> resp = ApiResponse.<Page<InventoryResponseDto>>builder()
+                .code(0)
+                .message("OK")
+                .result(empty)
+                .build();
+            return ResponseEntity.ok(resp);
+            }
+        }
+
+        Page<Inventory> pageData = (filterProductIds2 != null)
+            ? inventoryService.searchInventoryByBranchWithProductIds(
                 effectiveBranchId,
                 request.getMinQuantity(),
                 request.getMaxQuantity(),
                 request.getLowStockOnly(),
-                request.getProductId(),
+                filterProductIds2,
                 page,
                 size,
                 sort
-        );
+            )
+            : inventoryService.searchInventoryByBranch(
+                effectiveBranchId,
+                request.getMinQuantity(),
+                request.getMaxQuantity(),
+                request.getLowStockOnly(),
+                null,
+                page,
+                size,
+                sort
+            );
 
         Page<InventoryResponseDto> dtoPage = pageData.map(inv -> {
             var pid = inv.getId().getProductId();
             String pName = productRepository.findById(pid).map(Product::getProductName).orElse(null);
-            return new InventoryResponseDto(
+                return new InventoryResponseDto(
                     inv.getId().getBranchId(),
                     pid,
                     pName,
+                    productRepository.findById(pid).map(Product::getImageUrl).orElse(null),
                     inv.getQuantity()
-            );
+                );
         });
 
         ApiResponse<Page<InventoryResponseDto>> resp = ApiResponse.<Page<InventoryResponseDto>>builder()
@@ -317,6 +376,7 @@ public class InventoryController {
             inventory.getId().getBranchId(),
             inventory.getId().getProductId(),
             productName2,
+            productRepository.findById(inventory.getId().getProductId()).map(Product::getImageUrl).orElse(null),
             inventory.getQuantity()
         );
         var resp = ApiResponse.<InventoryResponseDto>builder()

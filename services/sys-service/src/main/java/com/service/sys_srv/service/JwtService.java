@@ -55,6 +55,15 @@ public class JwtService {
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
+    public boolean isTokenValid(String token) {
+        try {
+            // Nếu parse được và không expired => valid
+            return !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);

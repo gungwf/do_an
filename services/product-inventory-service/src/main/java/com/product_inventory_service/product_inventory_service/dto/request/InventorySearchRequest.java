@@ -15,5 +15,5 @@ public class InventorySearchRequest {
     private Integer minQuantity;
     private Integer maxQuantity;
     private Boolean lowStockOnly;
-    private UUID productId;
+    private String productName;
 }
