@@ -1,0 +1,175 @@
+<div class="modal-backdrop"></div>
+
+<div class="modal-container">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <div>
+        <h3>Kê đơn thuốc</h3>
+        <p class="text-muted mb-0">Bệnh nhân: <strong>{{ patientName }}</strong></p>
+      </div>
+      <button class="btn-close" (click)="close()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Chẩn đoán -->
+      <div class="diagnosis-section mb-4">
+        <label class="form-label fw-bold">Chẩn đoán <span class="text-danger">*</span></label>
+        <textarea 
+          class="form-control" 
+          rows="2" 
+          [(ngModel)]="diagnosis"
+          placeholder="Nhập chẩn đoán bệnh"
+        ></textarea>
+      </div>
+
+      <!-- Search & Filter -->
+      <div class="search-section mb-3">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Tìm thuốc..."
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="onSearchChange()"
+            />
+          </div>
+          <div class="col-md-6">
+            <select class="form-select" (change)="onCategoryChange($event)">
+              <option value="">Tất cả danh mục</option>
+              <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Danh sách thuốc có sẵn -->
+      <div class="products-section mb-4">
+        <h5 class="mb-3">Danh sách thuốc</h5>
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 60%">Tên thuốc</th>
+                <th style="width: 25%" class="text-end">Giá</th>
+                <th style="width: 15%" class="text-center">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let product of products">
+                <td>{{ product.productName }}</td>
+                <td class="text-end">{{ product.price | number:'1.0-0' }}đ</td>
+                <td class="text-center">
+                  <button 
+                    class="btn btn-sm btn-primary" 
+                    type="button"
+                    (click)="addMedicine(product)">
+                    <i class="bi bi-plus-circle"></i> Thêm
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="products.length === 0">
+                <td colspan="3" class="text-center text-muted">Không tìm thấy thuốc</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <button 
+            class="btn btn-outline-secondary btn-sm" 
+            type="button"
+            (click)="prevPage()" 
+            [disabled]="page === 0">
+            ← Trang trước
+          </button>
+          <span>Trang {{ page + 1 }} / {{ totalPages || 1 }}</span>
+          <button 
+            class="btn btn-outline-secondary btn-sm" 
+            type="button"
+            (click)="nextPage()" 
+            [disabled]="page >= totalPages - 1">
+            Trang sau →
+          </button>
+        </div>
+      </div>
+
+      <!-- Danh sách thuốc đã chọn -->
+      <div class="selected-medicines-section" *ngIf="selectedMedicines.length > 0">
+        <h5 class="mb-3">Thuốc đã chọn ({{ selectedMedicines.length }})</h5>
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th style="width: 35%">Tên thuốc</th>
+                <th style="width: 15%">Số lượng</th>
+                <th style="width: 30%">Liều lượng <span class="text-danger">*</span></th>
+                <th style="width: 15%">Thành tiền</th>
+                <th style="width: 5%"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let medicine of selectedMedicines; let i = index">
+                <td>{{ medicine.productName }}</td>
+                <td>
+                  <div class="quantity-control">
+                    <button 
+                      class="btn btn-sm btn-outline-secondary" 
+                      type="button"
+                      (click)="decreaseQuantity(i)">-</button>
+                    <span class="px-3">{{ medicine.quantity }}</span>
+                    <button 
+                      class="btn btn-sm btn-outline-secondary" 
+                      type="button"
+                      (click)="increaseQuantity(i)">+</button>
+                  </div>
+                </td>
+                <td>
+                  <input 
+                    type="text" 
+                    class="form-control form-control-sm" 
+                    [(ngModel)]="medicine.dosage"
+                    placeholder="VD: 1 viên x 2 lần/ngày"
+                  />
+                </td>
+                <td class="text-end">{{ (medicine.price * medicine.quantity) | number:'1.0-0' }}đ</td>
+                <td class="text-center">
+                  <button 
+                    class="btn btn-sm btn-danger" 
+                    type="button"
+                    (click)="removeMedicine(i)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3" class="text-end fw-bold">Tổng cộng:</td>
+                <td class="text-end fw-bold">{{ getTotalAmount() | number:'1.0-0' }}đ</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button 
+        class="btn btn-secondary" 
+        type="button"
+        (click)="close()" 
+        [disabled]="loading">Hủy</button>
+      <button 
+        class="btn btn-primary" 
+        type="button"
+        (click)="onSubmit()" 
+        [disabled]="loading">
+        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+        {{ loading ? 'Đang lưu...' : 'Lưu đơn thuốc' }}
+      </button>
+    </div>
+  </div>
+</div>

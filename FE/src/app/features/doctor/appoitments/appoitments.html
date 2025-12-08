@@ -101,9 +101,17 @@
 
                   <button 
                     *ngIf="canCreateMedicalRecord(appt)"
-                    class="btn btn-sm btn-success"
+                    class="btn btn-sm btn-success me-2"
                     (click)="onStartMedicalRecord(appt)">
                     <i class="bi bi-file-earmark-plus"></i> Tạo Bệnh án
+                  </button>
+
+                  <!-- ✅ THÊM BUTTON KÊ ĐƠN THUỐC -->
+                  <button 
+                    *ngIf="canCreatePrescription(appt)"
+                    class="btn btn-sm btn-primary me-2"
+                    (click)="openPrescriptionDialog(appt)">
+                    <i class="bi bi-prescription2"></i> Kê đơn thuốc
                   </button>
 
                   <span 
@@ -235,3 +243,15 @@
   (closeModal)="onCloseRecordModal()"
   (submitSuccess)="onSubmitSuccess()">
 </app-medical-record-form>
+
+<!-- ✅ SỬA PRESCRIPTION DIALOG: Dùng prescriptionAppointment thay vì selectedAppointment -->
+<app-prescription-dialog
+  *ngIf="showPrescriptionDialog && prescriptionAppointment"
+  [medicalRecordId]="prescriptionAppointment.medicalRecordId!"
+  [appointmentId]="prescriptionAppointment.id"
+  [patientName]="prescriptionAppointment.patient.fullName"
+  [currentDiagnosis]="prescriptionAppointment.diagnosis || ''"
+  [currentIcd10Code]="prescriptionAppointment.icd10Code || ''"
+  (closed)="closePrescriptionDialog()"
+  (saved)="onPrescriptionSaved()"
+></app-prescription-dialog>

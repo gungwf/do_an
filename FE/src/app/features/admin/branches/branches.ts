@@ -1,26 +1,11 @@
-// src/app/features/admin/branches/branches.ts
-
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
 
-// Service
-import { BranchService } from '../../../core/services/branch.service'; 
+// ✅ IMPORT INTERFACES FROM SERVICE
+import { BranchService, Branch, CreateBranchDto } from '../../../core/services/branch.service'; 
 import { AuthService } from '../../../core/services/auth'; 
-
-// *** THAY ĐỔI: ĐỊNH NGHĨA MODEL TẠI ĐÂY (THAY VÌ IMPORT) ***
-export interface Branch {
-  id: string;
-  branchName: string;
-  address: string;
-  phoneNumber: string;
-  createdAt: string;
-  updatedAt: string;
-  active: boolean;
-}
-export type CreateBranchDto = Pick<Branch, 'branchName' | 'address' | 'phoneNumber'>;
-// *** KẾT THÚC THAY ĐỔI ***
 
 @Component({
   selector: 'app-branches',
@@ -41,7 +26,7 @@ export class BranchesComponent implements OnInit {
   private branchService = inject(BranchService);
 
   // State
-  public branches: Branch[] = []; // Vẫn dùng được kiểu 'Branch'
+  public branches: Branch[] = [];
   public isLoading = false;
   public isSubmitting = false; 
 
@@ -77,16 +62,17 @@ export class BranchesComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.branches = data;
+          console.log('✅ Branches loaded:', data);
         },
         error: (err) => {
-          console.error('Lỗi khi tải danh sách chi nhánh:', err);
+          console.error('❌ Lỗi khi tải danh sách chi nhánh:', err);
         }
       });
   }
 
   // --- Logic Modal Thêm/Sửa ---
 
-  openBranchModal(branch: Branch | null): void { // Vẫn dùng được kiểu 'Branch'
+  openBranchModal(branch: Branch | null): void {
     if (branch) {
       this.isEditMode = true;
       this.editingBranch = branch; 
@@ -113,7 +99,7 @@ export class BranchesComponent implements OnInit {
     this.isSubmitting = true;
 
     if (this.isEditMode && this.editingBranch) {
-      const updatedBranch: Branch = { // Vẫn dùng được kiểu 'Branch'
+      const updatedBranch: Branch = {
         ...this.editingBranch, 
         ...this.branchForm.value 
       };
@@ -122,14 +108,15 @@ export class BranchesComponent implements OnInit {
         .pipe(finalize(() => this.isSubmitting = false))
         .subscribe({
           next: () => {
+            console.log('✅ Branch updated successfully');
             this.loadBranches(); 
             this.closeBranchModal();
           },
-          error: (err) => console.error('Lỗi cập nhật:', err)
+          error: (err) => console.error('❌ Lỗi cập nhật:', err)
         });
 
     } else {
-      const createDto: CreateBranchDto = { // Vẫn dùng được kiểu 'CreateBranchDto'
+      const createDto: CreateBranchDto = {
         branchName: this.branchForm.value.branchName,
         address: this.branchForm.value.address,
         phoneNumber: this.branchForm.value.phoneNumber
@@ -139,17 +126,18 @@ export class BranchesComponent implements OnInit {
         .pipe(finalize(() => this.isSubmitting = false))
         .subscribe({
           next: () => {
+            console.log('✅ Branch created successfully');
             this.loadBranches();
             this.closeBranchModal();
           },
-          error: (err) => console.error('Lỗi thêm mới:', err)
+          error: (err) => console.error('❌ Lỗi thêm mới:', err)
         });
     }
   }
 
   // --- Logic Modal Chi tiết ---
   
-  openDetailModal(branch: Branch): void { // Vẫn dùng được kiểu 'Branch'
+  openDetailModal(branch: Branch): void {
     this.selectedBranch = null; 
     this.showDetailModal = true;
     this.isLoadingDetail = true;
@@ -159,9 +147,10 @@ export class BranchesComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.selectedBranch = data;
+          console.log('✅ Branch detail loaded:', data);
         },
         error: (err) => {
-          console.error('Lỗi lấy chi tiết:', err);
+          console.error('❌ Lỗi lấy chi tiết:', err);
           this.closeDetailModal();
         }
       });
@@ -174,7 +163,7 @@ export class BranchesComponent implements OnInit {
 
   // --- Logic Soft-Delete (Toggle Status) ---
 
-  toggleBranchStatus(branch: Branch): void { // Vẫn dùng được kiểu 'Branch'
+  toggleBranchStatus(branch: Branch): void {
     const updatedBranch: Branch = {
       ...branch,
       active: !branch.active 
@@ -186,9 +175,10 @@ export class BranchesComponent implements OnInit {
         if (index !== -1) {
           this.branches[index] = updatedData;
         }
+        console.log('✅ Branch status toggled:', updatedData);
       },
       error: (err) => {
-        console.error('Lỗi khi đổi trạng thái:', err);
+        console.error('❌ Lỗi khi đổi trạng thái:', err);
       }
     });
   }

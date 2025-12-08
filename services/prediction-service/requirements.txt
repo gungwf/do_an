@@ -1,0 +1,6 @@
+flask
+flask-cors
+pandas
+prophet
+psycopg2-binary
+faker

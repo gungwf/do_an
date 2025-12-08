@@ -1,0 +1,510 @@
+<div class="patient-profile-page">
+  <!-- Breadcrumb -->
+  <div class="breadcrumb-section mb-4">
+    <h2 class="page-title">Profile</h2>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a routerLink="/">Home</a></li>
+        <li class="breadcrumb-item active">Profile</li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-3 text-muted">Đang tải thông tin...</p>
+  </div>
+
+  <!-- Profile Content -->
+  <div *ngIf="!isLoading" class="row g-4">
+    
+    <!-- LEFT SIDEBAR: Avatar & Basic Info -->
+    <div class="col-lg-4">
+      <div class="profile-card">
+        
+        <!-- Avatar Section -->
+        <div class="avatar-section">
+          <div class="avatar-wrapper" (click)="onAvatarClick()">
+            <img 
+              [src]="avatarUrl" 
+              [alt]="fullName"
+              (error)="onAvatarError($event)"
+              class="profile-avatar">
+            
+            <!-- Upload Overlay -->
+            <div class="avatar-overlay">
+              <i class="bi bi-camera-fill"></i>
+              <span>Thay đổi</span>
+            </div>
+
+            <!-- Upload Spinner -->
+            <div class="avatar-spinner" *ngIf="isUploadingAvatar">
+              <div class="spinner-border text-light"></div>
+            </div>
+          </div>
+
+          <!-- Hidden File Input -->
+          <input 
+            id="avatarInput"
+            type="file" 
+            accept="image/*"
+            style="display: none"
+            (change)="onAvatarSelected($event)">
+        </div>
+
+        <!-- Basic Info -->
+        <div class="profile-info text-center mt-4">
+          <h3 class="profile-name">{{ fullName }}</h3>
+          <p class="profile-role">
+            <i class="bi bi-heart-pulse me-2"></i>
+            Bệnh nhân
+          </p>
+
+          <!-- ✅ NEW: Membership Badge -->
+          <div class="membership-badge mt-3">
+            <span class="badge" [ngClass]="membershipBadgeClass">
+              <i class="bi bi-star-fill me-1"></i>
+              {{ membershipTier }}
+            </span>
+            <div class="points-display mt-2">
+              <i class="bi bi-trophy-fill text-warning me-1"></i>
+              <span class="fw-bold">{{ points }}</span> điểm
+            </div>
+          </div>
+
+          <!-- Social Links (Optional) -->
+          <div class="social-links mt-3">
+            <a href="#" class="social-icon">
+              <i class="bi bi-twitter"></i>
+            </a>
+            <a href="#" class="social-icon">
+              <i class="bi bi-facebook"></i>
+            </a>
+            <a href="#" class="social-icon">
+              <i class="bi bi-instagram"></i>
+            </a>
+            <a href="#" class="social-icon">
+              <i class="bi bi-linkedin"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT CONTENT: Profile Details -->
+    <div class="col-lg-8">
+      <div class="profile-details-card">
+        
+        <!-- Tabs Navigation -->
+        <ul class="nav nav-tabs profile-tabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button 
+              class="nav-link"
+              [class.active]="activeTab === 'overview'"
+              (click)="setActiveTab('overview')">
+              <i class="bi bi-person-circle me-2"></i>
+              Overview
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button 
+              class="nav-link"
+              [class.active]="activeTab === 'edit'"
+              (click)="setActiveTab('edit')">
+              <i class="bi bi-pencil-square me-2"></i>
+              Edit Profile
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button 
+              class="nav-link"
+              [class.active]="activeTab === 'medical'"
+              (click)="setActiveTab('medical')">
+              <i class="bi bi-file-medical me-2"></i>
+              Medical History
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button 
+              class="nav-link"
+              [class.active]="activeTab === 'password'"
+              (click)="setActiveTab('password')">
+              <i class="bi bi-shield-lock me-2"></i>
+              Change Password
+            </button>
+          </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content p-4">
+          
+          <!-- OVERVIEW TAB -->
+          <div *ngIf="activeTab === 'overview'" class="tab-pane-content">
+            <div class="section-header">
+              <h4 class="section-title">About</h4>
+            </div>
+            <p class="text-muted">
+              Bệnh nhân tại hệ thống y tế. Quản lý thông tin sức khỏe, 
+              lịch hẹn khám và hồ sơ bệnh án điện tử.
+            </p>
+
+            <!-- ✅ NEW: Membership Section -->
+            <div class="section-header mt-4">
+              <h4 class="section-title">Membership Information</h4>
+            </div>
+
+            <div class="profile-details-table">
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-star-fill me-2"></i>
+                  Hạng thành viên
+                </div>
+                <div class="detail-value">
+                  <span class="badge" [ngClass]="membershipBadgeClass">
+                    {{ membershipTier }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-trophy-fill me-2"></i>
+                  Điểm tích lũy
+                </div>
+                <div class="detail-value">
+                  <span class="text-success fw-bold">{{ points }} điểm</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-header mt-4">
+              <h4 class="section-title">Personal Information</h4>
+            </div>
+
+            <div class="profile-details-table">
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-person-fill me-2"></i>
+                  Full Name
+                </div>
+                <div class="detail-value">{{ fullName }}</div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-calendar3 me-2"></i>
+                  Ngày sinh
+                </div>
+                <div class="detail-value">
+                  <!-- ✅ FIXED: Added null safety -->
+                  <span *ngIf="patientProfile?.dateOfBirth; else notUpdatedDate">
+                    {{ patientProfile?.dateOfBirth | date:'dd/MM/yyyy' }}
+                  </span>
+                  <ng-template #notUpdatedDate>
+                    <span class="text-muted">Chưa cập nhật</span>
+                  </ng-template>
+                </div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-gender-ambiguous me-2"></i>
+                  Giới tính
+                </div>
+                <div class="detail-value">
+                  <span *ngIf="patientProfile?.gender; else notUpdatedGender">
+                    {{ gender }}
+                  </span>
+                  <ng-template #notUpdatedGender>
+                    <span class="text-muted">Chưa cập nhật</span>
+                  </ng-template>
+                </div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-telephone-fill me-2"></i>
+                  Phone
+                </div>
+                <div class="detail-value">{{ phoneNumber }}</div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-envelope-fill me-2"></i>
+                  Email
+                </div>
+                <div class="detail-value">{{ email }}</div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-geo-alt-fill me-2"></i>
+                  Địa chỉ
+                </div>
+                <div class="detail-value">
+                  <span *ngIf="patientProfile?.address; else notUpdatedAddress">
+                    {{ address }}
+                  </span>
+                  <ng-template #notUpdatedAddress>
+                    <span class="text-muted">Chưa cập nhật</span>
+                  </ng-template>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-header mt-4">
+              <h4 class="section-title">Medical Information</h4>
+            </div>
+
+            <div class="profile-details-table">
+              <!-- ✅ UPDATED: Allergies from API -->
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                  Dị ứng
+                </div>
+                <div class="detail-value">
+                  <span *ngIf="patientProfile?.allergies; else noAllergies">
+                    {{ allergies }}
+                  </span>
+                  <ng-template #noAllergies>
+                    <span class="text-success">Không có</span>
+                  </ng-template>
+                </div>
+              </div>
+
+              <!-- ✅ NEW: Contraindications -->
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-shield-exclamation me-2"></i>
+                  Chống chỉ định
+                </div>
+                <div class="detail-value">
+                  <span *ngIf="patientProfile?.contraindications; else noContraindications">
+                    {{ contraindications }}
+                  </span>
+                  <ng-template #noContraindications>
+                    <span class="text-success">Không có</span>
+                  </ng-template>
+                </div>
+              </div>
+
+              <!-- ✅ NEW: Medical History Summary -->
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-clipboard2-pulse me-2"></i>
+                  Tiền sử bệnh
+                </div>
+                <div class="detail-value">
+                  <span *ngIf="patientProfile?.medicalHistory; else noMedicalHistory">
+                    {{ medicalHistory }}
+                  </span>
+                  <ng-template #noMedicalHistory>
+                    <span class="text-muted">Chưa có lịch sử bệnh án</span>
+                  </ng-template>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- EDIT PROFILE TAB -->
+          <div *ngIf="activeTab === 'edit'" class="tab-pane-content">
+            <div class="section-header">
+              <h4 class="section-title">Edit Profile</h4>
+            </div>
+
+            <!-- ✅ EDIT FORM -->
+            <form [formGroup]="editForm" (ngSubmit)="onSubmitEditForm()">
+              
+              <div class="row g-3">
+                
+                <!-- Date of Birth -->
+                <div class="col-md-6">
+                  <label for="dateOfBirth" class="form-label">
+                    Ngày sinh <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="date" 
+                    id="dateOfBirth"
+                    class="form-control" 
+                    formControlName="dateOfBirth"
+                    [class.is-invalid]="editForm.get('dateOfBirth')?.invalid && editForm.get('dateOfBirth')?.touched">
+                  <div class="invalid-feedback" *ngIf="editForm.get('dateOfBirth')?.invalid && editForm.get('dateOfBirth')?.touched">
+                    Vui lòng chọn ngày sinh
+                  </div>
+                </div>
+
+                <!-- Gender -->
+                <div class="col-md-6">
+                  <label for="gender" class="form-label">
+                    Giới tính <span class="text-danger">*</span>
+                  </label>
+                  <select 
+                    id="gender"
+                    class="form-select" 
+                    formControlName="gender"
+                    [class.is-invalid]="editForm.get('gender')?.invalid && editForm.get('gender')?.touched">
+                    <option value="" disabled>Chọn giới tính</option>
+                    <option value="male">Nam</option>
+                    <option value="female">Nữ</option>
+                  </select>
+                  <div class="invalid-feedback" *ngIf="editForm.get('gender')?.invalid && editForm.get('gender')?.touched">
+                    Vui lòng chọn giới tính
+                  </div>
+                </div>
+
+                <!-- Address -->
+                <div class="col-12">
+                  <label for="address" class="form-label">
+                    Địa chỉ <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    id="address"
+                    class="form-control" 
+                    formControlName="address"
+                    placeholder="Nhập địa chỉ đầy đủ"
+                    [class.is-invalid]="editForm.get('address')?.invalid && editForm.get('address')?.touched">
+                  <div class="invalid-feedback" *ngIf="editForm.get('address')?.invalid && editForm.get('address')?.touched">
+                    Địa chỉ phải có ít nhất 10 ký tự
+                  </div>
+                </div>
+
+                <!-- Allergies -->
+                <div class="col-12">
+                  <label for="allergies" class="form-label">
+                    Dị ứng
+                  </label>
+                  <textarea 
+                    id="allergies"
+                    class="form-control" 
+                    formControlName="allergies"
+                    rows="2"
+                    placeholder="Nhập các loại dị ứng (nếu có)"></textarea>
+                  <small class="text-muted">Ví dụ: Penicillin, Peanuts, Seafood</small>
+                </div>
+
+                <!-- Contraindications -->
+                <div class="col-12">
+                  <label for="contraindications" class="form-label">
+                    Chống chỉ định
+                  </label>
+                  <textarea 
+                    id="contraindications"
+                    class="form-control" 
+                    formControlName="contraindications"
+                    rows="2"
+                    placeholder="Nhập các chống chỉ định (nếu có)"></textarea>
+                  <small class="text-muted">Các loại thuốc hoặc thực phẩm không nên sử dụng</small>
+                </div>
+
+                <!-- Medical History -->
+                <div class="col-12">
+                  <label for="medicalHistory" class="form-label">
+                    Tiền sử bệnh
+                  </label>
+                  <textarea 
+                    id="medicalHistory"
+                    class="form-control" 
+                    formControlName="medicalHistory"
+                    rows="3"
+                    placeholder="Nhập tiền sử bệnh án (nếu có)"></textarea>
+                  <small class="text-muted">Các bệnh đã từng mắc hoặc đang điều trị</small>
+                </div>
+
+              </div>
+
+              <!-- Submit Buttons -->
+              <div class="d-flex justify-content-end gap-2 mt-4">
+                <button 
+                  type="button" 
+                  class="btn btn-secondary"
+                  (click)="setActiveTab('overview')"
+                  [disabled]="isSubmitting">
+                  <i class="bi bi-x-circle me-2"></i>
+                  Hủy
+                </button>
+                <button 
+                  type="submit" 
+                  class="btn btn-primary"
+                  [disabled]="editForm.invalid || isSubmitting">
+                  <span *ngIf="!isSubmitting">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Lưu thay đổi
+                  </span>
+                  <span *ngIf="isSubmitting">
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    Đang lưu...
+                  </span>
+                </button>
+              </div>
+
+            </form>
+          </div>
+
+          <!-- MEDICAL HISTORY TAB -->
+          <div *ngIf="activeTab === 'medical'" class="tab-pane-content">
+            <div class="section-header">
+              <h4 class="section-title">Medical History</h4>
+            </div>
+            
+            <!-- ✅ Show medical history if available -->
+            <div *ngIf="patientProfile?.medicalHistory; else noMedicalRecords">
+              <div class="alert alert-light border">
+                <h6 class="fw-bold mb-3">
+                  <i class="bi bi-file-medical me-2"></i>
+                  Tiền sử bệnh
+                </h6>
+                <p class="mb-0">{{ medicalHistory }}</p>
+              </div>
+            </div>
+
+            <ng-template #noMedicalRecords>
+              <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                Hiện tại chưa có hồ sơ bệnh án. Hồ sơ sẽ được cập nhật sau mỗi lần khám.
+              </div>
+            </ng-template>
+
+            <!-- ✅ Future: List of medical records -->
+            <div class="section-header mt-4">
+              <h6 class="section-title">Lịch sử khám bệnh</h6>
+            </div>
+            <div class="alert alert-secondary">
+              <i class="bi bi-calendar2-week me-2"></i>
+              Danh sách lịch sử khám bệnh sẽ được hiển thị tại đây.
+            </div>
+          </div>
+
+          <!-- CHANGE PASSWORD TAB -->
+          <div *ngIf="activeTab === 'password'" class="tab-pane-content">
+            <div class="section-header">
+              <h4 class="section-title">Change Password</h4>
+            </div>
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle me-2"></i>
+              Chức năng đổi mật khẩu sẽ được cập nhật sau.
+            </div>
+
+            <!-- ✅ Placeholder for Password Form -->
+            <div class="text-muted small">
+              <p><strong>Yêu cầu mật khẩu mới:</strong></p>
+              <ul>
+                <li>Ít nhất 8 ký tự</li>
+                <li>Chứa ít nhất 1 chữ hoa</li>
+                <li>Chứa ít nhất 1 chữ số</li>
+                <li>Chứa ít nhất 1 ký tự đặc biệt</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

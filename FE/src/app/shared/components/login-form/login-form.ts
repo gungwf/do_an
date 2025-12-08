@@ -16,6 +16,7 @@ export class LoginForm {
   @Output() showRegister = new EventEmitter<void>();
 
   errorMessage: string | null = null;
+  isSubmitting: boolean = false; // ✅ Added loading state
 
   loginForm = new FormGroup({
     email: new FormControl('', [Validators.required, Validators.email]),
@@ -42,30 +43,47 @@ export class LoginForm {
       return;
     }
 
+    this.isSubmitting = true; // ✅ Start loading
+
     const credentials = this.loginForm.getRawValue();
     this.authService.login(credentials).subscribe({
       next: () => {
-        // Đóng dialog trước khi navigate
+        this.isSubmitting = false;
+
+        // ✅ Get role AFTER token is saved
+        const role = this.authService.getUserRole();
+        console.log('🔍 Login successful, role:', role);
+        console.log('✅ Is Admin:', this.authService.isAdmin());
+        console.log('✅ Is Doctor:', this.authService.isDoctor());
+        console.log('✅ Is Staff:', this.authService.isStaff());
+        console.log('✅ Is Patient:', this.authService.isPatient());
+
+        // ✅ Emit success to close modal
         this.loginSuccess.emit();
         
-        // Hiển thị thông báo
+        // ✅ Show success message
         this.toastr.success('Đăng nhập thành công!', 'Thành công');
         
-        // Navigate dựa vào role
-        console.log('Role:', this.authService.getUserRole());
+        // ✅ Navigate based on role with FULL PATH
         if (this.authService.isAdmin()) {
-          this.router.navigate(['/admin']);
+          console.log('🔄 Redirecting to /admin/dashboard');
+          this.router.navigate(['/admin/dashboard']);
         } else if (this.authService.isDoctor()) {
-          this.router.navigate(['/doctor']);
+          console.log('🔄 Redirecting to /doctor/dashboard');
+          this.router.navigate(['/doctor/dashboard']); // ✅ FIXED: Full path
         } else if (this.authService.isStaff()) {
-          this.router.navigate(['/staff']);
+          console.log('🔄 Redirecting to /staff/dashboard');
+          this.router.navigate(['/staff/dashboard']);
         } else {
+          console.log('🔄 Redirecting to home');
           this.router.navigate(['/']);
         }
       },
-    error: err => {
-      this.errorMessage = err.message || 'Đăng nhập thất bại';
-    }
-  });
+      error: err => {
+        this.isSubmitting = false;
+        this.errorMessage = err.message || 'Đăng nhập thất bại';
+        console.error('❌ Login error:', err);
+      }
+    });
   }
 }

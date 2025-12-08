@@ -2,46 +2,81 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError, of } from 'rxjs';
-import { tap, catchError, map } from 'rxjs/operators';
+import { tap, catchError, map, switchMap } from 'rxjs/operators';
+import { BranchService, Branch } from './branch.service'; // ✅ Import BranchService
 
-/**
- * Data Transfer Object (DTO) cho thông tin người dùng
- * (Đây là thông tin chúng ta mong đợi nhận về từ API "Get My Profile")
- */
+// ===== DTOs =====
 export interface UserDto {
   id: string;
   fullName: string;
   email: string;
   phoneNumber?: string;
-  // Thêm các trường khác nếu API "Get My Profile" của bạn trả về
+  role?: string;
+  avatarUrl?: string;
+  branchId?: string;
+  active?: boolean;
 }
+
 export interface DoctorDto {
   userId: string;
   specialty: string;
   degree: string;
 }
 
+export interface DoctorProfileResponse {
+  user: UserDto;
+  profile: DoctorDto;
+}
+
+export interface PatientProfileDto {
+  userId: string;
+  user: UserDto;
+  dateOfBirth: string | null;
+  gender: string | null;
+  address: string | null;
+  allergies: string | null;
+  contraindications: string | null;
+  medicalHistory: string | null;
+  membershipTier: 'STANDARD' | 'SILVER' | 'GOLD' | 'PLATINUM';
+  points: number;
+}
+
+export interface DoctorProfileDto extends DoctorDto {
+  user?: UserDto;
+  branch?: Branch; // ✅ Add branch property
+}
+
+export interface AvatarUploadResponse {
+  message?: string;
+  avatarUrl?: string;
+  success?: boolean;
+}
+
+export interface UpdatePatientProfileDto {
+  dateOfBirth: string;
+  gender: 'male' | 'female';
+  address: string;
+  allergies: string;
+  contraindications: string;
+  medicalHistory: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  // === ĐÃ SỬA: Trỏ đến API Gateway 8080 ===
   private apiUrl = 'http://localhost:8080'; 
-  
-  // Key để lưu token (từ Swagger)
   private readonly TOKEN_KEY = 'healthcare_token'; 
-  // Key MỚI để lưu ID người dùng
-  private readonly USER_ID_KEY = 'healthcare_user_id'; 
+  private readonly USER_ID_KEY = 'healthcare_user_id';
+  private cachedRole: string | null = null;
 
   constructor(
     private router: Router,
-    private http: HttpClient
-  ) { }
+    private http: HttpClient,
+    private branchService: BranchService // ✅ Inject BranchService
+  ) {}
 
-  /**
-   * Gọi API đăng ký bệnh nhân mới
-   * @param userData Dữ liệu từ form đăng ký
-   */
+  // ===== REGISTER =====
   register(userData: any): Observable<any> {
     const registrationData = {
       fullName: userData.fullName,
@@ -50,38 +85,25 @@ export class AuthService {
       phoneNumber: userData.phone,
       role: "PATIENT"
     };
-    // Sửa apiUrl
-    return this.http.post(`${this.apiUrl}/auth/register/patient`, registrationData, { responseType: 'text' });
+    
+    return this.http.post(`${this.apiUrl}/auth/register/patient`, registrationData, { responseType: 'text' }).pipe(
+      catchError(err => throwError(() => err))
+    );
   }
 
-  /**
-   * Gọi API đăng nhập
-   * @param credentials Dữ liệu từ form đăng nhập
-   */
+  // ===== LOGIN =====
   login(credentials: any): Observable<any> {
     const loginData = {
       email: credentials.email,
       password: credentials.password
     };
 
-    // Sửa apiUrl và logic
     return this.http.post<any>(`${this.apiUrl}/auth/login`, loginData).pipe(
       tap(response => {
-        // Log này để bạn kiểm tra
-        console.log('AuthService: Đã nhận response từ login:', response);
-
-        // Dựa trên Swagger, chúng ta CHỈ tìm accessToken
         const token = response.accessToken; 
-
         if (token) {
           this.saveToken(token);
-          console.log('AuthService: Đã lưu token thành công.');
-          
-          // QUAN TRỌNG: Chúng ta KHÔNG lưu userId ở đây nữa,
-          // vì API login không trả về nó.
-          
-        } else {
-          console.error('AuthService: Không tìm thấy accessToken trong response đăng nhập:', response);
+          this.cachedRole = null;
         }
       }),
       catchError(err => {
@@ -91,95 +113,230 @@ export class AuthService {
     );
   }
 
-  /**
-   * LẤY THÔNG TIN NGƯỜI DÙNG HIỆN TẠI (ĐÃ SỬA LOGIC)
-   * Hàm này sẽ gọi API "Get My Profile" (dùng token)
-   */
+  // ===== GET CURRENT USER =====
   getCurrentUser(): Observable<UserDto | null> {
+    const token = this.getTokenSilent();
+    if (!token) return of(null);
+    
+    const role = this.getUserRole();
+    
+    if (this.isDoctor()) {
+      return this.getCurrentDoctorUser();
+    }
+    
+    if (this.isPatient()) {
+      return this.getCurrentPatientUser();
+    }
+    
+    if (this.isStaff() || this.isAdmin()) {
+      return this.getUserByToken();
+    }
+    
+    return this.getUserByToken();
+  }
 
-    // BƯỚC 1: Đã cập nhật API "Get My Profile" từ Swagger
-    // Gateway (8080) sẽ tự động điều hướng /patient-profiles/me đến service (8081)
-    const profileApiUrl = '/patient-profiles/me'; // <-- API ĐÚNG
-
-    // GỌI API (Interceptor sẽ tự đính kèm token)
-    // API trả về: { userId: "...", user: { id: "...", fullName: "..." }, ... }
-    // Chúng ta cần trích xuất (map) object 'user' bên trong.
-    return this.http.get<any>(`${this.apiUrl}${profileApiUrl}`).pipe(
-      map(response => {
-        if (response && response.user) {
-          return response.user as UserDto; // Trả về object 'user' lồng nhau
+  // ===== GET PATIENT USER INFO =====
+  private getCurrentPatientUser(): Observable<UserDto | null> {
+    return this.http.get<any>(`${this.apiUrl}/patient-profiles/me`).pipe(
+      tap(response => {
+        if (response?.user?.id) {
+          this.saveUserIdSilent(response.user.id);
         }
-        console.warn('AuthService: API /patient-profiles/me không trả về "user" object.');
-        return null; // Không tìm thấy 'user'
       }),
+      map(response => response?.user || null),
+      catchError(() => of(null))
+    );
+  }
+
+  // ===== GET DOCTOR USER INFO =====
+  private getCurrentDoctorUser(): Observable<UserDto | null> {
+    return this.http.get<DoctorProfileResponse>(`${this.apiUrl}/doctor-profiles/me`).pipe(
+      tap(response => {
+        if (response?.user?.id) {
+          this.saveUserIdSilent(response.user.id);
+        }
+      }),
+      map(response => response?.user || null),
+      catchError(() => of(null))
+    );
+  }
+
+  // ===== GET USER BY TOKEN =====
+  private getUserByToken(): Observable<UserDto | null> {
+    return this.http.get<UserDto>(`${this.apiUrl}/users/me`).pipe(
       tap(user => {
-        // Khi lấy được thông tin user, LƯU LẠI ID
-        // để dùng cho các tác vụ khác (như đặt lịch)
-        if (user && user.id) {
-          this.saveUserId(user.id); // Lưu ID từ object 'user'
-          console.log('AuthService: Đã lấy và lưu thông tin user:', user);
+        if (user?.id) {
+          this.saveUserIdSilent(user.id);
         }
       }),
-      catchError(err => {
-        console.error('getCurrentUser: Không thể lấy thông tin user. Lỗi:', err);
-        return of(null); // Trả về null nếu có lỗi
-      })
-    );
-  }
-  getCurrentDoctor(): Observable<DoctorDto | null> {
-    const profileApiUrl = '/doctor-profiles/me';
-
-    // GỌI API (Interceptor sẽ tự đính kèm token)
-    return this.http.get<DoctorDto>(`${this.apiUrl}${profileApiUrl}`).pipe(
-      tap(doctor => {
-        // Khi lấy được thông tin doctor, LƯU LẠI userId
-        if (doctor && doctor.userId) {
-          this.saveUserId(doctor.userId);
-          console.log('AuthService: Đã lấy và lưu thông tin bác sĩ:', doctor);
-        }
-      }),
-      catchError(err => {
-        console.error('getCurrentDoctor: Không thể lấy thông tin bác sĩ. Lỗi:', err);
-        return of(null);
-      })
+      catchError(() => of(null))
     );
   }
 
-  // --- CÁC HÀM TIỆN ÍCH (HELPER) ---
+  // ===== GET CURRENT PATIENT (Full Profile) =====
+  getCurrentPatient(): Observable<PatientProfileDto | null> {
+    return this.http.get<PatientProfileDto>(`${this.apiUrl}/patient-profiles/me`).pipe(
+      tap(profile => {
+        if (profile?.userId) {
+          this.saveUserIdSilent(profile.userId);
+        }
+      }),
+      catchError(() => of(null))
+    );
+  }
 
+  // ===== GET CURRENT DOCTOR (Full Profile with Branch) =====
+  getCurrentDoctor(): Observable<DoctorProfileDto | null> {
+    return this.http.get<DoctorProfileResponse>(`${this.apiUrl}/doctor-profiles/me`).pipe(
+      tap(response => {
+        if (response?.user?.id) {
+          this.saveUserIdSilent(response.user.id);
+        }
+      }),
+      switchMap(response => {
+        if (!response?.user || !response?.profile) {
+          return of(null);
+        }
+
+        const basicProfile: DoctorProfileDto = {
+          userId: response.profile.userId,
+          specialty: response.profile.specialty,
+          degree: response.profile.degree,
+          user: response.user
+        };
+
+        // ✅ Fetch branch if branchId exists
+        if (response.user.branchId) {
+          return this.branchService.getBranchById(response.user.branchId).pipe(
+            map(branch => ({
+              ...basicProfile,
+              branch: branch
+            })),
+            catchError(() => of(basicProfile))
+          );
+        }
+
+        return of(basicProfile);
+      }),
+      catchError(() => of(null))
+    );
+  }
+
+  // ===== UPDATE PATIENT PROFILE =====
+  updatePatientProfile(data: UpdatePatientProfileDto): Observable<PatientProfileDto> {
+    return this.http.put<PatientProfileDto>(`${this.apiUrl}/patient-profiles/me`, data).pipe(
+      catchError(err => {
+        throw err;
+      })
+    );
+  }
+  
+  // ===== UPLOAD AVATAR =====
+  uploadAvatar(file: File): Observable<AvatarUploadResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post<AvatarUploadResponse>(
+      `${this.apiUrl}/users/avatar`, 
+      formData
+    ).pipe(
+      catchError(err => {
+        const errorMessage = err.error?.message || 'Không thể tải lên ảnh đại diện';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
+  }
+
+  // ===== VALIDATE IMAGE FILE =====
+  validateImageFile(file: File): { valid: boolean; error?: string } {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      return {
+        valid: false,
+        error: 'Chỉ chấp nhận file ảnh (JPG, PNG, GIF, WEBP)'
+      };
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return {
+        valid: false,
+        error: 'Kích thước file không được vượt quá 5MB'
+      };
+    }
+
+    return { valid: true };
+  }
+
+  // ===== GET AVATAR URL =====
+  getAvatarUrl(): Observable<string | null> {
+    if (this.isPatient()) {
+      return this.getCurrentUser().pipe(
+        map(user => user?.avatarUrl || null)
+      );
+    } else if (this.isDoctor()) {
+      return this.getCurrentDoctor().pipe(
+        map(profile => profile?.user?.avatarUrl || null)
+      );
+    }
+    
+    return of(null);
+  }
+
+  // ===== GET DEFAULT AVATAR =====
+  getDefaultAvatar(role?: string): string {
+    const userRole = role || this.getUserRole();
+    
+    switch(userRole?.toLowerCase()) {
+      case 'doctor':
+      case 'role_doctor':
+        return 'assets/images/default-doctor-avatar.png';
+      case 'admin':
+      case 'role_admin':
+        return 'assets/images/default-admin-avatar.png';
+      case 'staff':
+      case 'role_staff':
+        return 'assets/images/default-staff-avatar.png';
+      default:
+        return 'assets/images/default-user-avatar.png';
+    }
+  }
+
+  // ===== LOGOUT =====
   logout(): void {
     localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.USER_ID_KEY); // Xóa cả userId
-    this.router.navigate(['/']); 
+    localStorage.removeItem(this.USER_ID_KEY);
+    this.cachedRole = null;
+    this.router.navigate(['/']);
   }
 
+  // ===== IS AUTHENTICATED =====
   isAuthenticated(): boolean {
-    return this.getToken() !== null;
+    return this.getTokenSilent() !== null;
   }
 
-  // Lưu token
+  // ===== TOKEN MANAGEMENT =====
   private saveToken(token: string): void {
     localStorage.setItem(this.TOKEN_KEY, token);
   }
 
-  // Lấy token (Dùng bởi Interceptor)
+  private getTokenSilent(): string | null {
+    return localStorage.getItem(this.TOKEN_KEY);
+  }
+
   getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);
   }
 
-  // Lưu userId
-  private saveUserId(userId: string): void {
+  private saveUserIdSilent(userId: string): void {
     localStorage.setItem(this.USER_ID_KEY, userId);
   }
 
-  // Lấy userId (Dùng để đặt lịch)
   getUserId(): string | null {
     return localStorage.getItem(this.USER_ID_KEY);
   }
 
-  /**
-   * Decode JWT token và trả về payload
-   */
+  // ===== DECODE TOKEN =====
   private decodeToken(token: string): any {
     try {
       const base64Url = token.split('.')[1];
@@ -192,56 +349,61 @@ export class AuthService {
       );
       return JSON.parse(jsonPayload);
     } catch (error) {
-      console.error('Lỗi decode token:', error);
       return null;
     }
   }
 
-  /**
-   * Lấy role từ token (authorities)
-   */
+  // ===== GET USER ROLE =====
   getUserRole(): string | null {
-    const token = this.getToken();
+    if (this.cachedRole !== null) {
+      return this.cachedRole;
+    }
+    
+    const token = this.getTokenSilent();
     if (!token) {
       return null;
     }
 
     const decoded = this.decodeToken(token);
+    
     if (!decoded || !decoded.authorities) {
       return null;
     }
 
-    // authorities là một mảng, lấy role đầu tiên
     const authorities = decoded.authorities;
+    
     if (Array.isArray(authorities) && authorities.length > 0) {
-      return authorities[0].toLowerCase();
+      let role = authorities[0];
+      
+      if (typeof role === 'string' && role.toUpperCase().startsWith('ROLE_')) {
+        role = role.substring(5);
+      }
+      
+      this.cachedRole = role.toLowerCase();
+      return this.cachedRole;
     }
 
     return null;
   }
 
-  /**
-   * Kiểm tra xem user có phải admin không
-   */
+  // ===== ROLE CHECKS =====
   isAdmin(): boolean {
     const role = this.getUserRole();
     return role === 'admin' || role === 'role_admin';
   }
 
-  // --- BẮT ĐẦU PHẦN THÊM MỚI ---
-
-  /**
-   * Kiểm tra xem user có phải bác sĩ không
-   */
   isDoctor(): boolean {
     const role = this.getUserRole();
-    // Dựa trên logic của 'isAdmin', chúng ta cũng kiểm tra 'doctor' và 'role_doctor'
     return role === 'doctor' || role === 'role_doctor';
   }
+
   isStaff(): boolean {
     const role = this.getUserRole();
-    return role === 'staff' || role === 'role_staff' ;
+    return role === 'staff' || role === 'role_staff';
   }
-  
-  // --- KẾT THÚC PHẦN THÊM MỚI ---
+
+  isPatient(): boolean {
+    const role = this.getUserRole();
+    return role === 'patient' || role === 'role_patient';
+  }
 }

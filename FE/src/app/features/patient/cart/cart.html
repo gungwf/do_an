@@ -1,71 +1,336 @@
-<div class="container py-4">
-  <h4 class="fw-bold mb-4">🛒 Giỏ hàng của bạn</h4>
-
-  <div *ngIf="cartItems.length === 0" class="alert alert-warning">
-    Giỏ hàng trống. Hãy quay lại chọn sản phẩm nhé!
-  </div>
-
-  <div *ngIf="cartItems.length > 0" class="table-responsive">
-    <table class="table align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>Sản phẩm</th>
-          <th class="text-center">Giá</th>
-          <th class="text-center">Số lượng</th>
-          <th class="text-center">Thành tiền</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let item of cartItems; let i = index">
-          <td>{{ item.productName }}</td>
-          <td class="text-center">
-            {{ item.price | currency:'VND':'symbol':'1.0-0' }}
-          </td>
-          <td class="text-center">
-            <div class="d-inline-flex align-items-center border rounded px-2">
-              <button
-                class="btn btn-sm btn-link text-decoration-none"
-                (click)="updateQuantity(item.id, item.quantity - 1)"
-                [disabled]="item.quantity <= 1"
-              >
-                −
-              </button>
-              <input
-                type="number"
-                [(ngModel)]="item.quantity"
-                (change)="updateQuantity(item.id, item.quantity)"
-                min="1"
-                class="form-control text-center border-0 shadow-none p-0"
-                style="width: 50px;"
-              />
-              <button
-                class="btn btn-sm btn-link text-decoration-none"
-                (click)="updateQuantity(item.id, item.quantity + 1)"
-              >
-                +
-              </button>
-            </div>
-          </td>
-          <td class="text-center fw-semibold">
-            {{ (item.price * item.quantity) | currency:'VND':'symbol':'1.0-0' }}
-          </td>
-          <td class="text-end">
-            <button class="btn btn-outline-danger btn-sm" (click)="removeItem(item.id)">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="text-end mt-3">
-      <h5 class="fw-bold">Tổng cộng: {{ getTotal() | currency:'VND':'symbol':'1.0-0' }}</h5>
-      <button class="btn btn-primary mt-2" (click)="openCheckoutDialog()">
-        <i class="bi bi-credit-card me-2"></i>
-        Tiến hành thanh toán
-      </button>
+<div class="cart-page">
+  <div class="container-fluid px-4 py-4">
+    
+    <!-- Modern Header -->
+    <div class="page-header mb-4" data-aos="fade-down">
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item">
+            <a routerLink="/patient/pharmacy">
+              <i class="bi bi-house-door"></i>
+              Trang chủ
+            </a>
+          </li>
+          <li class="breadcrumb-item active">Giỏ hàng</li>
+        </ol>
+      </nav>
+      
+      <div class="header-content">
+        <div class="header-title-group">
+          <h1 class="page-title">
+            <i class="bi bi-cart3"></i>
+            Giỏ Hàng Của Bạn
+          </h1>
+          <!-- <p class="page-subtitle" *ngIf="cartItems.length > 0">
+            <span class="badge bg-primary me-2">{{ cartItems.length }}</span>
+            sản phẩm đang chờ thanh toán
+          </p> -->
+          <p class="page-subtitle text-muted" *ngIf="cartItems.length === 0">
+            Chưa có sản phẩm nào
+          </p>
+        </div>
+      </div>
     </div>
+
+    <!-- Empty State -->
+    <div *ngIf="cartItems.length === 0" class="empty-cart" data-aos="zoom-in">
+      <div class="empty-cart-content">
+        <div class="empty-icon-wrapper">
+          <i class="bi bi-cart-x"></i>
+          <div class="empty-icon-bg"></div>
+        </div>
+        <h3>Giỏ Hàng Trống</h3>
+        <p>Khám phá hàng ngàn sản phẩm chăm sóc sức khỏe chất lượng cao</p>
+        <div class="empty-actions">
+          <button class="btn btn-primary btn-lg" routerLink="/patient/pharmacy">
+            <i class="bi bi-shop"></i>
+            Khám Phá Ngay
+          </button>
+          <button class="btn btn-outline-secondary btn-lg" routerLink="/patient/dashboard">
+            <i class="bi bi-house-door"></i>
+            Về Trang Chủ
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cart Content -->
+    <div *ngIf="cartItems.length > 0">
+      
+      <!-- Cart Items Section - Full Width -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="cart-items-section" data-aos="fade-up">
+            
+            <!-- Section Header -->
+            <div class="section-header">
+              <h5>
+                <i class="bi bi-bag-check-fill"></i>
+                Sản Phẩm Trong Giỏ
+              </h5>
+              <span class="item-count">{{ cartItems.length }} sản phẩm</span>
+            </div>
+
+            <!-- Items List -->
+            <div class="cart-items-list">
+              <div 
+                *ngFor="let item of cartItems; let i = index"
+                class="cart-item"
+                data-aos="fade-up"
+                [attr.data-aos-delay]="i * 50">
+
+                <!-- Product Image -->
+                <div class="item-image">
+                  <img 
+                    [src]="item.imageUrl || 'assets/images/default-product.png'" 
+                    [alt]="item.productName"
+                    (error)="$event.target.src='assets/images/default-product.png'">
+                </div>
+
+                <!-- Product Info -->
+                <div class="item-details">
+                  <h6 class="item-name">{{ item.productName }}</h6>
+                  
+                  <div class="item-meta-row">
+                    <div class="item-price-group">
+                      <span class="item-price">
+                        {{ item.price | currency:'VND':'symbol':'1.0-0' }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Mobile Subtotal -->
+                  <div class="item-subtotal-mobile d-lg-none">
+                    <span class="subtotal-label">Thành tiền:</span>
+                    <span class="subtotal-price">
+                      {{ (item.price * item.quantity) | currency:'VND':'symbol':'1.0-0' }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Quantity Controls -->
+                <div class="item-actions">
+                  <label class="action-label">Số lượng</label>
+                  <div class="quantity-selector">
+                    <button 
+                      class="qty-btn qty-minus"
+                      (click)="updateQuantity(item.id, item.quantity - 1)"
+                      [disabled]="item.quantity <= 1">
+                      <i class="bi bi-dash"></i>
+                    </button>
+                    <input
+                      type="number"
+                      class="qty-input"
+                      [(ngModel)]="item.quantity"
+                      (change)="updateQuantity(item.id, item.quantity)"
+                      min="1"
+                    />
+                    <button 
+                      class="qty-btn qty-plus"
+                      (click)="updateQuantity(item.id, item.quantity + 1)">
+                      <i class="bi bi-plus"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Subtotal -->
+                <div class="item-subtotal d-none d-lg-flex">
+                  <label class="subtotal-label">Thành tiền</label>
+                  <div class="subtotal-price">
+                    {{ (item.price * item.quantity) | currency:'VND':'symbol':'1.0-0' }}
+                  </div>
+                </div>
+
+                <!-- Remove Button -->
+                <button 
+                  class="item-remove-btn"
+                  (click)="removeItem(item.id)"
+                  title="Xóa sản phẩm">
+                  <i class="bi bi-x-lg"></i>
+                </button>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Section: Summary + Map -->
+      <div class="row g-4">
+        
+        <!-- Left Column: Map & Contact Info -->
+        <div class="col-lg-7">
+          
+          <!-- Google Map -->
+          <div class="map-container" data-aos="fade-right">
+            <div class="map-header">
+              <h5>
+                <i class="bi bi-geo-alt-fill"></i>
+                Địa Điểm Nhận Hàng
+              </h5>
+            </div>
+            <iframe 
+              class="google-map"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.096743914435!2d105.78031897503205!3d21.028770980629355!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ab86cece8ae5%3A0xf857d30aa8cdcf23!2zVHLGsOG7nW5nIMSQ4bqhaSBo4buNYyBQaGVuaWthYQ!5e0!3m2!1svi!2s!4v1701234567890!5m2!1svi!2s"
+              frameborder="0" 
+              allowfullscreen="" 
+              loading="lazy" 
+              referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+          </div>
+
+          <!-- Contact Info Cards -->
+          <div class="info-cards">
+            
+            <!-- Location Card -->
+            <div class="info-card" data-aos="fade-up" data-aos-delay="100">
+              <div class="icon-box location">
+                <i class="bi bi-geo-alt-fill"></i>
+              </div>
+              <div class="info-content">
+                <h6>Địa chỉ</h6>
+                <p>96 Định Công, Hoàng Mai, Hà Nội</p>
+              </div>
+            </div>
+
+            <!-- Email Card -->
+            <div class="info-card" data-aos="fade-up" data-aos-delay="200">
+              <div class="icon-box email">
+                <i class="bi bi-envelope-fill"></i>
+              </div>
+              <div class="info-content">
+                <h6>Email</h6>
+                <p>healthcare@example.com</p>
+              </div>
+            </div>
+
+            <!-- Call Card -->
+            <div class="info-card" data-aos="fade-up" data-aos-delay="300">
+              <div class="icon-box phone">
+                <i class="bi bi-telephone-fill"></i>
+              </div>
+              <div class="info-content">
+                <h6>Hotline</h6>
+                <p>+84 (24) 555-7890</p>
+              </div>
+            </div>
+
+            <!-- Open Hours Card -->
+            <div class="info-card" data-aos="fade-up" data-aos-delay="400">
+              <div class="icon-box hours">
+                <i class="bi bi-clock-fill"></i>
+              </div>
+              <div class="info-content">
+                <h6>Giờ mở cửa</h6>
+                <p>Thứ 2 - Thứ 6: 8:00 - 18:00<br>Thứ 7: 8:00 - 14:00</p>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Right Column: Order Summary -->
+        <div class="col-lg-5">
+          <div class="summary-sticky">
+            
+            <!-- Main Summary Card -->
+            <div class="order-summary-card" data-aos="fade-left">
+              
+              <div class="summary-header">
+                <h5>
+                  <i class="bi bi-receipt-cutoff"></i>
+                  Tóm Tắt Đơn Hàng
+                </h5>
+              </div>
+
+              <div class="summary-body">
+                
+                <!-- Summary Rows -->
+                <div class="summary-row">
+                  <span class="label">Tạm tính ({{ cartItems.length }} sản phẩm)</span>
+                  <span class="value">{{ getTotal() | currency:'VND':'symbol':'1.0-0' }}</span>
+                </div>
+
+                <div class="summary-row">
+                  <span class="label">
+                    <i class="bi bi-truck"></i>
+                    Phí vận chuyển
+                  </span>
+                  <span class="value free-badge">Miễn phí</span>
+                </div>
+
+                <div class="summary-divider"></div>
+
+                <!-- Total -->
+                <div class="summary-total-row">
+                  <span class="label">Tổng thanh toán</span>
+                  <div class="value-group">
+                    <span class="vat-note">(Đã bao gồm VAT)</span>
+                    <span class="total-value">{{ getTotal() | currency:'VND':'symbol':'1.0-0' }}</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="summary-footer">
+                <button 
+                  class="btn btn-checkout"
+                  (click)="openCheckoutDialog()">
+                  <i class="bi bi-credit-card-2-front"></i>
+                  <span>Tiến Hành Thanh Toán</span>
+                </button>
+                
+                <button 
+                  class="btn btn-continue-shopping"
+                  routerLink="/patient/pharmacy">
+                  <i class="bi bi-arrow-left"></i>
+                  <span>Tiếp Tục Mua Sắm</span>
+                </button>
+              </div>
+
+            </div>
+
+            <!-- Trust Badges -->
+            <div class="trust-section" data-aos="fade-up">
+              <div class="trust-badge">
+                <i class="bi bi-shield-check"></i>
+                <div class="trust-text">
+                  <strong>Thanh toán an toàn</strong>
+                  <span>Bảo mật SSL 256-bit</span>
+                </div>
+              </div>
+              <div class="trust-badge">
+                <i class="bi bi-truck"></i>
+                <div class="trust-text">
+                  <strong>Giao hàng nhanh</strong>
+                  <span>2-3 ngày toàn quốc</span>
+                </div>
+              </div>
+              <div class="trust-badge">
+                <i class="bi bi-arrow-repeat"></i>
+                <div class="trust-text">
+                  <strong>Đổi trả miễn phí</strong>
+                  <span>Trong vòng 7 ngày</span>
+                </div>
+              </div>
+              <div class="trust-badge">
+                <i class="bi bi-headset"></i>
+                <div class="trust-text">
+                  <strong>Hỗ trợ 24/7</strong>
+                  <span>Hotline: 1900-xxxx</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
   </div>
 </div>
 

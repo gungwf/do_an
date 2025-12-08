@@ -1,76 +1,236 @@
-<div class="container my-4">
-  <h2 class="text-center mb-4 text-primary fw-bold">
-    Danh sách sản phẩm
-  </h2>
+<div class="products-page">
+  <div class="container-fluid py-4">
+     <!-- Header -->
+        <!-- <div class="products-header mb-4">
+          <h2 class="page-title">
+            <i class="bi bi-bag-fill me-2"></i>
+            Danh sách sản phẩm
+          </h2> -->
+          <!-- <p class="text-muted mb-0">
+            Tìm thấy {{ totalElements }} sản phẩm
+          </p> -->
+        <!-- </div> -->
+    <div class="row g-4">
+      
+      <!-- ✅ LEFT SIDEBAR - CATEGORIES -->
+      <div class="col-lg-3 col-md-4">
+        <div class="sidebar-wrapper">
+          
+          <!-- Categories Section -->
+          <div class="filter-section">
+            <h5 class="filter-title">
+              <i class="bi bi-grid-3x3-gap-fill me-2"></i>
+              Categories
+            </h5>
+            
+            <div class="category-list">
+              <!-- All Categories -->
+              <div 
+                class="category-item" 
+                [class.active]="selectedCategory === ''"
+                (click)="filterByCategory('')">
+                <span class="category-name">Tất cả sản phẩm</span>
+                <i class="bi bi-chevron-right"></i>
+              </div>
+              
+              <!-- Individual Categories -->
+              <div 
+                *ngFor="let category of categories"
+                class="category-item"
+                [class.active]="selectedCategory === category.id"
+                (click)="filterByCategory(category.id)">
+                <span class="category-name">{{ category.name }}</span>
+                <i class="bi bi-chevron-right"></i>
+              </div>
+            </div>
+          </div>
 
-  <div
-    class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3"
-  >
-    <div class="d-flex align-items-center gap-2 flex-wrap">
-      <label class="fw-semibold">Danh mục:</label>
-      <select
-        class="form-select"
-        style="width: 200px"
-        (change)="onCategoryChange($event)"
-      >
-        <option value="">Tất cả</option>
-        <option *ngFor="let c of categories" [value]="c.id">
-          {{ c.name }}
-        </option>
-      </select>
+          <!-- Price Range Filter (Optional) -->
+          <div class="filter-section mt-4">
+            <h5 class="filter-title">
+              <i class="bi bi-tag-fill me-2"></i>
+              Khoảng giá
+            </h5>
+            <div class="price-filter">
+              <button class="btn btn-outline-primary btn-sm w-100 mb-2">
+                Dưới 100.000đ
+              </button>
+              <button class="btn btn-outline-primary btn-sm w-100 mb-2">
+                100.000đ - 500.000đ
+              </button>
+              <button class="btn btn-outline-primary btn-sm w-100 mb-2">
+                Trên 500.000đ
+              </button>
+            </div>
+          </div>
 
-      <label class="fw-semibold ms-3">Sắp xếp theo giá:</label>
-      <select
-        class="form-select"
-        style="width: 150px"
-        (change)="onSortChange($event)"
-      >
-        <option value="asc">Tăng dần</option>
-        <option value="desc">Giảm dần</option>
-      </select>
-    </div>
+        </div>
+      </div>
 
-    </div>
+      <!-- ✅ MAIN CONTENT -->
+      <div class="col-lg-9 col-md-8">
+        
+       
 
-  <div class="row g-4" *ngIf="products.length > 0; else noProducts">
-    <div
-      class="col-12 col-sm-6 col-md-4 col-lg-3"
-      *ngFor="let product of products"
-    >
-      <app-product-card
-        [product]="product"
-        (addToCart)="onAddToCart($event)"
-      ></app-product-card>
+        <!-- ✅ SEARCH & FILTERS BAR -->
+        <div class="filters-bar mb-4">
+          <div class="row g-3 align-items-center">
+            
+            <!-- Search Box -->
+            <div class="col-lg-5 col-md-6">
+              <div class="search-box">
+                <i class="bi bi-search search-icon"></i>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  placeholder="Search Products..."
+                  [(ngModel)]="searchTerm"
+                  (input)="onSearchChange()">
+                <button 
+                  *ngIf="searchTerm" 
+                  class="clear-btn"
+                  (click)="clearSearch()">
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Sort by Price -->
+            <div class="col-lg-3 col-md-3 col-sm-6">
+              <select 
+                class="form-select" 
+                [(ngModel)]="sortOrder"
+                (change)="onSortChange($event)">
+                <option value="asc">Giá thấp đến cao</option>
+                <option value="desc">Giá cao đến thấp</option>
+              </select>
+            </div>
+
+            <!-- Items per page -->
+            <div class="col-lg-2 col-md-3 col-sm-6">
+              <select 
+                class="form-select"
+                [(ngModel)]="size"
+                (change)="onSizeChange()">
+                <option [value]="12">12 / trang</option>
+                <option [value]="24">24 / trang</option>
+                <option [value]="48">48 / trang</option>
+              </select>
+            </div>
+
+            <!-- View Toggle (Optional) -->
+            <div class="col-lg-2 col-12 text-end">
+              <div class="btn-group" role="group">
+                <button class="btn btn-outline-secondary active">
+                  <i class="bi bi-grid-3x3-gap"></i>
+                </button>
+                <button class="btn btn-outline-secondary">
+                  <i class="bi bi-list-ul"></i>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div *ngIf="isLoading" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-3 text-muted">Đang tải sản phẩm...</p>
+        </div>
+
+        <!-- ✅ PRODUCTS GRID -->
+        <div class="row g-4" *ngIf="!isLoading && products.length > 0">
+          <div 
+            class="col-xl-3 col-lg-4 col-md-6 col-sm-6"
+            *ngFor="let product of products"
+            data-aos="fade-up"
+            data-aos-duration="500">
+            <app-product-card
+              [product]="product"
+              (addToCart)="onAddToCart($event)">
+            </app-product-card>
+          </div>
+        </div>
+
+        <!-- No Products -->
+        <div 
+          *ngIf="!isLoading && products.length === 0" 
+          class="no-products text-center py-5">
+          <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+          <h4 class="text-muted">Không tìm thấy sản phẩm</h4>
+          <p class="text-muted">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
+          <button class="btn btn-primary mt-3" (click)="resetFilters()">
+            <i class="bi bi-arrow-counterclockwise me-2"></i>
+            Đặt lại bộ lọc
+          </button>
+        </div>
+
+        <!-- ✅ PAGINATION - NEW DESIGN -->
+        <div class="pagination-wrapper mt-5" *ngIf="totalPages > 1">
+          <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+              
+              <!-- Previous Button -->
+              <li class="page-item" [class.disabled]="page === 0">
+                <a class="page-link" (click)="prevPage()" tabindex="-1">
+                  <i class="bi bi-chevron-left"></i>
+                  Previous
+                </a>
+              </li>
+
+              <!-- First Page -->
+              <li class="page-item" [class.active]="page === 0" *ngIf="totalPages > 0">
+                <a class="page-link" (click)="goToPage(0)">1</a>
+              </li>
+
+              <!-- Dots if needed -->
+              <li class="page-item disabled" *ngIf="getPageNumbers()[0] > 1">
+                <span class="page-link">...</span>
+              </li>
+
+              <!-- Page Numbers -->
+              <li 
+                class="page-item" 
+                [class.active]="page === pageNum"
+                *ngFor="let pageNum of getPageNumbers()">
+                <a class="page-link" (click)="goToPage(pageNum)">
+                  {{ pageNum + 1 }}
+                </a>
+              </li>
+
+              <!-- Dots if needed -->
+              <li class="page-item disabled" *ngIf="getPageNumbers()[getPageNumbers().length - 1] < totalPages - 2">
+                <span class="page-link">...</span>
+              </li>
+
+              <!-- Last Page -->
+              <li class="page-item" [class.active]="page === totalPages - 1" *ngIf="totalPages > 1 && !getPageNumbers().includes(totalPages - 1)">
+                <a class="page-link" (click)="goToPage(totalPages - 1)">
+                  {{ totalPages }}
+                </a>
+              </li>
+
+              <!-- Next Button -->
+              <li class="page-item" [class.disabled]="page >= totalPages - 1">
+                <a class="page-link" (click)="nextPage()">
+                  Next
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+              </li>
+
+            </ul>
+          </nav>
+
+          <!-- Page Info -->
+          <div class="page-info text-center mt-3 text-muted">
+            Hiển thị {{ startIndex }} - {{ endIndex }} trong tổng số {{ totalElements }} sản phẩm
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
-
-  <ng-template #noProducts>
-    <div class="text-center text-muted py-5">
-      <i class="bi bi-box-seam display-6 d-block mb-3"></i>
-      Không có sản phẩm nào trong danh mục này.
-    </div>
-  </ng-template>
-
-  <div class="d-flex justify-content-end mt-4">
-    <div class="d-flex align-items-center gap-2">
-      <button
-        class="btn btn-outline-primary"
-        (click)="prevPage()"
-        [disabled]="page === 0"
-      >
-        <i class="bi bi-arrow-left"></i> Trang trước
-      </button>
-      <span class="fw-semibold"
-        >Trang {{ page + 1 }} / {{ totalPages || 1 }}</span
-      >
-      <button
-        class="btn btn-outline-primary"
-        (click)="nextPage()"
-        [disabled]="page >= totalPages - 1"
-      >
-        Trang sau <i class="bi bi-arrow-right"></i>
-      </button>
-    </div>
-  </div>
-  
 </div>

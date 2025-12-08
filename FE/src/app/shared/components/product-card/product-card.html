@@ -2,7 +2,7 @@
   <!-- Ảnh sản phẩm -->
   <a routerLink="/product/{{ product.id }}" class="d-block text-center p-3">
     <img
-      [src]="product.imageUrl || 'https://via.placeholder.com/200x200?text=No+Image'"
+      [src]="product.imageUrl || product.image || 'https://via.placeholder.com/200x200?text=No+Image'"
       [alt]="product.productName"
       class="product-card-img img-fluid"
       loading="lazy"
@@ -26,15 +26,6 @@
       <div class="product-card-price text-primary fw-bold fs-5">
         {{ product.price | currency:'VND':'symbol':'1.0-0' }}
         <span class="text-muted small"> / Hộp</span>
-      </div>
-    </div>
-
-    <div class="card-text text-muted small mt-auto" style="font-size: 0.85rem;">
-      <div class="mb-1">
-        <strong>Sản phẩm:</strong> {{ product.productName }}
-      </div>
-      <div>
-        <strong>Mô tả:</strong> {{ product.description }}
       </div>
     </div>
 

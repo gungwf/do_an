@@ -1,33 +1,68 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection, LOCALE_ID } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideToastr } from 'ngx-toastr';
 import { routes } from './app.routes';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { authInterceptor } from './core/interceptors/auth.interceptor'; // Đảm bảo đường dẫn đúng
+import { authInterceptor } from './core/interceptors/auth.interceptor';
 
-// --- BẮT ĐẦU THÊM LOCALE ---
+// ===== LOCALE SETUP =====
 import { registerLocaleData } from '@angular/common';
-import localeVi from '@angular/common/locales/vi'; // Import dữ liệu tiếng Việt
+import localeVi from '@angular/common/locales/vi';
 
 // Đăng ký locale tiếng Việt
-registerLocaleData(localeVi); 
-// --- KẾT THÚC THÊM LOCALE ---
+registerLocaleData(localeVi);
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    // Bỏ provideBrowserGlobalErrorListeners() vì nó không còn được khuyến nghị
-    provideZoneChangeDetection({ eventCoalescing: true }),
+    // ✅ Zone Change Detection với optimization
+    provideZoneChangeDetection({ 
+      eventCoalescing: true,
+      runCoalescing: true 
+    }),
+    
+    // ✅ Router
     provideRouter(routes),
-    provideHttpClient(withFetch(), withInterceptors([authInterceptor])), // Sử dụng interceptor hàm
+    
+    // ✅ HTTP Client với Fetch API và Auth Interceptor
+    provideHttpClient(
+      withFetch(), 
+      withInterceptors([authInterceptor])
+    ),
+    
+    // ✅ Animations (required for Toastr)
     provideAnimations(),
+    
+    // ✅ Toastr với cấu hình tối ưu
     provideToastr({
-      timeOut: 3000,
+      timeOut: 2500,
       positionClass: 'toast-top-right',
       preventDuplicates: true,
+      progressBar: true,
+      closeButton: true,
+      newestOnTop: true,
+      tapToDismiss: true,
+      maxOpened: 3,
+      autoDismiss: true,
+      enableHtml: false,
+      easeTime: 300,
+      easing: 'ease-in',
+      extendedTimeOut: 1500,
+      toastClass: 'ngx-toastr',
+      titleClass: 'toast-title',
+      messageClass: 'toast-message',
+      iconClasses: {
+        error: 'toast-error',
+        info: 'toast-info',
+        success: 'toast-success',
+        warning: 'toast-warning'
+      }
     }),
-    // Bạn có thể cần thêm LOCALE_ID nếu muốn đặt locale mặc định toàn ứng dụng
-    // { provide: LOCALE_ID, useValue: 'vi-VN' } // Import LOCALE_ID from '@angular/core'
+    
+    // ✅ Set Vietnamese as default locale
+    { 
+      provide: LOCALE_ID, 
+      useValue: 'vi-VN' 
+    }
   ]
 };
-

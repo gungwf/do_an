@@ -1,0 +1,56 @@
+<div class="card h-100 product-card">
+  <!-- Badge trạng thái -->
+  <div class="badge-wrapper">
+    <span [class]="statusBadgeClass">
+      {{ statusText }}
+    </span>
+  </div>
+
+  <!-- Ảnh sản phẩm -->
+  <div class="card-img-top-wrapper">
+    <img
+      [src]="displayImage"
+      [alt]="item.productName"
+      class="card-img-top"
+      loading="lazy"
+      (error)="onImageError($event)"
+    />
+  </div>
+
+  <!-- Nội dung -->
+  <div class="card-body">
+    
+    <!-- Tên sản phẩm -->
+    <h5 class="product-title">
+      {{ item.productName }}
+    </h5>
+
+    <!-- Thông tin số lượng -->
+    <div class="product-info">
+      <div class="quantity-section">
+        <span class="quantity-label">Tồn kho:</span>
+        <span class="quantity-value" [class.low-stock]="item.quantity < 20">
+          {{ item.quantity }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="product-actions">
+      <button 
+        class="btn btn-primary btn-sm flex-fill"
+        (click)="onStockUpdate()"
+        title="Nhập/Xuất kho">
+        <i class="bi bi-box-arrow-in-down me-1"></i>
+        Nhập kho
+      </button>
+      <button 
+        class="btn btn-outline-info btn-sm"
+        (click)="onViewDetail()"
+        title="Chi tiết">
+        <i class="bi bi-eye"></i>
+      </button>
+    </div>
+
+  </div>
+</div>

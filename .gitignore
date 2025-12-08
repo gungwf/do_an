@@ -1,11 +1,69 @@
-"target/" 
-"*.class" 
-"*.log" 
-"*.jar" 
-".idea/" 
-".vscode/" 
-".DS_Store" 
-services/.vscode/settings.json
-.vscode/settings.json
-.vscode/launch.json
-.vscode/extensions.json
+############################
+# Global OS / Editor Files #
+############################
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+############################
+# Node / Angular FE        #
+############################
+# Ignore Node packages
+FE/node_modules/
+FE/dist/
+FE/tmp/
+FE/out-tsc/
+FE/.angular/cache/
+
+# Logs
+npm-debug.log
+yarn-error.log
+
+############################
+# Python services          #
+############################
+# Ignore Python virtual envs
+services/**/venv/
+services/**/__pycache__/
+services/**/.pytest_cache/
+services/**/*.pyc
+
+#################################
+# Java Spring Boot Microservices
+#################################
+# Build output
+services/**/target/
+services/**/build/
+
+# Logs
+services/**/*.log
+
+# JVM files
+*.class
+*.jar
+*.war
+
+#################################
+# Docker & Compose
+#################################
+docker-compose.override.yml
+*.pid
+
+#################################
+# Environment & Secrets
+#################################
+*.env
+*.env.local
+*.env.development
+*.env.production
+
+#################################
+# VSCode specific (keep required)
+#################################
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json

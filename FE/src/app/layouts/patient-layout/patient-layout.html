@@ -1,18 +1,18 @@
 <header class="header shadow-sm sticky-top bg-white border-bottom">
   <div class="container d-flex align-items-center justify-content-between py-2">
 
-    <a routerLink="/" class="d-flex align-items-center text-decoration-none text-primary">
-      <i class="bi bi-heart-pulse-fill fs-4"></i>
-      <span class="fs-4 ms-2 fw-bold text-dark">Healthcare</span>
+    <a routerLink="/" class="d-flex align-items-center text-decoration-none">
+      <i class="bi bi-heart-pulse-fill fs-4 text-brand"></i>
+      <span class="fs-4 ms-2 fw-bold text-brand">Healthcare</span>
     </a>
 
     <ul class="nav align-items-center mb-0">
       <li class="nav-item">
-        <a routerLink="/" routerLinkActive="text-primary fw-semibold" [routerLinkActiveOptions]="{ exact: true }"
-          class="nav-link px-3 text-dark">Nhà thuốc</a>
+        <a routerLink="/" routerLinkActive="text-brand fw-semibold" [routerLinkActiveOptions]="{ exact: true }"
+           class="nav-link px-3 text-dark">Nhà thuốc</a>
       </li>
       <li class="nav-item">
-        <a routerLink="/products" routerLinkActive="text-primary fw-semibold" class="nav-link px-3 text-dark">
+        <a routerLink="/products" routerLinkActive="text-brand fw-semibold" class="nav-link px-3 text-dark">
           Sản phẩm
         </a>
       </li>
@@ -34,63 +34,63 @@
     </div>
 
     <div class="cart-container position-relative me-4"
-     (mouseenter)="toggleCartPreview(true)"
-     (mouseleave)="toggleCartPreview(false)"
-     style="cursor: pointer;">
-  
-  <div class="cart-icon position-relative d-flex align-items-center" (click)="handleProtectedLink('/cart')">
-    <i class="bi bi-cart3 fs-4 text-primary"></i>
-    
-    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-          *ngIf="authService.isAuthenticated() && cartService.getTotalQuantity() > 0">
-      {{ cartService.getTotalQuantity() }}
-    </span>
-  </div>
+         (mouseenter)="toggleCartPreview(true)"
+         (mouseleave)="toggleCartPreview(false)"
+         style="cursor: pointer;">
 
-  <div class="cart-dropdown position-absolute bg-white shadow rounded p-3"
-       [class.show]="showCartPreview"
-       style="width: 300px; right: 0; top: 120%; z-index: 2000;">
-    <h6 class="fw-bold mb-2">Giỏ hàng</h6>
+      <div class="cart-icon position-relative d-flex align-items-center" (click)="handleProtectedLink('/cart')">
+        <i class="bi bi-cart3 fs-4 text-brand"></i>
 
-    <ng-container *ngIf="authService.isAuthenticated(); else loggedOutCartView">
-
-      <div *ngIf="cartService.getCart().length === 0"
-           class="text-muted small text-center py-2">
-        Chưa có sản phẩm nào.
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+              *ngIf="authService.isAuthenticated() && cartService.getTotalQuantity() > 0">
+          {{ cartService.getTotalQuantity() }}
+        </span>
       </div>
 
-      <ul class="list-unstyled mb-2"
-          *ngIf="cartService.getCart().length > 0"
-          style="max-height: 250px; overflow-y: auto;">
-        <li *ngFor="let item of cartService.getCart()"
-            class="d-flex justify-content-between align-items-center border-bottom py-2 small">
-          <div class="d-flex flex-column">
-            <span class="fw-medium">{{ item.productName }}</span>
-            <small class="text-muted">SL: {{ item.quantity }}</small>
+      <div class="cart-dropdown position-absolute bg-white shadow rounded p-3"
+           [class.show]="showCartPreview"
+           style="width: 300px; right: 0; top: 120%; z-index: 2000;">
+        <h6 class="fw-bold mb-2">Giỏ hàng</h6>
+
+        <ng-container *ngIf="authService.isAuthenticated(); else loggedOutCartView">
+
+          <div *ngIf="cartService.getCart().length === 0"
+               class="text-muted small text-center py-2">
+            Chưa có sản phẩm nào.
           </div>
-          <span class="text-primary fw-semibold">
-            {{ (item.price * item.quantity) | currency:'VND':'symbol':'1.0-0' }}
-          </span>
-        </li>
-      </ul>
 
-      <div *ngIf="cartService.getCart().length > 0" class="text-center mt-2">
-        <button class="btn btn-sm btn-outline-primary w-100"
-                (click)="handleProtectedLink('/cart'); toggleCartPreview(false)">
-          Xem giỏ hàng
-        </button>
+          <ul class="list-unstyled mb-2"
+              *ngIf="cartService.getCart().length > 0"
+              style="max-height: 250px; overflow-y: auto;">
+            <li *ngFor="let item of cartService.getCart()"
+                class="d-flex justify-content-between align-items-center border-bottom py-2 small">
+              <div class="d-flex flex-column">
+                <span class="fw-medium">{{ item.productName }}</span>
+                <small class="text-muted">SL: {{ item.quantity }}</small>
+              </div>
+              <span class="text-brand fw-semibold">
+                {{ (item.price * item.quantity) | currency:'VND':'symbol':'1.0-0' }}
+              </span>
+            </li>
+          </ul>
+
+          <div *ngIf="cartService.getCart().length > 0" class="text-center mt-2">
+            <button class="btn btn-sm btn-outline-primary w-100"
+                    (click)="handleProtectedLink('/cart'); toggleCartPreview(false)">
+              Xem giỏ hàng
+            </button>
+          </div>
+
+        </ng-container>
+
+        <ng-template #loggedOutCartView>
+          <div class="text-muted small text-center py-2">
+            Vui lòng đăng nhập để xem giỏ hàng.
+          </div>
+        </ng-template>
+
       </div>
-      
-    </ng-container>
-
-    <ng-template #loggedOutCartView>
-      <div class="text-muted small text-center py-2">
-        Vui lòng đăng nhập để xem giỏ hàng.
-      </div>
-    </ng-template>
-
-  </div>
-</div>
+    </div>
 
     <div *ngIf="!authService.isAuthenticated()" class="text-end">
       <button type="button" class="btn btn-primary btn-sm" (click)="isAuthModalOpen = true">
@@ -104,13 +104,22 @@
         <i class="bi bi-person-circle fs-4"></i>
       </a>
       <ul class="dropdown-menu text-small dropdown-menu-end shadow-sm">
+        <!-- ✅ NEW: Profile Link -->
+        <li>
+          <a class="dropdown-item" routerLink="/profile" style="cursor: pointer;">
+            <i class="bi bi-person-fill me-2"></i> Hồ sơ của tôi
+          </a>
+        </li>
         <li>
           <a class="dropdown-item" (click)="router.navigate(['/my-appointments'])" style="cursor: pointer;">
             <i class="bi bi-calendar2-check me-2"></i> Lịch hẹn của tôi
           </a>
         </li>
-        <li><a class="dropdown-item" href="#"><i class="bi bi-card-list me-2"></i> Đơn hàng của tôi</a></li>
-        <li><a class="dropdown-item" href="#"><i class="bi bi-person-fill me-2"></i> Hồ sơ của tôi</a></li>
+        <li>
+          <a class="dropdown-item" href="#">
+            <i class="bi bi-card-list me-2"></i> Đơn hàng của tôi
+          </a>
+        </li>
         <li><hr class="dropdown-divider" /></li>
         <li>
           <a class="dropdown-item text-danger" (click)="logout()" style="cursor: pointer;">
@@ -134,7 +143,7 @@
           routerLink="/"
           class="d-flex align-items-center mb-3 link-body-emphasis text-decoration-none"
         >
-          <i class="bi bi-heart-pulse-fill fs-4 text-primary me-2"></i>
+          <i class="bi bi-heart-pulse-fill fs-4 text-brand me-2"></i>
           <span class="fs-4 fw-bold">Healthcare</span>
         </a>
         <p class="text-body-secondary">© 2025 Healthcare</p>

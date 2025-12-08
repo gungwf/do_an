@@ -1,7 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common'; 
-import { Observable, finalize } from 'rxjs';
+import { Observable, finalize, forkJoin } from 'rxjs';
 import { FormsModule } from '@angular/forms';
+import { ToastrService } from 'ngx-toastr';
 
 import { 
   AppointmentService, 
@@ -11,12 +12,14 @@ import {
 } from '../../../core/services/AppointmentService';
 
 import { MedicalRecordForm } from '../medical-record-form/medical-record-form';
+import { PrescriptionDialog } from '../../../shared/components/prescription-dialog/prescription-dialog';
 import { AuthService } from '../../../core/services/auth';
+import { MedicalRecordService } from '../../../core/services/medical-record.service';
 
 @Component({
   selector: 'app-appoitments',
   standalone: true,
-  imports: [CommonModule, MedicalRecordForm, FormsModule], 
+  imports: [CommonModule, MedicalRecordForm, FormsModule, PrescriptionDialog], 
   templateUrl: './appoitments.html',
   styleUrl: './appoitments.scss'
 })
@@ -24,6 +27,8 @@ export class Appoitments implements OnInit {
   
   private appointmentService = inject(AppointmentService);
   private authService = inject(AuthService);
+  private toastr = inject(ToastrService);
+  private medicalRecordService = inject(MedicalRecordService);
 
   public appointments: AppointmentResponseDto[] = [];
   public isLoading = true;
@@ -44,6 +49,9 @@ export class Appoitments implements OnInit {
   public selectedAppointment: AppointmentResponseDto | null = null;
   public isLoadingDetail = false; 
   public recordForAppointment: AppointmentResponseDto | null = null; 
+
+  public showPrescriptionDialog = false;
+  public prescriptionAppointment: AppointmentResponseDto | null = null;
 
   ngOnInit(): void {
     this.currentDoctorId = this.authService.getUserId();
@@ -70,7 +78,18 @@ export class Appoitments implements OnInit {
     .pipe(finalize(() => this.isLoading = false))
     .subscribe({
       next: (response: PagedAppointmentResponse) => {
-        this.appointments = response.content; 
+        this.appointments = response.content;
+        
+        // ✅ Lấy medicalRecordId cho các appointment có thể kê đơn
+        const eligibleStatuses = ['PAID_SERVICE', 'PENDING_BILLING', 'COMPLETED'];
+        const eligibleAppointments = this.appointments.filter(
+          a => eligibleStatuses.includes(a.status)
+        );
+        
+        if (eligibleAppointments.length > 0) {
+          this.loadMedicalRecordsForAppointments(eligibleAppointments);
+        }
+        
         this.totalPages = response.totalPages;
         this.totalElements = response.totalElements;
         this.paginationState.page = response.number;
@@ -79,6 +98,29 @@ export class Appoitments implements OnInit {
         console.error('Lỗi khi tải danh sách lịch hẹn:', err);
         this.appointments = [];
       }
+    });
+  }
+
+  // ✅ Method mới: Lấy medical record cho nhiều appointments
+  private loadMedicalRecordsForAppointments(appointments: AppointmentResponseDto[]): void {
+    appointments.forEach(appt => {
+      this.medicalRecordService.getMedicalRecordByAppointment(appt.id).subscribe({
+        next: (record) => {
+          // Cập nhật thông tin medical record vào appointment
+          appt.medicalRecordId = record.id;
+          appt.diagnosis = record.diagnosis;
+          appt.icd10Code = record.icd10Code || '';
+          
+          console.log(`✓ Loaded medical record for appointment ${appt.id}:`, {
+            medicalRecordId: record.id,
+            diagnosis: record.diagnosis
+          });
+        },
+        error: (err) => {
+          // Không có medical record thì bỏ qua (chưa tạo bệnh án)
+          console.log(`ℹ No medical record for appointment ${appt.id}`);
+        }
+      });
     });
   }
 
@@ -131,18 +173,39 @@ export class Appoitments implements OnInit {
   onSubmitSuccess(): void {
     console.log('Bệnh án đã được tạo thành công, đang reload...');
     this.recordForAppointment = null;
-    // Reload lại danh sách để cập nhật trạng thái mới
     this.loadAppointments();
   }
 
-  // Hàm kiểm tra có thể tạo bệnh án không
   canCreateMedicalRecord(appointment: AppointmentResponseDto): boolean {
-    // Chỉ cho phép tạo khi trạng thái là CONFIRMED hoặc COMPLETED
-    // và chưa tạo bệnh án (không phải PENDING_BILLING hoặc PAID_SERVICE)
     const createdStatuses = ['PENDING_BILLING', 'PAID_SERVICE'];
     if (createdStatuses.includes(appointment.status)) {
       return false;
     }
     return appointment.status === 'CONFIRMED' || appointment.status === 'COMPLETED';
+  }
+
+  // ✅ Kiểm tra có thể kê đơn thuốc không
+  canCreatePrescription(appointment: AppointmentResponseDto): boolean {
+    return appointment.status === 'PAID_SERVICE' && !!appointment.medicalRecordId;
+  }
+
+  // ✅ Mở dialog kê đơn thuốc
+  openPrescriptionDialog(appointment: AppointmentResponseDto): void {
+    if (!appointment.medicalRecordId) {
+      this.toastr.error('Không tìm thấy bệnh án cho cuộc hẹn này');
+      return;
+    }
+    this.prescriptionAppointment = appointment;
+    this.showPrescriptionDialog = true;
+  }
+
+  closePrescriptionDialog(): void {
+    this.showPrescriptionDialog = false;
+    this.prescriptionAppointment = null;
+  }
+
+  onPrescriptionSaved(): void {
+    this.toastr.success('Đơn thuốc đã được lưu thành công!');
+    this.loadAppointments();
   }
 }

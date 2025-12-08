@@ -1,2 +1,75 @@
 /* You can add global styles to this file, and also import other style files */
 @import 'ngx-toastr/toastr';
+.toast-container {
+  z-index: 999999 !important; // Above everything
+  pointer-events: none !important;
+  
+  .ngx-toastr {
+    pointer-events: auto !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2) !important;
+    border-radius: 12px !important;
+    min-width: 300px;
+    padding: 15px 20px;
+    
+    // Success toast - Cyan theme
+    &.toast-success {
+      background-color: #3fbbc0 !important;
+      background-image: none !important;
+      
+      .toast-progress {
+        background-color: rgba(255, 255, 255, 0.7) !important;
+      }
+      
+      .toast-close-button {
+        color: #ffffff !important;
+        opacity: 0.8;
+        
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
+    
+    // Error toast
+    &.toast-error {
+      background-color: #e74c3c !important;
+      background-image: none !important;
+    }
+    
+    // Info toast
+    &.toast-info {
+      background-color: #3498db !important;
+      background-image: none !important;
+    }
+    
+    // Warning toast
+    &.toast-warning {
+      background-color: #f39c12 !important;
+      background-image: none !important;
+    }
+  }
+}
+
+// ✅ ENSURE AOS DOESN'T BLOCK TOASTS
+[data-aos] {
+  pointer-events: auto !important;
+  
+  &.aos-animate {
+    pointer-events: auto !important;
+  }
+}
+
+// ✅ PREVENT AOS CONFLICTS
+body.aos-loading * {
+  pointer-events: none !important;
+}
+
+body.aos-loaded {
+  .toast-container {
+    pointer-events: none !important;
+    
+    .ngx-toastr {
+      pointer-events: auto !important;
+    }
+  }
+}

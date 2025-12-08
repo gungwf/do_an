@@ -6,6 +6,7 @@ export interface MedicalRecordDto {
   id: string;
   appointmentId: string;
   diagnosis: string;
+  icd10Code?: string; 
   createdAt?: string;
 }
 
@@ -64,6 +65,33 @@ export interface SpringPage<T> {
   pageable: any;
 }
 
+// ✅ THÊM MỚI - Interfaces cho update medical record với prescription
+export interface PrescriptionItem {
+  productId: string;
+  quantity: number;
+  dosage: string;
+}
+
+export interface UpdateMedicalRecordRequest {
+  diagnosis: string;
+  icd10Code: string;
+  prescriptionItems: PrescriptionItem[];
+  templateId: string | null;
+}
+
+export interface MedicalRecordResponse {
+  id: string;
+  appointmentId: string;
+  diagnosis: string;
+  prescriptionItems: any[];
+  icd10Code: string;
+  createdAt: string;
+  updatedAt: string;
+  performedServices: any[];
+  locked: boolean;
+  esignature: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class MedicalRecordService {
   private http = inject(HttpClient);
@@ -82,5 +110,10 @@ export class MedicalRecordService {
 
   getMedicalRecordByAppointment(appointmentId: string): Observable<MedicalRecordDto> {
     return this.http.get<MedicalRecordDto>(`${this.apiUrl}/medical-records/appointment/${appointmentId}`);
+  }
+
+  // ✅ THÊM MỚI - Method update medical record với prescription items
+  updateMedicalRecord(id: string, request: UpdateMedicalRecordRequest): Observable<MedicalRecordResponse> {
+    return this.http.put<MedicalRecordResponse>(`${this.apiUrl}/medical-records/${id}`, request);
   }
 }

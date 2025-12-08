@@ -4,30 +4,31 @@
     <div class="sidebar-header">
       <div class="logo">
         <i class="bi bi-heart-pulse-fill fs-4"></i>
-        <!-- Thay đổi logo text -->
         <span class="logo-text">Bác sĩ</span>
       </div>
     </div>
 
     <nav class="sidebar-nav">
-      <!-- 
-        Đã xóa các section của Admin (Dashboard, Users, Branches, Products)
-        Chỉ giữ lại section cho Lịch hẹn 
-      -->
       <div class="nav-section">
+        <!-- ✅ Lịch hẹn -->
         <a routerLink="/doctor/appointments" routerLinkActive="active" class="nav-item">
           <i class="bi bi-calendar-event"></i>
-          <!-- Thay đổi text và link -->
           <span class="nav-text">Quản lý Lịch hẹn</span>
+        </a>
+
+        <!-- ✅ NEW: Profile Link -->
+        <a routerLink="/doctor/profile" routerLinkActive="active" class="nav-item">
+          <i class="bi bi-person-circle"></i>
+          <span class="nav-text">Hồ sơ cá nhân</span>
         </a>
       </div>
     </nav>
   </aside>
 
-  <!-- Main Content: Giữ nguyên 100% từ admin-layout -->
+  <!-- Main Content -->
   <div class="main-content" [class.sidebar-collapsed]="isSidebarCollapsed">
     
-    <!-- Header: Giữ nguyên 100% từ admin-layout -->
+    <!-- Header -->
     <header class="admin-header">
       <div class="header-left">
         <button class="btn btn-link sidebar-toggle" (click)="toggleSidebar()">
@@ -52,9 +53,10 @@
             </div>
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
+            <!-- ✅ NEW: Profile Link in Dropdown -->
             <li>
-              <a class="dropdown-item" href="#">
-                <i class="bi bi-person-fill me-2"></i> Hồ sơ
+              <a class="dropdown-item" routerLink="/doctor/profile">
+                <i class="bi bi-person-fill me-2"></i> Hồ sơ cá nhân
               </a>
             </li>
             <li><hr class="dropdown-divider" /></li>
@@ -68,7 +70,7 @@
       </div>
     </header>
 
-    <!-- Content Area: Giữ nguyên 100% từ admin-layout -->
+    <!-- Content Area -->
     <main class="admin-main">
       <router-outlet></router-outlet>
     </main>
