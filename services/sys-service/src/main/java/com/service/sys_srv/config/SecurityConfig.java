@@ -87,7 +87,8 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**",
                                 "/api/ai/chat",
-                                "/products/search"
+                                "/products/search",
+                                "/ws-chat/**"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.GET,

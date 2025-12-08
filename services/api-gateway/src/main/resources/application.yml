@@ -13,6 +13,7 @@ spring:
           '[/**]':
             allowedOrigins:
               - "http://localhost:4200"
+              - "http://localhost:63342"
             allowedMethods:
               - GET
               - POST
@@ -132,6 +133,20 @@ spring:
           uri: lb://medical-record-service
           predicates:
             - Path=/bills/**
+
+        - id: sys-srv-ws-chat
+          uri: lb://sys-srv   # <-- sửa thành host:port thật của sys-srv (ws:// or wss://)
+          predicates:
+            - Path=/ws-chat/**       # bao gồm /ws-chat/info và tất cả transport của SockJS
+          filters:
+            - StripPrefix=0
+
+        - id: sys-srv-chat-api
+          uri: lb://sys-srv      # hoặc http://localhost:8081 nếu không dùng Eureka
+          predicates:
+            - Path=/api/chat/**
+          filters:
+            - StripPrefix=0
 
 eureka:
   client:

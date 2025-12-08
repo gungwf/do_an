@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Test Chat</title>
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+  <h3>Test WebSocket Chat (via Gateway)</h3>
+  <input id="token" placeholder="JWT token" style="width:600px" />
+  <button onclick="connectWS()">Connect</button>
+  <button onclick="disconnectWS()">Disconnect</button>
+  <br/><br/>
+  <input id="room" placeholder="roomId (e.g. 1)" value="1" />
+  <input id="msg" placeholder="message..." style="width:400px" />
+  <button onclick="sendMsg()">Send</button>
+  <pre id="log" style="height:300px;overflow:auto;border:1px solid #ccc;"></pre>
+
+<script>
+let stompClient = null;
+function log(s){ const p=document.getElementById('log'); p.textContent += s + "\\n"; p.scrollTop = p.scrollHeight; }
+
+function connectWS(){
+  const token = document.getElementById('token').value;
+  if(!token){ alert('Paste JWT token'); return; }
+  const url = '/ws-chat?access_token=' + encodeURIComponent(token); // relative -> goes to gateway host
+  const socket = new SockJS(url);
+  stompClient = Stomp.over(socket);
+  stompClient.connect({}, frame => {
+    log('CONNECTED: ' + frame);
+    const room = document.getElementById('room').value;
+    stompClient.subscribe('/topic/chat.' + room, m => log('RECV: ' + m.body));
+  }, err => {
+    log('CONNECT ERROR: ' + JSON.stringify(err));
+  });
+}
+
+function disconnectWS(){
+  if(stompClient) stompClient.disconnect(() => log('DISCONNECTED'));
+  stompClient = null;
+}
+
+function sendMsg(){
+  if(!stompClient || !stompClient.connected) { alert('Not connected'); return; }
+  const room = document.getElementById('room').value;
+  const content = document.getElementById('msg').value;
+  const payload = { roomId: Number(room), senderId: null, content: content };
+  stompClient.send('/app/chat.send', {}, JSON.stringify(payload));
+  log('SENT: ' + JSON.stringify(payload));
+}
+</script>
+</body>
+</html>
