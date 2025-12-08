@@ -3,6 +3,8 @@ package com.service.sys_srv.chat.service;
 import com.service.sys_srv.chat.dto.ChatMessageDto;
 import com.service.sys_srv.chat.entity.ChatMessage;
 import com.service.sys_srv.chat.repository.ChatMessageRepository;
+import com.service.sys_srv.entity.User;
+import com.service.sys_srv.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,6 +24,9 @@ public class ChatServiceImpl implements ChatService {
 
   @Autowired
   private ChatMessageRepository messageRepository;
+
+  @Autowired
+  private UserRepository userRepository;
 
   @Override
   @Transactional
@@ -41,11 +48,31 @@ public class ChatServiceImpl implements ChatService {
         .stream().map(this::map).collect(Collectors.toList());
   }
 
+  @Override
+  public List<ChatMessageDto> getMessagesByRoom(Long roomId, int page, int size) {
+    return messageRepository.findByRoomIdOrderByCreatedAtAsc(roomId, PageRequest.of(page, size))
+        .stream().map(this::map).collect(Collectors.toList());
+  }
+
   private ChatMessageDto map(ChatMessage m) {
     ChatMessageDto d = new ChatMessageDto();
     d.setId(m.getId());
     d.setRoomId(m.getRoomId());
     d.setSenderId(m.getSenderId());
+    
+    // Load sender name from User
+    try {
+      UUID userId = UUID.fromString(m.getSenderId());
+      Optional<User> userOpt = userRepository.findById(userId);
+      if (userOpt.isPresent()) {
+        d.setSenderName(userOpt.get().getFullName());
+      } else {
+        d.setSenderName("Unknown User");
+      }
+    } catch (Exception e) {
+      d.setSenderName("Unknown User");
+    }
+    
     d.setContent(m.getContent());
     d.setMessageType(m.getMessageType());
     d.setMetadata(m.getMetadata());

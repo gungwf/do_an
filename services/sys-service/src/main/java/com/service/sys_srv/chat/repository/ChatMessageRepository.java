@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
   List<ChatMessage> findByRoomIdOrderByCreatedAtDesc(Long roomId, Pageable pageable);
+  List<ChatMessage> findByRoomIdOrderByCreatedAtAsc(Long roomId, Pageable pageable);
 }

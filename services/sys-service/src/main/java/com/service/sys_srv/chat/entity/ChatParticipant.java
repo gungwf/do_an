@@ -33,4 +33,8 @@ public class ChatParticipant {
   @Column(name = "joined_at")
   private LocalDateTime joinedAt = LocalDateTime.now();
 
+  // Transient field for user name (loaded from User service)
+  @jakarta.persistence.Transient
+  private String userName;
+
 }
