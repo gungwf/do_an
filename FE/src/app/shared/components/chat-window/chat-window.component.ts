@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, Output, EventEmitter, Input, ViewChild, E
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService, ChatRoom, ChatMessage, ChatParticipant } from '../../../core/services/chat.service';
+import { AuthService, UserDto } from '../../../core/services/auth';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -30,8 +31,15 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
   
   private subscriptions: Subscription[] = [];
   private shouldScrollToBottom = false;
+  // Cache participants per room to avoid repeated network calls
+  private participantsCache: Map<number, ChatParticipant[]> = new Map();
+  // Track rooms for which a participants fetch is in-flight
+  private participantsFetching: Set<number> = new Set();
 
-  constructor(private chatService: ChatService) {}
+  // cache userId -> fullName
+  private userNameCache: Map<string, string> = new Map();
+
+  constructor(private chatService: ChatService, private authService: AuthService) {}
 
   ngOnInit(): void {
     this.currentUserId = localStorage.getItem('healthcare_user_id');
@@ -59,9 +67,59 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
         // Nếu tin nhắn thuộc room đang mở
         if (this.selectedRoom && message.roomId === this.selectedRoom.id) {
           console.log('✅ Adding message to current room');
+
+          const setSenderNameFromParticipants = (participants?: ChatParticipant[]) => {
+            if (!message.senderName && participants) {
+              const p = participants.find(pp => pp.userId === message.senderId);
+              if (p && p.userName) {
+                message.senderName = p.userName;
+              }
+            }
+          };
+
+          // 1) try selectedRoom.participants
+          setSenderNameFromParticipants(this.selectedRoom.participants);
+
+          // 2) try cache
+          if (!message.senderName) {
+            const cached = this.participantsCache.get(message.roomId);
+            if (cached) {
+              setSenderNameFromParticipants(cached);
+            }
+          }
+
+          // 3) if still missing, fetch participants for this room once
+          if (!message.senderName) {
+            this.chatService.getParticipants(message.roomId).subscribe({
+              next: (participants) => {
+                console.log('👥 Fetched participants for incoming message room', message.roomId, participants);
+                this.participantsCache.set(message.roomId, participants);
+                if (this.selectedRoom && this.selectedRoom.id === message.roomId) {
+                  this.selectedRoom.participants = participants;
+                }
+                setSenderNameFromParticipants(participants);
+                this.messages.push(message);
+                this.shouldScrollToBottom = true;
+                // Đánh dấu đã đọc
+                if (message.id && message.senderId !== this.currentUserId) {
+                  this.chatService.markAsRead(message.id);
+                }
+              },
+              error: (err) => {
+                console.error('Error fetching participants for message room', message.roomId, err);
+                // still push message even if we couldn't resolve name
+                this.messages.push(message);
+                this.shouldScrollToBottom = true;
+              }
+            });
+
+            return; // handled in async callback
+          }
+
+          // If senderName resolved synchronously, push message
           this.messages.push(message);
           this.shouldScrollToBottom = true;
-          
+
           // Đánh dấu đã đọc
           if (message.id && message.senderId !== this.currentUserId) {
             this.chatService.markAsRead(message.id);
@@ -133,12 +191,53 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
     console.log('🔔 Subscribing to room:', room.id);
     this.chatService.subscribeToRoom(room.id);
 
+    // Load participants for the room so we can show sender names
+    this.chatService.getParticipants(room.id).subscribe({
+      next: (participants) => {
+        console.log('👥 Loaded participants for room', room.id, participants);
+        // cache participants to avoid future calls
+        this.participantsCache.set(room.id, participants);
+        if (this.selectedRoom && this.selectedRoom.id === room.id) {
+          this.selectedRoom.participants = participants;
+          // If messages already loaded, map names
+          if (this.messages && this.messages.length > 0) {
+            this.mapSenderNames(this.messages, participants);
+          }
+        }
+      },
+      error: (err) => {
+        console.error('Error loading participants for room', room.id, err);
+      }
+    });
+
     // Load message history
     this.chatService.getMessageHistory(room.id).subscribe({
       next: (messages) => {
         console.log('📜 Loaded message history:', messages);
         this.messages = messages;
-        this.shouldScrollToBottom = true;
+        // If participants already available (or cached), map names; otherwise fetch participants
+        const participants = this.selectedRoom?.participants || this.participantsCache.get(room.id);
+        if (participants && participants.length > 0) {
+          this.mapSenderNames(this.messages, participants);
+          this.shouldScrollToBottom = true;
+        } else {
+          // fetch participants to map names
+          this.chatService.getParticipants(room.id).subscribe({
+            next: (participants) => {
+              console.log('👥 Fetched participants for history mapping', room.id, participants);
+              this.participantsCache.set(room.id, participants);
+              if (this.selectedRoom && this.selectedRoom.id === room.id) {
+                this.selectedRoom.participants = participants;
+              }
+              this.mapSenderNames(this.messages, participants);
+              this.shouldScrollToBottom = true;
+            },
+            error: (err) => {
+              console.error('Error fetching participants for history mapping', room.id, err);
+              this.shouldScrollToBottom = true;
+            }
+          });
+        }
       },
       error: (error) => {
         console.error('Error loading message history:', error);
@@ -147,6 +246,44 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
 
     // Load message history nếu có API
     // this.loadMessageHistory(room.id);
+  }
+
+  /**
+   * Map participant.userName onto messages' senderName when missing
+   */
+  private mapSenderNames(messages: ChatMessage[], participants: ChatParticipant[]): void {
+    if (!messages || !participants) return;
+    messages.forEach(m => {
+      if (!m.senderName) {
+        const p = participants.find(pp => pp.userId === m.senderId);
+        if (p && p.userName) {
+          m.senderName = p.userName;
+          return;
+        }
+
+        // try cached userName
+        const cachedName = this.userNameCache.get(m.senderId);
+        if (cachedName) {
+          m.senderName = cachedName;
+          // also update participant if exists
+          if (p) p.userName = cachedName;
+          return;
+        }
+
+        // fallback: fetch user profile by id
+        this.authService.getUserById(m.senderId).subscribe({
+          next: (user: UserDto) => {
+            const name = user?.fullName || user?.id || m.senderId;
+            this.userNameCache.set(m.senderId, name);
+            m.senderName = name;
+            if (p) p.userName = name;
+          },
+          error: (err) => {
+            console.error('Error fetching user profile for', m.senderId, err);
+          }
+        });
+      }
+    });
   }
 
   /**
@@ -308,10 +445,38 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
       return message.senderName;
     }
     
-    // Fallback: lấy từ participants
-    if (!this.selectedRoom?.participants) return 'Unknown';
-    
-    const participant = this.selectedRoom.participants.find(p => p.userId === senderId);
+    // Fallback: lấy từ participants của selectedRoom
+    let participants = this.selectedRoom?.participants;
+
+    // Nếu selectedRoom không có participants, thử lấy từ cache
+    if ((!participants || participants.length === 0) && this.selectedRoom) {
+      const cached = this.participantsCache.get(this.selectedRoom.id);
+      if (cached && cached.length > 0) {
+        participants = cached;
+        // assign vào selectedRoom để UI có thể dùng
+        this.selectedRoom.participants = cached;
+      } else if (this.selectedRoom && !this.participantsFetching.has(this.selectedRoom.id)) {
+        // Khi chưa có cached, fetch participants một lần
+        const roomId = this.selectedRoom.id;
+        this.participantsFetching.add(roomId);
+        this.chatService.getParticipants(roomId).subscribe({
+          next: (parts) => {
+            this.participantsCache.set(roomId, parts);
+            if (this.selectedRoom && this.selectedRoom.id === roomId) {
+              this.selectedRoom.participants = parts;
+            }
+            this.participantsFetching.delete(roomId);
+          },
+          error: () => {
+            this.participantsFetching.delete(roomId);
+          }
+        });
+      }
+
+    }
+
+    if (!participants || participants.length === 0) return senderId || 'Unknown';
+    const participant = participants.find(p => p.userId === senderId);
     return participant?.userName || senderId;
   }
 
@@ -319,13 +484,63 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
    * Lấy tên room (tên của người kia trong cuộc hội thoại 1-1)
    */
   getRoomName(room: ChatRoom): string {
-    if (!room.participants || room.participants.length === 0) {
-      return 'Unknown';
+    // Nếu đã có participants thì dùng luôn (và nếu thiếu userName, thử fetch từng user)
+    if (room.participants && room.participants.length > 0) {
+      const otherParticipant = room.participants.find(p => p.userId !== this.currentUserId);
+      if (!otherParticipant) return 'Unknown';
+
+      if (otherParticipant.userName) return otherParticipant.userName;
+
+      // try cache
+      const cached = this.userNameCache.get(otherParticipant.userId);
+      if (cached) {
+        otherParticipant.userName = cached;
+        return cached;
+      }
+
+      // fallback: fetch user profile once
+      this.authService.getUserById(otherParticipant.userId).subscribe({
+        next: (user) => {
+          const name = user?.fullName || user?.id || otherParticipant.userId;
+          this.userNameCache.set(otherParticipant.userId, name);
+          otherParticipant.userName = name;
+        },
+        error: (err) => {
+          console.error('Error fetching user for room header', otherParticipant.userId, err);
+        }
+      });
+
+      return otherParticipant.userId || '...';
     }
 
-    // Tìm participant khác với current user
-    const otherParticipant = room.participants.find(p => p.userId !== this.currentUserId);
-    return otherParticipant?.userName || otherParticipant?.userId || 'Unknown';
+    // Thử lấy từ cache
+    const cached = this.participantsCache.get(room.id);
+    if (cached && cached.length > 0) {
+      room.participants = cached;
+      const otherParticipant = cached.find(p => p.userId !== this.currentUserId);
+      return otherParticipant?.userName || otherParticipant?.userId || 'Unknown';
+    }
+
+    // Nếu chưa có, khởi tạo fetch (một lần) để cập nhật header khi về
+    if (!this.participantsFetching.has(room.id)) {
+      this.participantsFetching.add(room.id);
+      this.chatService.getParticipants(room.id).subscribe({
+        next: (parts) => {
+          this.participantsCache.set(room.id, parts);
+          // Nếu room đang là selectedRoom, sync participants để UI update
+          if (this.selectedRoom && this.selectedRoom.id === room.id) {
+            this.selectedRoom.participants = parts;
+          }
+          this.participantsFetching.delete(room.id);
+        },
+        error: () => {
+          this.participantsFetching.delete(room.id);
+        }
+      });
+    }
+
+    // Trả về tạm userId để không block UI; sẽ cập nhật khi data về
+    return '...';
   }
 
   /**
