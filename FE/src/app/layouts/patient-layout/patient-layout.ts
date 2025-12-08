@@ -43,7 +43,7 @@ export class PatientLayout implements OnInit, OnDestroy {
     // Kết nối WebSocket nếu user đã đăng nhập
     if (this.authService.isAuthenticated()) {
       try {
-        const token = this.chatService.getToken();
+        const token = this.authService.getToken();
         if (token) {
           this.chatService.connect(token);
         }

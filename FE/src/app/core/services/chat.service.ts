@@ -2,8 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject, Subject } from 'rxjs';
 import { Client, IMessage } from '@stomp/stompjs';
-// @ts-ignore
-import SockJS from 'sockjs-client';
 
 export interface ChatMessage {
   id?: number;
@@ -11,7 +9,7 @@ export interface ChatMessage {
   senderId: string;
   senderName?: string;
   content: string;
-  timestamp?: string;
+  createdAt?: string; // Backend uses createdAt, not timestamp
   delivered?: boolean;
   read?: boolean;
 }
@@ -47,7 +45,7 @@ export interface ChatNotification {
 })
 export class ChatService {
   private apiUrl = 'http://localhost:8080/api/chat';
-  private wsUrl = 'http://localhost:8080/ws';
+  private wsUrl = 'http://localhost:8080/ws-chat';
   
   private stompClient: Client | null = null;
   private connected$ = new BehaviorSubject<boolean>(false);
@@ -74,8 +72,12 @@ export class ChatService {
       return;
     }
 
+    const userId = this.getCurrentUserId();
+    console.log('🔌 Connecting WebSocket - userId from localStorage:', userId);
+    console.log('🔑 Token (first 20 chars):', token.substring(0, 20) + '...');
+
     this.stompClient = new Client({
-      webSocketFactory: () => new SockJS(this.wsUrl),
+      brokerURL: this.wsUrl.replace('http', 'ws') + '?access_token=' + token,
       connectHeaders: {
         Authorization: `Bearer ${token}`
       },
@@ -88,11 +90,12 @@ export class ChatService {
     });
 
     this.stompClient.onConnect = (frame) => {
-      console.log('Connected to WebSocket:', frame);
+      console.log('✅ Connected to WebSocket:', frame);
+      const userId = this.getCurrentUserId();
+      console.log('👤 Current userId after connect:', userId);
       this.connected$.next(true);
       
       // Subscribe to user-specific notifications
-      const userId = this.getCurrentUserId();
       if (userId) {
         this.subscribeToUserNotifications(userId);
       }
@@ -143,11 +146,13 @@ export class ChatService {
       return;
     }
 
+    console.log('🔔 Subscribing to /topic/chat.' + roomId);
+    
     const subscription = this.stompClient.subscribe(
       `/topic/chat.${roomId}`,
       (message: IMessage) => {
         const chatMessage: ChatMessage = JSON.parse(message.body);
-        console.log('Message received:', chatMessage);
+        console.log('📨 Message received from WebSocket:', chatMessage);
         this.messageReceived$.next(chatMessage);
       }
     );
@@ -193,12 +198,17 @@ export class ChatService {
       return;
     }
 
+    const currentUserId = this.getCurrentUserId();
+    console.log('📤 Sending message - userId:', currentUserId, 'roomId:', roomId);
+
     const chatMessage: ChatMessage = {
       roomId,
-      senderId: this.getCurrentUserId() || '',
+      senderId: currentUserId || '',
       content,
-      timestamp: new Date().toISOString()
+      createdAt: new Date().toISOString()
     };
+
+    console.log('📤 Message payload:', JSON.stringify(chatMessage));
 
     this.stompClient.publish({
       destination: '/app/chat.send',
@@ -272,11 +282,10 @@ export class ChatService {
   }
 
   /**
-   * Lấy lịch sử tin nhắn của room (nếu có API)
+   * Lấy lịch sử tin nhắn của room
    */
   getMessageHistory(roomId: number, page: number = 0, size: number = 50): Observable<ChatMessage[]> {
-    // TODO: Implement API endpoint on backend if needed
-    return this.http.get<ChatMessage[]>(`${this.apiUrl}/messages/${roomId}?page=${page}&size=${size}`);
+    return this.http.get<ChatMessage[]>(`${this.apiUrl}/rooms/${roomId}/messages?page=${page}&size=${size}`);
   }
 
   /**

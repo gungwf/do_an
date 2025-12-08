@@ -35,10 +35,12 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
 
   ngOnInit(): void {
     this.currentUserId = localStorage.getItem('healthcare_user_id');
+    console.log('💬 Chat window initialized - currentUserId:', this.currentUserId);
     
     // Kết nối WebSocket nếu chưa
     const token = this.chatService.getToken();
     if (token) {
+      console.log('🔐 Token found, connecting WebSocket...');
       this.chatService.connect(token);
     }
 
@@ -53,8 +55,10 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
     // Lắng nghe tin nhắn mới
     const messageSub = this.chatService.onMessageReceived().subscribe(
       (message: ChatMessage) => {
+        console.log('💬 Message received in window:', message);
         // Nếu tin nhắn thuộc room đang mở
         if (this.selectedRoom && message.roomId === this.selectedRoom.id) {
+          console.log('✅ Adding message to current room');
           this.messages.push(message);
           this.shouldScrollToBottom = true;
           
@@ -64,6 +68,8 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
           }
         } else {
           // Cập nhật unread count cho room khác
+          console.log('📥 Message for different room, reloading rooms...');
+          this.loadRooms(); // Reload để thấy room mới
           this.updateRoomUnreadCount(message.roomId);
         }
       }
@@ -97,8 +103,14 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
     this.isLoading = true;
     this.chatService.getRoomsByUser(this.currentUserId).subscribe({
       next: (rooms) => {
+        console.log('📋 Loaded rooms:', rooms);
         this.rooms = rooms;
         this.isLoading = false;
+        
+        // Auto subscribe to all rooms to receive messages
+        rooms.forEach(room => {
+          this.chatService.subscribeToRoom(room.id);
+        });
       },
       error: (error) => {
         console.error('Error loading rooms:', error);
@@ -111,13 +123,27 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
    * Mở một room để chat
    */
   openRoom(room: ChatRoom): void {
+    console.log('📂 Opening room:', room.id);
     this.selectedRoom = room;
     this.currentView = 'chat';
     this.messages = [];
     this.shouldScrollToBottom = true;
 
     // Subscribe to room messages
+    console.log('🔔 Subscribing to room:', room.id);
     this.chatService.subscribeToRoom(room.id);
+
+    // Load message history
+    this.chatService.getMessageHistory(room.id).subscribe({
+      next: (messages) => {
+        console.log('📜 Loaded message history:', messages);
+        this.messages = messages;
+        this.shouldScrollToBottom = true;
+      },
+      error: (error) => {
+        console.error('Error loading message history:', error);
+      }
+    });
 
     // Load message history nếu có API
     // this.loadMessageHistory(room.id);
@@ -130,7 +156,10 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
     if (!this.currentUserId) return;
 
     this.isLoading = true;
-    this.chatService.createOrGetOneToOneRoom(this.currentUserId, userId).subscribe({
+    // Đảm bảo patient luôn là userA, doctor là userB
+    const userA = this.userRole === 'PATIENT' ? this.currentUserId : userId;
+    const userB = this.userRole === 'PATIENT' ? userId : this.currentUserId;
+    this.chatService.createOrGetOneToOneRoom(userA, userB).subscribe({
       next: (room) => {
         this.isLoading = false;
         this.openRoom(room);
@@ -173,18 +202,9 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
 
     this.isSending = true;
     
-    // Tạo tin nhắn tạm để hiển thị ngay
-    const tempMessage: ChatMessage = {
-      roomId: this.selectedRoom.id,
-      senderId: this.currentUserId || '',
-      content: this.newMessage.trim(),
-      timestamp: new Date().toISOString()
-    };
+    console.log('📤 Sending message to room:', this.selectedRoom.id);
 
-    this.messages.push(tempMessage);
-    this.shouldScrollToBottom = true;
-
-    // Gửi qua WebSocket
+    // Gửi qua WebSocket (không tạo temp message để tránh duplicate)
     this.chatService.sendMessage(this.selectedRoom.id, this.newMessage.trim());
     
     this.newMessage = '';
@@ -280,9 +300,15 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
   }
 
   /**
-   * Lấy tên người gửi từ room participants
+   * Lấy tên người gửi từ message hoặc room participants
    */
-  getSenderName(senderId: string): string {
+  getSenderName(senderId: string, message?: ChatMessage): string {
+    // Ưu tiên lấy từ message.senderName nếu có
+    if (message?.senderName) {
+      return message.senderName;
+    }
+    
+    // Fallback: lấy từ participants
     if (!this.selectedRoom?.participants) return 'Unknown';
     
     const participant = this.selectedRoom.participants.find(p => p.userId === senderId);

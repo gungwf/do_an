@@ -59,7 +59,7 @@
         </div>
         <div class="room-meta">
           <div class="room-time text-muted" *ngIf="room.lastMessage">
-            {{ formatTime(room.lastMessage.timestamp) }}
+            {{ formatTime(room.lastMessage.createdAt) }}
           </div>
           <span class="unread-count" *ngIf="room.unreadCount && room.unreadCount > 0">
             {{ room.unreadCount }}
@@ -81,11 +81,14 @@
              [class.my-message]="isMyMessage(message)"
              [class.other-message]="!isMyMessage(message)">
           <div class="message-content">
+            <div class="sender-name" *ngIf="!isMyMessage(message)">
+              {{ getSenderName(message.senderId, message) }}
+            </div>
             <div class="message-bubble">
               {{ message.content }}
             </div>
             <div class="message-time">
-              {{ formatTime(message.timestamp) }}
+              {{ formatTime(message.createdAt) }}
               <i class="bi bi-check2-all ms-1" *ngIf="isMyMessage(message) && message.read"></i>
               <i class="bi bi-check2 ms-1" *ngIf="isMyMessage(message) && message.delivered && !message.read"></i>
             </div>

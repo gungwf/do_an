@@ -2,6 +2,22 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { App } from './app/app';
 
+// ✅ FIX: Polyfill 'global', 'process', 'Buffer', 'module' for browser
+(window as any).global = window;
+(window as any).process = {
+  env: {},
+  version: '',
+  nextTick: (fn: Function) => setTimeout(fn, 0),
+  browser: true
+};
+(window as any).Buffer = {
+  isBuffer: () => false,
+  from: (data: any) => data,
+  alloc: (size: number) => new Uint8Array(size)
+};
+(window as any).module = { exports: {} };
+(window as any).exports = {};
+
 // ✅ CLEANUP CORRUPTED DATA ON STARTUP
 function cleanupStorage(): void {
   try {
