@@ -56,6 +56,8 @@ export class ChatService {
   
   // Lưu trữ các subscription theo roomId
   private roomSubscriptions = new Map<number, any>();
+  // Pending outgoing messages queued while WebSocket is disconnected
+  private pendingMessages: ChatMessage[] = [];
   
   // Lưu trữ các rooms và messages
   private chatRooms$ = new BehaviorSubject<ChatRoom[]>([]);
@@ -99,6 +101,21 @@ export class ChatService {
       if (userId) {
         this.subscribeToUserNotifications(userId);
       }
+      // Flush any pending messages queued while disconnected
+      if (this.pendingMessages.length > 0) {
+        console.log('📤 Flushing pending messages:', this.pendingMessages.length);
+        this.pendingMessages.forEach(msg => {
+          try {
+            this.stompClient?.publish({
+              destination: '/app/chat.send',
+              body: JSON.stringify(msg)
+            });
+          } catch (err) {
+            console.error('Error publishing pending message', err);
+          }
+        });
+        this.pendingMessages = [];
+      }
     };
 
     this.stompClient.onStompError = (frame) => {
@@ -130,6 +147,13 @@ export class ChatService {
    */
   isConnected(): Observable<boolean> {
     return this.connected$.asObservable();
+  }
+
+  /**
+   * Synchronous check for connection state (useful for quick guards)
+   */
+  isConnectedSync(): boolean {
+    return !!this.stompClient?.connected;
   }
 
   /**
@@ -193,14 +217,7 @@ export class ChatService {
    * Gửi tin nhắn
    */
   sendMessage(roomId: number, content: string): void {
-    if (!this.stompClient?.connected) {
-      console.error('WebSocket not connected');
-      return;
-    }
-
     const currentUserId = this.getCurrentUserId();
-    console.log('📤 Sending message - userId:', currentUserId, 'roomId:', roomId);
-
     const chatMessage: ChatMessage = {
       roomId,
       senderId: currentUserId || '',
@@ -208,12 +225,30 @@ export class ChatService {
       createdAt: new Date().toISOString()
     };
 
-    console.log('📤 Message payload:', JSON.stringify(chatMessage));
+    // If websocket connected, publish immediately
+    if (this.stompClient?.connected) {
+      console.log('📤 Sending message - userId:', currentUserId, 'roomId:', roomId);
+      console.log('📤 Message payload:', JSON.stringify(chatMessage));
+      this.stompClient.publish({
+        destination: '/app/chat.send',
+        body: JSON.stringify(chatMessage)
+      });
+      return;
+    }
 
-    this.stompClient.publish({
-      destination: '/app/chat.send',
-      body: JSON.stringify(chatMessage)
-    });
+    // Otherwise queue the message and attempt to connect
+    console.warn('WebSocket not connected - queueing message and attempting connect');
+    this.pendingMessages.push(chatMessage);
+    const token = this.getToken();
+    if (token) {
+      try {
+        this.connect(token);
+      } catch (err) {
+        console.error('Error attempting to connect WebSocket for queued message', err);
+      }
+    } else {
+      console.error('No auth token available; cannot connect WebSocket to send queued message.');
+    }
   }
 
   /**

@@ -337,13 +337,24 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
       return;
     }
 
+    // If websocket not connected, we still call service.sendMessage() which will queue the message
+    if (!this.chatService.isConnectedSync()) {
+      console.warn('WebSocket not connected when trying to send message. Message will be queued and connection will be attempted.');
+      const token = this.chatService.getToken();
+      if (token) {
+        this.chatService.connect(token);
+      } else {
+        console.error('No auth token available; cannot connect WebSocket. Message will remain queued until login.');
+      }
+      // continue so service can queue the message
+    }
+
     this.isSending = true;
-    
     console.log('📤 Sending message to room:', this.selectedRoom.id);
 
     // Gửi qua WebSocket (không tạo temp message để tránh duplicate)
     this.chatService.sendMessage(this.selectedRoom.id, this.newMessage.trim());
-    
+
     this.newMessage = '';
     this.isSending = false;
   }

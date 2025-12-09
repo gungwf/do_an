@@ -219,79 +219,84 @@
                           </div>
                         </div>
 
-                        <!-- ✅ TIME SLOTS - Cập nhật UI giống ảnh -->
-                        <div *ngIf="timeSlots.length > 0" class="time-slots-section">
-                          <h6 class="slots-title">
+                        <!-- Time Slots -->
+                        <div class="schedule-block">
+                          <h6 class="block-title">
                             <i class="bi bi-clock-fill"></i>
-                            <span>Chọn giờ khám</span>
-                            <small class="slots-count">({{ getAvailableSlotsCount() }}/{{ timeSlots.length }} ca trống)</small>
+                            Chọn giờ khám
                           </h6>
 
-                          <!-- Morning Slots (08:00 - 10:15) -->
-                          <div class="time-period-section" *ngIf="getMorningSlots().length > 0">
+                          <!-- Morning Slots -->
+                          <div class="time-period-section" *ngIf="getMorningSlots().length > 0 || getAfternoonSlots().length > 0">
                             <div class="period-header">
                               <i class="bi bi-sunrise-fill"></i>
-                              <span>Buổi sáng (08:00 - 10:15)</span>
+                              <span>Buổi sáng (7:00 - 12:59)</span>
                             </div>
-                            <div class="time-grid">
-                              <button 
-                                *ngFor="let slot of getMorningSlots()"
-                                class="time-slot-btn"
-                                [class.selected]="selectedTime === slot.time"
-                                [class.disabled]="!slot.isAvailable"
-                                [disabled]="!slot.isAvailable"
-                                (click)="$event.stopPropagation(); selectTime(slot.time, slot.isAvailable)">
-                                <i class="bi bi-clock-fill"></i>
-                                <span class="time-text">{{ slot.displayTime }}</span>
-                              </button>
+                            <div class="slots-container">
+                              <ng-container *ngIf="getMorningSlots().length > 0; else noMorningSlots">
+                                <button 
+                                  *ngFor="let slot of getMorningSlots()"
+                                  class="slot-btn"
+                                  [class.active]="selectedTime === slot.time"
+                                  [disabled]="slot.isBooked"
+                                  (click)="$event.stopPropagation(); selectTime(slot.time, slot.isBooked)">
+                                  <i class="bi" [class.bi-clock]="!slot.isBooked" [class.bi-lock-fill]="slot.isBooked"></i>
+                                  <span class="slot-time">{{ slot.time | slice:0:5 }}</span>
+                                  <span *ngIf="slot.isBooked" class="booked-badge">Đã đặt</span>
+                                </button>
+                              </ng-container>
+                              <ng-template #noMorningSlots>
+                                <div class="no-slots-period">
+                                  <i class="bi bi-moon-stars"></i>
+                                  <p>Không có ca trống buổi sáng</p>
+                                </div>
+                              </ng-template>
                             </div>
                           </div>
 
-                          <!-- Afternoon Slots (13:00 - 15:15) -->
-                          <div class="time-period-section" *ngIf="getAfternoonSlots().length > 0">
+                          <!-- Afternoon Slots -->
+                          <div class="time-period-section" *ngIf="getMorningSlots().length > 0 || getAfternoonSlots().length > 0">
                             <div class="period-header">
                               <i class="bi bi-sunset-fill"></i>
-                              <span>Buổi chiều (13:00 - 15:15)</span>
+                              <span>Buổi chiều (13:00 - 18:00)</span>
                             </div>
-                            <div class="time-grid">
-                              <button 
-                                *ngFor="let slot of getAfternoonSlots()"
-                                class="time-slot-btn"
-                                [class.selected]="selectedTime === slot.time"
-                                [class.disabled]="!slot.isAvailable"
-                                [disabled]="!slot.isAvailable"
-                                (click)="$event.stopPropagation(); selectTime(slot.time, slot.isAvailable)">
-                                <i class="bi bi-clock-fill"></i>
-                                <span class="time-text">{{ slot.displayTime }}</span>
-                              </button>
+                            <div class="slots-container">
+                              <ng-container *ngIf="getAfternoonSlots().length > 0; else noAfternoonSlots">
+                                <button 
+                                  *ngFor="let slot of getAfternoonSlots()"
+                                  class="slot-btn"
+                                  [class.active]="selectedTime === slot.time"
+                                  [disabled]="slot.isBooked"
+                                  (click)="$event.stopPropagation(); selectTime(slot.time, slot.isBooked)">
+                                  <i class="bi" [class.bi-clock]="!slot.isBooked" [class.bi-lock-fill]="slot.isBooked"></i>
+                                  <span class="slot-time">{{ slot.time | slice:0:5 }}</span>
+                                  <span *ngIf="slot.isBooked" class="booked-badge">Đã đặt</span>
+                                </button>
+                              </ng-container>
+                              <ng-template #noAfternoonSlots>
+                                <div class="no-slots-period">
+                                  <i class="bi bi-moon-stars"></i>
+                                  <p>Không có ca trống buổi chiều</p>
+                                </div>
+                              </ng-template>
                             </div>
                           </div>
-                        </div>
 
-                        <!-- No slots -->
-                        <div *ngIf="timeSlots.length === 0" class="no-slots">
-                          <i class="bi bi-calendar-x"></i>
-                          <p>Không có ca làm việc trong ngày này</p>
-                        </div>
-
-                        <!-- All booked -->
-                        <div *ngIf="timeSlots.length > 0 && getAvailableSlotsCount() === 0" class="all-booked">
-                          <i class="bi bi-exclamation-triangle-fill"></i>
-                          <p>Tất cả các ca trong ngày này đã được đặt hết</p>
-                          <button class="btn-try-another" (click)="$event.stopPropagation(); selectedDate = null">
-                            <i class="bi bi-arrow-left-circle"></i>
-                            Chọn ngày khác
-                          </button>
+                          <!-- No Slots at All -->
+                          <div *ngIf="getMorningSlots().length === 0 && getAfternoonSlots().length === 0" class="no-slots">
+                            <i class="bi bi-calendar-x"></i>
+                            <p>Không có ca trống cho ngày này</p>
+                          </div>
                         </div>
 
                         <!-- Confirm Button -->
-                        <div *ngIf="timeSlots.length > 0 && getAvailableSlotsCount() > 0" class="confirm-section">
+                        <div class="confirm-section">
                           <button 
                             class="btn-confirm"
                             [disabled]="!selectedTime || isLoadingSlots"
                             (click)="$event.stopPropagation(); openConfirmModal()">
                             <i class="bi bi-check-circle-fill"></i>
-                            <span *ngIf="selectedTime">Xác nhận đặt lịch ({{ getDisplaySelectedTime() }})</span>
+                            <span *ngIf="selectedTime">Xác nhận đặt lịch ({{ selectedTime | slice:0:5 }})</span>
                             <span *ngIf="!selectedTime">Vui lòng chọn giờ khám</span>
                           </button>
                         </div>
@@ -331,7 +336,7 @@
         <i class="bi bi-clipboard-check-fill"></i>
         <h4>Xác nhận đặt lịch khám</h4>
       </div>
-      <button class="btn-close" (click)="closeConfirmModal()" [disabled]="isBooking">
+      <button class="btn-close" (click)="closeConfirmModal()">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -360,7 +365,7 @@
           <div class="item-content">
             <label>Thời gian khám</label>
             <div class="item-value">
-              <strong>{{ getDisplaySelectedTime() }}</strong>
+              <strong>{{ selectedTime | slice:0:5 }}</strong>
               <span>{{ selectedDate | date:'EEEE, dd/MM/yyyy':'':'vi-VN' }}</span>
             </div>
           </div>
@@ -418,7 +423,6 @@
       
     </div>
 
-    <!-- ✅ Modal Footer - Bỏ nút Hủy -->
     <div class="modal-footer">
       <button 
         class="btn-submit" 
