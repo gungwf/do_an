@@ -20,18 +20,18 @@ import java.util.Set;
 public class ChatRestController {
 
 
-  @Autowired
-  private ChatService chatService;
+//  @Autowired
+//  private ChatService chatService;
+//
+//
+//  @Autowired
+//  private PresenceService presenceService;
 
 
-  @Autowired
-  private PresenceService presenceService;
-
-
-  @GetMapping("/rooms/{roomId}/messages")
-  public List<ChatMessageDto> getMessages(@PathVariable Long roomId) {
-    return chatService.getRecentMessages(roomId, 50);
-  }
+//  @GetMapping("/rooms/{roomId}/messages")
+//  public List<ChatMessageDto> getMessages(@PathVariable Long roomId) {
+//    return chatService.getRecentMessages(roomId, 50);
+//  }
 
 
 //   @GetMapping("/doctors/online")

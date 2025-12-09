@@ -67,3 +67,7 @@ docker-compose.override.yml
 !.vscode/launch.json
 !.vscode/tasks.json
 !.vscode/extensions.json
+services/sys-service/src/main/resources/application.properties
+services/product-inventory-service/src/main/resources/application.properties
+services/medical-record-service/src/main/resources/application.properties
+services/appointment-service/src/main/resources/application.properties

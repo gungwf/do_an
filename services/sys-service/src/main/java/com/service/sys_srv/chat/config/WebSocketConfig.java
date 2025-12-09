@@ -25,11 +25,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   @Override
   public void registerStompEndpoints(StompEndpointRegistry registry) {
+    // WebSocket native (không dùng SockJS)
     registry.addEndpoint("/ws-chat")
         .addInterceptors(jwtHandshakeInterceptor)
         .setHandshakeHandler(new StompPrincipalHandshakeHandler())
-        .addInterceptors(jwtHandshakeInterceptor)
-        .setAllowedOriginPatterns("*") // or list origins explicitly
-        .withSockJS();
+        .setAllowedOriginPatterns("*"); // Bỏ withSockJS() để dùng WebSocket native
   }
 }

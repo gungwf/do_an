@@ -33,9 +33,32 @@ export class PatientLayout {
     private toastr: ToastrService,
     public router: Router,
     public cartService: CartService,
+    private chatService: ChatService
   ) {}
 
-  handleProtectedLink(url: string) {
+  ngOnInit(): void {
+    // Kết nối WebSocket nếu user đã đăng nhập
+    if (this.authService.isAuthenticated()) {
+      try {
+        const token = this.authService.getToken();
+        if (token) {
+          this.chatService.connect(token);
+        }
+      } catch (error) {
+        console.error('Error connecting to WebSocket:', error);
+        // Không throw error để app vẫn chạy được
+      }
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Ngắt kết nối WebSocket khi rời layout
+    try {
+      this.chatService.disconnect();
+    } catch (error) {
+      console.error('Error disconnecting WebSocket:', error);
+    }
+  }  handleProtectedLink(url: string) {
     if (this.authService.isAuthenticated()) {
       this.router.navigate([url]);
     } else {

@@ -23,7 +23,32 @@ export class DoctorLayout {
     public authService: AuthService,
     private toastr: ToastrService,
     private router: Router,
+    private chatService: ChatService
   ) {}
+
+  ngOnInit(): void {
+    // Kết nối WebSocket cho bác sĩ
+    if (this.authService.isAuthenticated()) {
+      try {
+        const token = this.authService.getToken();
+        if (token) {
+          this.chatService.connect(token);
+        }
+      } catch (error) {
+        console.error('Error connecting to WebSocket:', error);
+        // Không throw error để app vẫn chạy được
+      }
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Ngắt kết nối WebSocket khi rời layout
+    try {
+      this.chatService.disconnect();
+    } catch (error) {
+      console.error('Error disconnecting WebSocket:', error);
+    }
+  }
 
   toggleSidebar() {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;

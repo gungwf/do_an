@@ -1,0 +1,119 @@
+<div class="chat-window-container">
+  <!-- Header -->
+  <div class="chat-header">
+    <div class="header-content">
+      <button class="btn-back" *ngIf="currentView === 'chat'" (click)="backToRooms()">
+        <i class="bi bi-arrow-left"></i>
+      </button>
+      <h5 class="mb-0">
+        <span *ngIf="currentView === 'rooms'">
+          <i class="bi bi-chat-dots me-2"></i>Tin nhắn
+        </span>
+        <span *ngIf="currentView === 'chat' && selectedRoom">
+          {{ getRoomName(selectedRoom) }}
+          <small class="text-muted ms-2">
+            ({{ getOtherParticipantRole(selectedRoom) }})
+          </small>
+        </span>
+      </h5>
+      <button class="btn-close-chat" (click)="close()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="chat-body">
+    <!-- Danh sách rooms -->
+    <div *ngIf="currentView === 'rooms'" class="rooms-list">
+      <div *ngIf="isLoading" class="text-center p-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <div *ngIf="!isLoading && rooms.length === 0" class="empty-state">
+        <i class="bi bi-chat-left-text"></i>
+        <p>Chưa có cuộc hội thoại nào</p>
+        <small class="text-muted">
+          {{ userRole === 'PATIENT' ? 'Nhấn "Liên hệ ngay" từ danh sách bác sĩ để bắt đầu chat' : 'Bệnh nhân sẽ liên hệ với bạn khi cần' }}
+        </small>
+      </div>
+
+      <div class="room-item" *ngFor="let room of rooms" (click)="openRoom(room)">
+        <div class="room-avatar">
+          <i class="bi" [class.bi-person-circle]="getOtherParticipantRole(room) === 'PATIENT'"
+                        [class.bi-hospital]="getOtherParticipantRole(room) === 'DOCTOR'"></i>
+        </div>
+        <div class="room-info">
+          <div class="room-name">
+            {{ getRoomName(room) }}
+            <span class="role-badge" [class.doctor]="getOtherParticipantRole(room) === 'DOCTOR'"
+                                    [class.patient]="getOtherParticipantRole(room) === 'PATIENT'">
+              {{ getOtherParticipantRole(room) }}
+            </span>
+          </div>
+          <div class="room-last-message text-muted" *ngIf="room.lastMessage">
+            {{ room.lastMessage.content }}
+          </div>
+        </div>
+        <div class="room-meta">
+          <div class="room-time text-muted" *ngIf="room.lastMessage">
+            {{ formatTime(room.lastMessage.createdAt) }}
+          </div>
+          <span class="unread-count" *ngIf="room.unreadCount && room.unreadCount > 0">
+            {{ room.unreadCount }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cửa sổ chat -->
+    <div *ngIf="currentView === 'chat' && selectedRoom" class="chat-view">
+      <!-- Messages container -->
+      <div class="messages-container" #messagesContainer>
+        <div *ngIf="messages.length === 0" class="empty-messages">
+          <i class="bi bi-chat-square-dots"></i>
+          <p>Bắt đầu cuộc hội thoại</p>
+        </div>
+
+        <div class="message" *ngFor="let message of messages" 
+             [class.my-message]="isMyMessage(message)"
+             [class.other-message]="!isMyMessage(message)">
+          <div class="message-content">
+            <div class="sender-name" *ngIf="!isMyMessage(message)">
+              {{ getSenderName(message.senderId, message) }}
+            </div>
+            <div class="message-bubble">
+              {{ message.content }}
+            </div>
+            <div class="message-time">
+              {{ formatTime(message.createdAt) }}
+              <i class="bi bi-check2-all ms-1" *ngIf="isMyMessage(message) && message.read"></i>
+              <i class="bi bi-check2 ms-1" *ngIf="isMyMessage(message) && message.delivered && !message.read"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input area -->
+      <div class="input-area">
+        <div class="input-wrapper">
+          <input 
+            type="text" 
+            class="form-control message-input" 
+            placeholder="Nhập tin nhắn..."
+            [(ngModel)]="newMessage"
+            (keypress)="onKeyPress($event)"
+            [disabled]="isSending">
+          <button 
+            class="btn btn-primary btn-send" 
+            (click)="sendMessage()"
+            [disabled]="!newMessage.trim() || isSending">
+            <i class="bi bi-send-fill"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
