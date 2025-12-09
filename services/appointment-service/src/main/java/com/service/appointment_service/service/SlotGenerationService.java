@@ -1,6 +1,9 @@
 package com.service.appointment_service.service;
 
+import com.service.appointment_service.entity.Appointment;
 import com.service.appointment_service.repository.AppointmentRepository;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -41,22 +44,34 @@ public class SlotGenerationService {
     }
 
     public List<LocalTime> getAvailableSlots(UUID doctorId, LocalDate date) {
-        // 1. Lấy tất cả các slot cố định trong ngày
+        // 1. tất cả slot cố định (ví dụ mỗi 15 phút)
         List<LocalTime> allFixedSlots = generateFixedSlots();
 
-        // 2. Lấy tất cả các lịch hẹn đã bị đặt của bác sĩ trong ngày đó
-        OffsetDateTime startOfDay = date.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime();
-        OffsetDateTime endOfDay = startOfDay.plusDays(1).minusSeconds(1);
+        // 2. dùng timezone phù hợp (ví dụ server hoặc clinic timezone)
+        ZoneId zone = ZoneId.of("Asia/Bangkok"); // hoặc ZoneId.systemDefault()
+        OffsetDateTime startOfDay = date.atStartOfDay(zone).toOffsetDateTime();
+        OffsetDateTime endOfDay = date.plusDays(1).atStartOfDay(zone).toOffsetDateTime(); // exclusive
 
-        Set<LocalTime> bookedSlots = appointmentRepository
-                .findByDoctorIdAndAppointmentTimeBetween(doctorId, startOfDay, endOfDay)
-                .stream()
-                .map(appointment -> appointment.getAppointmentTime().toLocalTime())
-                .collect(Collectors.toSet());
+        // Lấy appointments trong [startOfDay, endOfDay) — nếu repo hỗ trợ < end, hoặc adjust accordingly
+        List<Appointment> appts = appointmentRepository
+            .findByDoctorIdAndAppointmentTimeBetween(doctorId, startOfDay, endOfDay.minusNanos(1)); // hoặc implement method dạng >= start && < end
 
-        // 3. Lọc và trả về các slot còn trống
-        return allFixedSlots.stream()
-                .filter(slot -> !bookedSlots.contains(slot))
-                .collect(Collectors.toList());
+        // 3. chuẩn hoá về phút (loại bỏ giây/nano) trước khi so sánh
+        Set<LocalTime> bookedSlots = appts.stream()
+            .map(a -> a.getAppointmentTime()
+                .withOffsetSameInstant(zone.getRules().getOffset(a.getAppointmentTime().toInstant()))
+                .toLocalTime()
+                .truncatedTo(ChronoUnit.MINUTES))
+            .collect(Collectors.toSet());
+
+        List<LocalTime> normalizedFixed = allFixedSlots.stream()
+            .map(t -> t.truncatedTo(ChronoUnit.MINUTES))
+            .collect(Collectors.toList());
+
+        // 4. lọc
+        return normalizedFixed.stream()
+            .filter(slot -> !bookedSlots.contains(slot))
+            .collect(Collectors.toList());
     }
+
 }
