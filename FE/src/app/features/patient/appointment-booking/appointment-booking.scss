@@ -53,7 +53,30 @@
   .doctors-card {
     background: white;
     border-radius: 12px;
-    overflow: hidden;
+  .doctor-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .btn-contact {
+    background: #6f42c1;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 0.9rem;
+  }
+
+  .btn-contact:hover {
+    opacity: 0.9;
+  }
+
+  .select-btn {
     border: none;
 
     .card-header {
@@ -1143,4 +1166,5 @@
       grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
     }
   }
+}
 }

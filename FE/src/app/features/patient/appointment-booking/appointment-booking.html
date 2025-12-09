@@ -150,10 +150,16 @@
                         </span>
                       </div>
                     </div>
-                    <button class="select-btn" [class.selected]="selectedDoctor?.id === doctor.id">
-                      <i class="bi" [class.bi-check-circle-fill]="selectedDoctor?.id === doctor.id" [class.bi-circle]="selectedDoctor?.id !== doctor.id"></i>
-                      {{ selectedDoctor?.id === doctor.id ? 'Đã chọn' : 'Chọn' }}
-                    </button>
+                    <div class="doctor-actions">
+                      <button class="btn-contact" (click)="$event.stopPropagation(); startChat(doctor.id)">
+                        <i class="bi bi-chat-dots"></i>
+                        Liên hệ ngay
+                      </button>
+                      <button class="select-btn" [class.selected]="selectedDoctor?.id === doctor.id" (click)="$event.stopPropagation(); selectDoctor(doctor)">
+                        <i class="bi" [class.bi-check-circle-fill]="selectedDoctor?.id === doctor.id" [class.bi-circle]="selectedDoctor?.id !== doctor.id"></i>
+                        {{ selectedDoctor?.id === doctor.id ? 'Đã chọn' : 'Chọn' }}
+                      </button>
+                    </div>
                   </div>
 
                   <!-- Schedule Section (when selected) -->
