@@ -451,6 +451,43 @@
       }
     }
 
+    // ✅ TIME SLOTS SECTION - Cải thiện UI
+    .time-slots-section {
+      margin-bottom: 24px;
+
+      .slots-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #e9ecef;
+
+        > span:first-child {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          i {
+            color: #3fbbc0;
+            font-size: 1.125rem;
+          }
+        }
+
+        .slots-count {
+          font-size: 0.875rem;
+          color: #6c757d;
+          font-weight: 600;
+          background: rgba(63, 187, 192, 0.1);
+          padding: 4px 12px;
+          border-radius: 20px;
+        }
+      }
+    }
+
     // ✅ TIME PERIOD SECTIONS - Chia Sáng/Chiều
     .time-period-section {
       margin-bottom: 32px;
@@ -481,146 +518,155 @@
         }
       }
 
-      .slots-container {
+      // ✅ TIME GRID - Layout cho các slots
+      .time-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 14px;
-
-        @media (max-width: 992px) {
-          grid-template-columns: repeat(3, 1fr);
-        }
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 12px;
 
         @media (max-width: 768px) {
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+          gap: 10px;
         }
+      }
 
-        @media (max-width: 576px) {
-          grid-template-columns: 1fr;
-        }
+      // ✅ TIME SLOT BUTTON - UI ĐẸP HƠN
+      .time-slot-btn {
+        position: relative;
+        padding: 14px 12px;
+        border: 2px solid #3fbbc0;
+        border-radius: 10px;
+        background: white;
+        color: #3fbbc0;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: 0.9375rem;
+        min-height: 75px;
+        overflow: hidden;
 
-        .slot-btn {
-          position: relative;
-          padding: 16px 18px;
-          border: 2px solid #3fbbc0;
-          border-radius: 10px;
-          background: rgba(63, 187, 192, 0.08);
+        // Icon clock
+        i {
+          font-size: 1.25rem;
           color: #3fbbc0;
-          font-weight: 600;
-          cursor: pointer;
           transition: all 0.25s ease;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          font-size: 0.95rem;
-          min-height: 75px;
+        }
+
+        // Time text
+        .time-text {
+          font-size: 1rem;
+          font-weight: 700;
+          color: #2c3e50;
+          transition: all 0.25s ease;
+        }
+
+        // ✅ HOVER STATE - Hiệu ứng đẹp
+        &:hover:not(:disabled) {
+          background: linear-gradient(135deg, #3fbbc0 0%, #2ba8ad 100%);
+          border-color: #3fbbc0;
+          color: white;
+          transform: translateY(-3px);
+          box-shadow: 0 6px 16px rgba(63, 187, 192, 0.35);
 
           i {
-            font-size: 1.125rem;
-          }
-
-          .slot-time {
-            font-size: 1.125rem;
-            font-weight: 700;
-          }
-
-          .booked-badge {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #dc3545;
-            padding: 2px 8px;
-            background: rgba(220, 53, 69, 0.1);
-            border-radius: 4px;
-            margin-top: 2px;
-          }
-
-          &:hover:not(:disabled) {
-            background: linear-gradient(135deg, #3fbbc0 0%, #2ba8ad 100%);
             color: white;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 16px rgba(63, 187, 192, 0.35);
-
-            .booked-badge {
-              color: white;
-              background: rgba(255, 255, 255, 0.2);
-            }
+            animation: pulse 0.6s ease-in-out;
           }
 
-          &.active {
-            background: linear-gradient(135deg, #3fbbc0 0%, #2ba8ad 100%);
+          .time-text {
             color: white;
-            font-weight: 700;
-            box-shadow: 0 6px 16px rgba(63, 187, 192, 0.35);
-            transform: translateY(-2px);
-
-            i {
-              animation: pulse 1s ease-in-out infinite;
-            }
-          }
-
-          // ✅ DISABLED SLOTS - Slots đã đặt
-          &:disabled {
-            background: #f8f9fa;
-            border-color: #dee2e6;
-            color: #adb5bd;
-            cursor: not-allowed;
-            opacity: 0.65;
-
-            // Gạch ngang màu đỏ
-            &::before {
-              content: '';
-              position: absolute;
-              top: 50%;
-              left: 12%;
-              right: 12%;
-              height: 2.5px;
-              background: #dc3545;
-              transform: translateY(-50%) rotate(-15deg);
-              z-index: 1;
-            }
-
-            i {
-              color: #dc3545;
-              font-size: 1.25rem;
-            }
-
-            .slot-time {
-              text-decoration: line-through;
-              opacity: 0.7;
-            }
-
-            .booked-badge {
-              color: #dc3545;
-              background: rgba(220, 53, 69, 0.15);
-            }
-
-            &:hover {
-              transform: none;
-              box-shadow: none;
-            }
           }
         }
 
-        .no-slots-period {
-          grid-column: 1 / -1;
-          text-align: center;
-          padding: 40px 20px;
-          background: rgba(108, 117, 125, 0.05);
-          border-radius: 10px;
-          border: 2px dashed #dee2e6;
+        // ✅ SELECTED STATE - Slot đã chọn
+        &.selected {
+          background: linear-gradient(135deg, #3fbbc0 0%, #2ba8ad 100%);
+          border-color: #3fbbc0;
+          color: white;
+          font-weight: 700;
+          box-shadow: 0 6px 16px rgba(63, 187, 192, 0.4);
+          transform: translateY(-2px);
 
           i {
-            font-size: 3rem;
-            color: #dee2e6;
-            margin-bottom: 16px;
+            color: white;
+            animation: heartBeat 1s ease-in-out infinite;
           }
 
-          p {
-            color: #6c757d;
-            margin: 0;
-            font-size: 1rem;
-            font-weight: 500;
+          .time-text {
+            color: white;
+          }
+
+          // Hiệu ứng sóng khi selected
+          &::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            animation: ripple 1.5s infinite;
+          }
+        }
+
+        // ✅ DISABLED STATE - Slot đã đặt (ĐẸP HƠN)
+        &.disabled,
+        &:disabled {
+          background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+          border-color: #dee2e6;
+          color: #adb5bd;
+          cursor: not-allowed;
+          opacity: 0.7;
+
+          // Icon với màu xám
+          i {
+            color: #cbd5e1;
+          }
+
+          // Time text với gạch ngang
+          .time-text {
+            color: #adb5bd;
+            text-decoration: line-through;
+            text-decoration-color: #dc3545;
+            text-decoration-thickness: 2px;
+          }
+
+          // ✅ Gạch chéo đỏ qua button
+          &::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 10%;
+            right: 10%;
+            height: 2.5px;
+            background: linear-gradient(90deg, transparent, #dc3545, transparent);
+            transform: translateY(-50%) rotate(-12deg);
+            box-shadow: 0 1px 2px rgba(220, 53, 69, 0.3);
+          }
+
+          // Badge "Đã đặt"
+          &::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 8px;
+            height: 8px;
+            background: #dc3545;
+            border-radius: 50%;
+            box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+          }
+
+          &:hover {
+            transform: none;
+            box-shadow: none;
           }
         }
       }
@@ -644,6 +690,49 @@
         color: #6c757d;
         margin: 0;
         font-size: 1rem;
+      }
+    }
+
+    // All Booked
+    .all-booked {
+      text-align: center;
+      padding: 40px 20px;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(220, 53, 69, 0.05) 100%);
+      border-radius: 10px;
+      border: 2px dashed rgba(245, 158, 11, 0.3);
+
+      i {
+        font-size: 3.5rem;
+        color: #f59e0b;
+        margin-bottom: 16px;
+      }
+
+      p {
+        color: #6c757d;
+        margin: 0 0 16px 0;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      .btn-try-another {
+        padding: 10px 20px;
+        background: white;
+        border: 2px solid #3fbbc0;
+        border-radius: 8px;
+        color: #3fbbc0;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+
+        &:hover {
+          background: #3fbbc0;
+          color: white;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(63, 187, 192, 0.3);
+        }
       }
     }
 
@@ -952,7 +1041,30 @@
     transform: scale(1);
   }
   50% {
+    transform: scale(1.15);
+  }
+}
+
+@keyframes heartBeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  10%, 30% {
     transform: scale(1.1);
+  }
+  20%, 40% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
   }
 }
 
@@ -988,6 +1100,24 @@
           justify-content: center;
         }
       }
+
+      .time-period-section .time-grid {
+        grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+        gap: 8px;
+      }
+
+      .time-slot-btn {
+        min-height: 68px;
+        padding: 12px 10px;
+
+        i {
+          font-size: 1.125rem;
+        }
+
+        .time-text {
+          font-size: 0.875rem;
+        }
+      }
     }
   }
 
@@ -1007,6 +1137,10 @@
     .date-selector .date-btn {
       min-width: 70px;
       padding: 10px 12px;
+    }
+
+    .doctor-card .time-period-section .time-grid {
+      grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
     }
   }
 }
