@@ -73,7 +73,9 @@ export class ForecastDashboard implements OnInit {
     });
     this.loadInventory();
   }
-
+  ngAfterViewInit() {
+  AOS.refresh();
+}
   loadInventory(): void {
     this.isLoadingInventory = true;
     

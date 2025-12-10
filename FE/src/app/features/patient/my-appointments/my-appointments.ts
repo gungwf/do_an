@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit,AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService, UserDto } from '../../../core/services/auth';
 import { AppointmentService, AppointmentResponseDto } from '../../../core/services/AppointmentService';
+import * as AOS from 'aos';
 
 @Component({
   selector: 'app-my-appointments',
@@ -33,7 +34,12 @@ export class MyAppointmentsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    AOS.init({ once: true });
     this.loadAppointments();
+  }
+
+  ngAfterViewInit() {
+  AOS.refresh();
   }
 
   /**

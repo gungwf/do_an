@@ -1,73 +1,303 @@
-/* src/app/features/doctor/appoitments/appoitments.component.scss */
-
-// Giả định bạn có biến màu chung, nếu không, hãy dùng màu trực tiếp
-:host {
-  display: block;
-}
-
-// Container chính của trang, khớp với padding của layout
 .page-container {
-  padding: 24px; // Tương tự .admin-main
-}
+  background: #f5f7fa;
+  min-height: 100vh;
+  padding: 30px;
 
-// Tiêu đề trang
-.page-title {
-  font-size: 1.75rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-  color: #333;
-}
-
-// "Thẻ" chứa nội dung chính (ví dụ: bảng)
-.content-card {
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  padding: 1.5rem;
-  overflow: hidden;
-}
-
-// Tùy chỉnh bảng
-.table {
-  // Giúp cột trạng thái và tác vụ không bị xuống dòng
-  th, td {
-    white-space: nowrap;
-    vertical-align: middle;
+  .page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 18px;
   }
 
-  // Cột ghi chú có thể dài, cho phép xuống dòng và giới hạn chiều rộng
-  .notes-cell {
-    white-space: normal;
-    min-width: 200px;
-    max-width: 350px;
+  .content-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(63, 187, 192, 0.07);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    border: none;
+
+    .card-body {
+      padding: 0;
+    }
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .form-control,
+  .form-select {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 1rem;
+    transition: all 0.3s;
+    background: #f8f9fa;
+
+    &:focus {
+      border-color: #3fbbc0;
+      box-shadow: 0 0 0 0.2rem rgba(63, 187, 192, 0.12);
+      background: #fff;
+    }
+  }
+
+  .input-group .btn {
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 10px 22px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #3fbbc0;
+    border: none;
+    color: #fff;
+
+    &:hover {
+      background: #2ba8ad;
+    }
+  }
+
+  .table-responsive {
+    border-radius: 12px;
     overflow: hidden;
-    text-overflow: ellipsis;
+    background: #fff;
+  }
+
+  .table {
+    margin-bottom: 0;
+    th, td {
+      white-space: nowrap;
+      vertical-align: middle;
+      font-size: 1rem;
+      padding: 14px 18px;
+      border-bottom: 1px solid #f1f3f5;
+    }
+    thead th {
+      background: #f8f9fa;
+      font-weight: 700;
+      color: #2c3e50;
+      border-bottom: 2px solid #e9ecef;
+    }
+    tbody tr {
+      transition: background 0.2s;
+      &:hover {
+        background: #e0f7fa;
+      }
+    }
+    .notes-cell {
+      white-space: normal;
+      min-width: 200px;
+      max-width: 350px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #495057;
+    }
+  }
+
+  .badge {
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 12px;
+  }
+
+  .btn {
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 8px 18px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    &.btn-outline-primary {
+      border: 2px solid #3fbbc0;
+      color: #3fbbc0;
+      background: #fff;
+      &:hover {
+        background: #3fbbc0;
+        color: #fff;
+      }
+    }
+    &.btn-success {
+      background: #43e97b;
+      border: none;
+      color: #fff;
+      &:hover {
+        background: #38f9d7;
+      }
+    }
+    &.btn-primary {
+      background: #3fbbc0;
+      border: none;
+      color: #fff;
+      &:hover {
+        background: #2ba8ad;
+      }
+    }
+    &.btn-secondary {
+      background: #f8f9fa;
+      color: #495057;
+      border: 1.5px solid #e9ecef;
+      &:hover {
+        background: #e9ecef;
+      }
+    }
+    &.btn-outline-danger {
+      border: 1.5px solid #dc3545;
+      color: #dc3545;
+      background: #fff;
+      &:hover {
+        background: #dc3545;
+        color: #fff;
+      }
+    }
+  }
+
+  .alert {
+    border-radius: 12px;
+    font-size: 0.98rem;
+    padding: 16px 18px;
+    i {
+      font-size: 1.5rem;
+      color: #3fbbc0;
+    }
+  }
+
+  .pagination {
+    .page-link {
+      border-radius: 10px !important;
+      color: #3fbbc0;
+      font-weight: 600;
+      background: #fff;
+      border: 1.5px solid #e9ecef;
+      margin: 0 2px;
+      transition: background 0.2s, color 0.2s;
+      &:hover {
+        background: #e0f7fa;
+        color: #2ba8ad;
+        border-color: #3fbbc0;
+      }
+    }
+    .page-item.active .page-link {
+      background: #3fbbc0;
+      color: #fff;
+      border-color: #3fbbc0;
+    }
+    .page-item.disabled .page-link {
+      color: #adb5bd;
+      background: #f8f9fa;
+      border-color: #e9ecef;
+      cursor: not-allowed;
+    }
+  }
+
+  .modal-content {
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(63, 187, 192, 0.08);
+    border: none;
+    overflow: hidden;
+  }
+  .modal-header {
+    background: #3fbbc0;
+    color: #fff;
+    border-bottom: none;
+    border-radius: 18px 18px 0 0;
+    padding: 28px 32px;
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn-close {
+      background: rgba(255,255,255,0.15);
+      border-radius: 8px;
+      color: #fff;
+      transition: all 0.2s;
+      &:hover {
+        background: rgba(255,255,255,0.25);
+        transform: rotate(90deg);
+      }
+    }
+  }
+  .modal-body {
+    padding: 32px 36px;
+    .list-group {
+      border-radius: 10px;
+      .list-group-item {
+        border: none;
+        border-bottom: 1px solid #f1f3f5;
+        font-size: 1rem;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+    }
+  }
+  .modal-footer {
+    background: #f8f9fa;
+    border-radius: 0 0 18px 18px;
+    padding: 24px 36px;
+    border-top: none;
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    .btn {
+      min-width: 120px;
+    }
+  }
+
+  .spinner-border {
+    width: 3rem;
+    height: 3rem;
+    border-width: 4px;
+    color: #3fbbc0;
   }
 }
 
-// Đảm bảo spinner căn giữa
-.spinner-border {
-  width: 3rem;
-  height: 3rem;
+// ===== ANIMATIONS =====
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Style này được dùng để mô phỏng cách Bootstrap
-  hiển thị modal mà không cần dùng JS.
-  (Nếu bạn đã cài đặt Bootstrap JS đúng cách, bạn không cần cái này,
-  nhưng cách làm với *ngIf ở trên là an toàn nhất)
-*/
-
-// Đảm bảo .modal-open làm tối nền
-:host-context(.modal-open) {
-  overflow: hidden;
-}
-
-// Bắt buộc hiển thị modal khi *ngIf là true
-.modal.show {
-  display: block;
-}
-
-// Bắt buộc hiển thị nền mờ khi *ngIf là true
-.modal-backdrop.show {
-  opacity: 0.5;
+// ===== RESPONSIVE =====
+@media (max-width: 992px) {
+  .page-container {
+    padding: 16px;
+    .content-card {
+      padding: 14px 8px;
+    }
+    .modal-body {
+      padding: 18px 8px;
+    }
+    .modal-header, .modal-footer {
+      padding: 12px 10px;
+    }
+    .table th, .table td {
+      padding: 10px 6px;
+    }
+  }
 }

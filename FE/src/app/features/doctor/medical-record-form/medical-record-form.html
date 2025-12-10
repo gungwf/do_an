@@ -1,125 +1,382 @@
-<div *ngIf="appointment">
+<div *ngIf="appointment" class="medical-record-form-page">
 
+  <!-- Modal Backdrop -->
   <div class="modal-backdrop fade show" (click)="onClose()"></div>
 
+  <!-- Modal Content -->
   <div class="modal fade show" id="medicalRecordModal" style="display: block;">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
         
+        <!-- ============ MODAL HEADER ============ -->
         <div class="modal-header">
           <h5 class="modal-title">
+            <i class="bi bi-file-medical-fill me-2"></i>
             <span *ngIf="!showConfirmationDialog">Tạo Bệnh án</span>
             <span *ngIf="showConfirmationDialog">Xác nhận Thông tin Bệnh án</span>
           </h5>
-          <button type="button" class="btn-close" (click)="onClose()" aria-label="Close"></button>
+          <button 
+            type="button" 
+            class="btn-close" 
+            (click)="onClose()" 
+            [disabled]="isSubmitting"
+            aria-label="Close">
+          </button>
         </div>
         
+        <!-- ============ MODAL BODY - FORM CHÍNH ============ -->
         <div *ngIf="!showConfirmationDialog" class="modal-body">
-          <div class="row g-4">
-            <div class="col-md-7">
-              <h6>Thông tin Lịch hẹn</h6>
-              <ul class="list-group list-group-flush mb-3">
-                <li class="list-group-item">
-                  <strong>Bệnh nhân:</strong> {{ appointment.patient?.fullName }}
-                </li>
-                <li class="list-group-item">
-                  <strong>Thời gian:</strong> {{ appointment.appointmentTime | date: 'dd/MM/yyyy HH:mm' }}
-                </li>
-              </ul>
-
-              <div class="mb-3">
-                <label for="diagnosis" class="form-label fw-bold">Chẩn đoán của Bác sĩ</label>
-                <textarea id="diagnosis" class="form-control" rows="5" [(ngModel)]="diagnosis" placeholder="Nhập chẩn đoán..."></textarea>
-              </div>
-
-              <div class="mb-3">
-                <label for="serviceSearch" class="form-label fw-bold">Chỉ định Dịch vụ</label>
-                <input type="text" class="form-control" id="serviceSearch" placeholder="Tìm tên dịch vụ..." [(ngModel)]="serviceSearchTerm" (ngModelChange)="onSearchService()">
-                
-                <div *ngIf="serviceSearchTerm && filteredServices.length > 0" class="list-group mt-1 shadow-sm" style="max-height: 200px; overflow-y: auto;">
-                  <a *ngFor="let service of filteredServices" (click)="onAddService(service)" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style="cursor: pointer;">
-                    {{ service.serviceName }}
-                    <span class="badge bg-primary">{{ service.price | number }} VNĐ</span>
-                  </a>
+          <div class="row g-4" style="display: flex;">
+            
+            <!-- ===== LEFT COLUMN: Thông tin + Chẩn đoán ===== -->
+            <div class="col-md-7 h-100 d-flex flex-column">
+              
+              <!-- Thông tin Lịch hẹn -->
+              <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                  <i class="bi bi-calendar-check me-2"></i>
+                  <strong>Thông tin Lịch hẹn</strong>
                 </div>
-                <div *ngIf="serviceSearchTerm && filteredServices.length === 0" class="list-group-item text-muted mt-1">
-                  Không tìm thấy dịch vụ.
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                      <i class="bi bi-person-fill text-primary me-2"></i>
+                      <strong>Bệnh nhân:</strong>
+                    </div>
+                    <span class="badge bg-light text-dark">{{ appointment.patient?.fullName }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                      <i class="bi bi-clock-fill text-primary me-2"></i>
+                      <strong>Thời gian:</strong>
+                    </div>
+                    <span class="badge bg-light text-dark">{{ appointment.appointmentTime | date: 'dd/MM/yyyy HH:mm' }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between align-items-center" *ngIf="appointment.notes">
+                    <div>
+                      <i class="bi bi-chat-left-text-fill text-primary me-2"></i>
+                      <strong>Ghi chú:</strong>
+                    </div>
+                    <span class="text-muted fst-italic">{{ appointment.notes }}</span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Chẩn đoán của Bác sĩ -->
+              <div class="mb-4">
+                <label for="diagnosis" class="form-label fw-bold">
+                  <i class="bi bi-clipboard-pulse me-2 text-danger"></i>
+                  Chẩn đoán của Bác sĩ
+                  <span class="text-danger">*</span>
+                </label>
+                <textarea 
+                  id="diagnosis" 
+                  class="form-control" 
+                  rows="6" 
+                  [(ngModel)]="diagnosis" 
+                  placeholder="Nhập chẩn đoán chi tiết..."
+                  [class.is-invalid]="!diagnosis && showConfirmationDialog">
+                </textarea>
+                <div class="form-text">
+                  <i class="bi bi-info-circle me-1"></i>
+                  Mô tả tình trạng sức khỏe và chẩn đoán của bệnh nhân
                 </div>
               </div>
-            </div>
 
-            <div class="col-md-5 bg-light p-3 border rounded">
-              <h6 class="border-bottom pb-2">Dịch vụ đã chọn ({{ selectedServices.length }})</h6>
-              <div *ngIf="selectedServices.length === 0" class="text-center text-muted p-3">
-                Chưa chọn dịch vụ nào.
-              </div>
-              <ul class="list-group">
-                <li *ngFor="let service of selectedServices" class="list-group-item d-flex justify-content-between align-items-center">
-                  <div>
-                    <div class="fw-medium">{{ service.serviceName }}</div>
-                    <small class="text-muted">{{ service.price | number }} VNĐ</small>
+              <!-- Dịch vụ đã chọn -->
+                <div class="card border-0 shadow-sm">
+                  <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <div>
+                      <i class="bi bi-list-check me-2"></i>
+                      <strong>Dịch vụ đã chọn</strong>
+                    </div>
+                    <span class="badge bg-light text-info">{{ selectedServices.length }}</span>
                   </div>
-                  <button class="btn btn-sm btn-outline-danger" (click)="onRemoveService(service.id)">
-                    <i class="bi bi-x-lg"></i>
-                  </button>
-                </li>
-              </ul>
+                  
+                  <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Empty State -->
+                    <div *ngIf="selectedServices.length === 0" class="text-center text-muted p-4">
+                      <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+                      <p class="mt-3 mb-0">Chưa chọn dịch vụ nào</p>
+                      <small>Tìm và chọn dịch vụ bên phải</small>
+                    </div>
+                    
+                    <!-- Services List -->
+                    <ul class="list-group list-group-flush" *ngIf="selectedServices.length > 0">
+                      <li 
+                        *ngFor="let service of selectedServices; let i = index" 
+                        class="list-group-item d-flex justify-content-between align-items-start px-0">
+                        <div class="flex-grow-1">
+                          <div class="d-flex align-items-center mb-1">
+                            <!-- <span class="badge bg-secondary me-2" style="color: #000; background: #e9ecef;">{{ i + 1 }}</span> -->
+                            <div class="fw-semibold" style="color: #000;">{{ service.serviceName }}</div>
+                          </div>
+                          <small class="fw-bold" style="color: #000;">
+                            <i class="bi bi-cash-coin me-1" style="color: #000000;"></i>
+                            {{ service.price | number }} VNĐ
+                          </small>
+                        </div>
+                        <button 
+                          class="btn btn-sm btn-outline-danger ms-2" 
+                          (click)="onRemoveService(service.id)"
+                          title="Xóa dịch vụ">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                  
+                  <!-- Total Price Footer -->
+                  <div class="card-footer bg-light" *ngIf="selectedServices.length > 0">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <strong style="color: #000;">
+                        <i class="bi bi-calculator me-2" style="color: #000;"></i>
+                        Tổng chi phí:
+                      </strong>
+                      <span class="fs-5 fw-bold" style="color: #000;">
+                        {{ totalServicePrice | number }} VNĐ
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
             </div>
+
+            <!-- ===== RIGHT COLUMN: Chỉ định Dịch vụ ===== -->
+            <div class="col-md-5 h-100 d-flex flex-column">
+              <div class="card border-0 shadow-sm" style="position: sticky; top: 20px;">
+                <div class="card-header bg-info text-white">
+                  <i class="bi bi-gear-fill me-2"></i>
+                  <strong>Chỉ định Dịch vụ</strong>
+                  <span class="text-danger ms-1">*</span>
+                </div>
+                
+                <div class="card-body">
+                  <!-- Search Input -->
+                  <div class="position-relative mb-3">
+                    <input 
+                      type="text" 
+                      class="form-control" 
+                      id="serviceSearch" 
+                      placeholder="Tìm tên dịch vụ hoặc click để xem tất cả..." 
+                      [(ngModel)]="serviceSearchTerm" 
+                      (ngModelChange)="onSearchService()"
+                      (focus)="onServiceSearchFocus()"
+                      (blur)="onServiceSearchBlur()"
+                      [class.is-invalid]="selectedServices.length === 0 && showConfirmationDialog">
+                    
+                    <!-- ✅ Dropdown List -->
+                    <div 
+                      *ngIf="showServiceDropdown && filteredServices.length > 0" 
+                      class="list-group mt-2 shadow service-dropdown" 
+                      style="max-height: 400px; overflow-y: auto; position: absolute; z-index: 1000; width: 100%;">
+                      <a 
+                        *ngFor="let service of filteredServices" 
+                        (mousedown)="onAddService(service)" 
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-start" 
+                        style="cursor: pointer;">
+                        <div class="flex-grow-1">
+                          <div class="fw-semibold text-dark">
+                            <i class="bi bi-circle-fill text-success me-2" style="font-size: 0.5rem;"></i>
+                            {{ service.serviceName }}
+                          </div>
+                          <small class="text-muted" *ngIf="service.description">
+                            {{ service.description }}
+                          </small>
+                        </div>
+                        <span class="badge bg-primary rounded-pill ms-2">
+                          {{ service.price | number }} đ
+                        </span>
+                      </a>
+                    </div>
+                    
+                    <!-- ✅ Message khi không tìm thấy -->
+                    <div 
+                      *ngIf="showServiceDropdown && serviceSearchTerm && filteredServices.length === 0" 
+                      class="list-group mt-2 shadow-sm" 
+                      style="position: absolute; z-index: 1000; width: 100%;">
+                      <div class="list-group-item text-muted text-center">
+                        <i class="bi bi-search me-2"></i>
+                        Không tìm thấy dịch vụ phù hợp với "{{ serviceSearchTerm }}"
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Hint Text
+                  <div class="alert alert-info d-flex align-items-start" role="alert">
+                    <i class="bi bi-lightbulb-fill me-2 mt-1"></i>
+                    <div>
+                      <strong class="d-block mb-1">Hướng dẫn:</strong>
+                      <ul class="mb-0 ps-3" style="font-size: 0.9rem;">
+                        <li>Click vào ô tìm kiếm để xem tất cả dịch vụ</li>
+                        <li>Gõ tên để tìm kiếm nhanh</li>
+                        <li>Click vào dịch vụ để thêm vào danh sách</li>
+                        <li>Dịch vụ đã chọn sẽ hiển thị bên trái</li>
+                      </ul>
+                    </div>
+                  </div> -->
+
+                  <!-- Thống kê nhanh -->
+                  <!-- <div class="row g-2 mt-2">
+                    <div class="col-6">
+                      <div class="card text-center border-success">
+                        <div class="card-body py-2">
+                          <small class="text-muted d-block">Đã chọn</small>
+                          <strong class="text-success fs-5">{{ selectedServices.length }}</strong>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="card text-center border-info">
+                        <div class="card-body py-2">
+                          <small class="text-muted d-block">Còn lại</small>
+                          <strong class="text-info fs-5">{{ allServices.length - selectedServices.length }}</strong>
+                        </div>
+                      </div>
+                    </div>
+                  </div> -->
+                </div>
+              </div>
+            </div>
+            
           </div>
         </div>
         
+        <!-- ============ MODAL BODY - XÁC NHẬN ============ -->
         <div *ngIf="showConfirmationDialog" class="modal-body">
+          
+          <!-- Loading State -->
           <div *ngIf="isSubmitting" class="text-center p-5">
-            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
-            <h5 class="mt-3">Đang lưu Bệnh án...</h5>
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <h5 class="mt-3 text-primary">Đang lưu Bệnh án...</h5>
+            <p class="text-muted">Vui lòng đợi trong giây lát</p>
           </div>
           
+          <!-- Confirmation Content -->
           <div *ngIf="!isSubmitting">
-            <h5 class="text-center">Vui lòng xác nhận lại thông tin</h5>
-            
-            <div class="mb-3">
-              <h6>Bệnh nhân</h6>
-              <div class="card card-body bg-light">
-                {{ appointment.patient?.fullName }}
+            <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+              <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+              <div>
+                <strong>Xác nhận lại thông tin bệnh án</strong>
+                <p class="mb-0 small">Vui lòng kiểm tra kỹ trước khi gửi. Bạn có thể quay lại để chỉnh sửa.</p>
               </div>
             </div>
             
-            <div class="mb-3">
-              <h6>Chẩn đoán</h6>
-              <div class="card card-body bg-light">
-                <pre style="font-family: inherit; margin: 0; white-space: pre-wrap;">{{ diagnosis }}</pre>
+            <!-- Bệnh nhân -->
+            <div class="mb-4">
+              <h6 class="text-primary">
+                <i class="bi bi-person-fill me-2"></i>
+                Bệnh nhân
+              </h6>
+              <div class="card card-body bg-light border-0">
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-person-circle fs-3 text-muted me-3"></i>
+                  <div>
+                    <strong class="fs-5">{{ appointment.patient?.fullName }}</strong>
+                    <div class="text-muted small">
+                      <i class="bi bi-calendar3 me-1"></i>
+                      {{ appointment.appointmentTime | date: 'EEEE, dd/MM/yyyy HH:mm':'':'vi-VN' }}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             
-            <div class="mb-3">
-              <h6>Dịch vụ đã chỉ định ({{ selectedServices.length }})</h6>
-              <ul class="list-group">
-                <li *ngFor="let service of selectedServices" class="list-group-item d-flex justify-content-between">
-                  {{ service.serviceName }}
-                  <span>{{ service.price | number }} VNĐ</span>
-                </li>
-                <li class="list-group-item list-group-item-info d-flex justify-content-between fw-bold">
-                    Tổng cộng
-                    <span>
-                        {{ totalServicePrice | number }} VNĐ
+            <!-- Chẩn đoán -->
+            <div class="mb-4">
+              <h6 class="text-primary">
+                <i class="bi bi-clipboard-pulse me-2"></i>
+                Chẩn đoán
+              </h6>
+              <div class="card card-body bg-light border-0">
+                <pre style="font-family: inherit; margin: 0; white-space: pre-wrap; font-size: 0.95rem;">{{ diagnosis }}</pre>
+              </div>
+              <div *ngIf="icd10Code" class="mt-2">
+                <small class="text-muted">
+                  <i class="bi bi-bookmark-fill me-1"></i>
+                  <strong>Mã ICD-10:</strong> 
+                  <span class="badge bg-info">{{ icd10Code }}</span>
+                </small>
+              </div>
+            </div>
+            
+            <!-- Dịch vụ đã chỉ định -->
+            <div class="mb-4">
+              <h6 class="text-primary">
+                <i class="bi bi-gear-fill me-2"></i>
+                Dịch vụ đã chỉ định
+                <span class="badge bg-primary ms-2">{{ selectedServices.length }}</span>
+              </h6>
+              <div class="card border-0 shadow-sm">
+                <ul class="list-group list-group-flush">
+                  <li 
+                    *ngFor="let service of selectedServices; let i = index" 
+                    class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                      <span class="badge bg-secondary me-2">{{ i + 1 }}</span>
+                      <strong>{{ service.serviceName }}</strong>
+                    </div>
+                    <span class="text-success fw-bold">{{ service.price | number }} VNĐ</span>
+                  </li>
+                  
+                  <!-- Total Row -->
+                  <li class="list-group-item bg-success bg-opacity-10 d-flex justify-content-between align-items-center">
+                    <strong class="text-success">
+                      <i class="bi bi-calculator me-2"></i>
+                      Tổng cộng
+                    </strong>
+                    <span class="fs-5 fw-bold text-success">
+                      {{ totalServicePrice | number }} VNĐ
                     </span>
-                </li>
-              </ul>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="modal-footer">
-          <div *ngIf="!showConfirmationDialog">
-            <button type="button" class="btn btn-secondary" (click)="onClose()">Hủy bỏ</button>
-            <button type="button" class="btn btn-primary" (click)="onShowConfirmation()">Tạo Bệnh án</button>
+        <!-- ============ MODAL FOOTER ============ -->
+        <div class="modal-footer bg-light">
+          
+          <!-- Footer - Form State -->
+          <div *ngIf="!showConfirmationDialog" class="w-100 d-flex justify-content-between">
+            <button 
+              type="button" 
+              class="btn btn-secondary" 
+              (click)="onClose()">
+              <i class="bi bi-x-circle me-2"></i>
+              Hủy bỏ
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-primary" 
+              (click)="onShowConfirmation()"
+              [disabled]="!diagnosis || selectedServices.length === 0">
+              <i class="bi bi-arrow-right-circle me-2"></i>
+              Xem xác nhận
+            </button>
           </div>
 
-          <div *ngIf="showConfirmationDialog">
-            <button type="button" class="btn btn-secondary" (click)="onBackToForm()" [disabled]="isSubmitting">Quay lại (Sửa)</button>
-            <button type="button" class="btn btn-success" (click)="onConfirmSubmit()" [disabled]="isSubmitting">
-              <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm" role="status"></span>
-              <span *ngIf="!isSubmitting">Xác nhận & Gửi</span>
+          <!-- Footer - Confirmation State -->
+          <div *ngIf="showConfirmationDialog" class="w-100 d-flex justify-content-between">
+            <button 
+              type="button" 
+              class="btn btn-secondary" 
+              (click)="onBackToForm()" 
+              [disabled]="isSubmitting">
+              <i class="bi bi-arrow-left-circle me-2"></i>
+              Quay lại (Sửa)
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-success" 
+              (click)="onConfirmSubmit()" 
+              [disabled]="isSubmitting">
+              <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"></span>
+              <i *ngIf="!isSubmitting" class="bi bi-check-circle-fill me-2"></i>
+              <span>{{ isSubmitting ? 'Đang gửi...' : 'Xác nhận & Gửi' }}</span>
             </button>
           </div>
         </div>

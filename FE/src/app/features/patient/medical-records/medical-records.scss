@@ -1,0 +1,122 @@
+.page-container {
+  background: #f5f7fa;
+  min-height: 100vh;
+  padding: 30px;
+
+  .page-header {
+    margin-bottom: 2rem;
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .header-icon {
+      width: 70px;
+      height: 70px;
+      background: linear-gradient(135deg, #3fbbc0 0%, #2ba8ad 100%);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(63, 187, 192, 0.3);
+
+      i {
+        font-size: 2.5rem;
+        color: white;
+      }
+    }
+
+    .header-text {
+      flex: 1;
+
+      .page-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #2c3e50;
+        margin-bottom: 8px;
+      }
+
+      .page-subtitle {
+        font-size: 1rem;
+        color: #6c757d;
+        margin: 0;
+      }
+    }
+  }
+
+  .content-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(63, 187, 192, 0.07);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    border: none;
+  }
+
+  .table-responsive {
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .table {
+    margin-bottom: 0;
+    th, td {
+      white-space: nowrap;
+      vertical-align: middle;
+      font-size: 1rem;
+      padding: 14px 18px;
+      border-bottom: 1px solid #f1f3f5;
+    }
+    thead th {
+      background: #f8f9fa;
+      font-weight: 700;
+      color: #2c3e50;
+      border-bottom: 2px solid #e9ecef;
+    }
+    tbody tr {
+      transition: background 0.2s;
+      &:hover {
+        background: #e0f7fa;
+      }
+    }
+    .notes-cell {
+      white-space: normal;
+      min-width: 200px;
+      max-width: 350px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #495057;
+    }
+  }
+
+  .badge {
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 12px;
+  }
+
+  .btn {
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 8px 18px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    &.btn-outline-primary {
+      border: 2px solid #3fbbc0;
+      color: #3fbbc0;
+      background: #fff;
+      &:hover {
+        background: #3fbbc0;
+        color: #fff;
+      }
+    }
+  }
+}

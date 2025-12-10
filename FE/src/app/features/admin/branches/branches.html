@@ -1,116 +1,90 @@
 <div class="admin-page">
+  <!-- HEADER -->
   <div class="page-header mb-4">
-    <h2 class="page-title">Quản lý Chi nhánh</h2>
-  </div>
-
-  <div class="mb-3">
+    <div class="header-content">
+      <div class="header-icon">
+        <i class="bi bi-building"></i>
+      </div>
+      <div class="header-text">
+        <h2 class="page-title">Quản lý Chi nhánh</h2>
+        <p class="page-subtitle">Theo dõi, thêm mới, chỉnh sửa và quản lý trạng thái các chi nhánh phòng khám</p>
+      </div>
+    </div>
     @if (authService.isAdmin()) {
-      <button class="btn btn-primary" (click)="openBranchModal(null)">
-        <i class="bi bi-plus-circle me-2"></i>Thêm chi nhánh
+      <button class="btn-filter primary" (click)="openBranchModal(null)">
+        <i class="bi bi-plus-circle"></i> Thêm chi nhánh
       </button>
     }
   </div>
 
-  <div class="card">
-    <div class="card-body">
-      @if (isLoading) {
-        <div class="text-center p-5">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
+  <div class="results-card">
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner-container">
+        <div class="spinner-border" role="status"></div>
+        <p>Đang tải dữ liệu...</p>
+      </div>
+    </div>
+    <div *ngIf="!isLoading">
+      <div class="table-container">
+        <table class="appointments-table">
+          <thead>
+            <tr>
+              <th class="col-id">ID</th>
+              <th>Tên chi nhánh</th>
+              <th>Địa chỉ</th>
+              <th>Số điện thoại</th>
+              <th>Trạng thái</th>
+              <th class="col-actions text-center">Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let branch of branches">
+              <td class="col-id" style="max-width: 220px;">{{ branch.id }}</td>
+              <td>{{ branch.branchName }}</td>
+              <td>{{ branch.address }}</td>
+              <td>{{ branch.phoneNumber }}</td>
+              <td>
+                <span [ngClass]="branch.active ? 'badge bg-success' : 'badge bg-danger'">
+                  <i class="bi" [ngClass]="branch.active ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
+                  {{ branch.active ? 'Hoạt động' : 'Không hoạt động' }}
+                </span>
+              </td>
+              <td class="col-actions text-center">
+                <div class="action-buttons">
+                  <button class="btn-action view" (click)="openDetailModal(branch)" title="Xem chi tiết">
+                    <i class="bi bi-eye"></i> Xem
+                  </button>
+                  <button *ngIf="authService.isAdmin()" class="btn-action edit" (click)="openBranchModal(branch)" title="Chỉnh sửa">
+                    <i class="bi bi-pencil"></i> Chỉnh sửa
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="branches.length === 0">
+              <td colspan="6" class="text-center text-muted py-4">
+                Chưa có dữ liệu
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <div>
+          Hiển thị {{ branches.length }} kết quả
         </div>
-      } @else {
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th class="col-id">ID</th>
-                <th>Tên chi nhánh</th>
-                <th>Địa chỉ</th>
-                <th>Số điện thoại</th>
-                <th>Trạng thái</th>
-                <th class="col-actions">Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (branch of branches; track branch.id) {
-                <tr>
-                  <td class="col-id text-truncate" title="{{ branch.id }}">{{ branch.id }}</td>
-                  <td>{{ branch.branchName }}</td>
-                  <td>{{ branch.address }}</td>
-                  <td>{{ branch.phoneNumber }}</td>
-                  
-                  <td class="col-actions text-nowrap">
-                    <span
-                      class="status-icon"
-                      [class.active]="branch.active === true"
-                      [class.inactive]="branch.active === false"
-                      [class.clickable]="authService.isAdmin()"
-                      (click)="authService.isAdmin() && toggleBranchStatus(branch)"
-                      [title]="authService.isAdmin() ? 'Click để đổi trạng thái' : (branch.active ? 'Hoạt động' : 'Không hoạt động')"
-                    >
-                      @if (branch.active === true) {
-                        <i class="bi bi-check-circle-fill text-success"></i>
-                      } @else {
-                        <i class="bi bi-x-circle-fill text-danger"></i>
-                      }
-                    </span>
-                  </td>
-                  
-                  <td>
-                    <button
-                      class="btn btn-sm btn-outline-info me-2"
-                      (click)="openDetailModal(branch)"
-                      title="Xem chi tiết"
-                    >
-                      <i class="bi bi-eye"></i>
-                    </button>
-                    
-                    @if (authService.isAdmin()) {
-                      <button 
-                        class="btn btn-sm btn-outline-primary me-2" 
-                        title="Sửa"
-                        (click)="openBranchModal(branch)">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                    }
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="6" class="text-center text-muted py-4">
-                    Chưa có dữ liệu
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-          
-          <div class="d-flex justify-content-between align-items-center mt-3">
-            <div>
-              Hiển thị {{ branches.length }} kết quả
-            </div>
-          </div>
-
-        </div>
-      }
+      </div>
     </div>
   </div>
-</div>
 
-@if (showBranchModal) {
-  <div class="modal fade show" style="display: block" tabindex="-1" role="dialog">
+  <!-- Backdrop for Add/Edit Modal -->
+  <div *ngIf="showBranchModal" class="modal-backdrop fade show"></div>
+  <!-- Modal Thêm/Sửa -->
+  <div *ngIf="showBranchModal" class="modal fade show" style="display: block; z-index: 1050;" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">
-            {{ isEditMode ? 'Cập nhật Chi nhánh' : 'Thêm Chi nhánh' }}
-          </h5>
-          <button
-            type="button"
-            class="btn-close"
-            (click)="closeBranchModal()"
-          ></button>
+          <h5 class="modal-title">{{ isEditMode ? 'Cập nhật Chi nhánh' : 'Thêm Chi nhánh' }}</h5>
+          <button type="button" class="btn-close" (click)="closeBranchModal()"></button>
         </div>
         <div class="modal-body">
           <form [formGroup]="branchForm" (ngSubmit)="onSubmitBranch()">
@@ -122,13 +96,10 @@
                 formControlName="branchName"
                 [class.is-invalid]="branchForm.get('branchName')?.invalid && branchForm.get('branchName')?.touched"
               />
-              @if (branchForm.get('branchName')?.invalid && branchForm.get('branchName')?.touched) {
-                <div class="invalid-feedback">
-                  Vui lòng nhập tên chi nhánh
-                </div>
-              }
+              <div *ngIf="branchForm.get('branchName')?.invalid && branchForm.get('branchName')?.touched" class="invalid-feedback">
+                Vui lòng nhập tên chi nhánh
+              </div>
             </div>
-
             <div class="mb-3">
               <label class="form-label">Địa chỉ *</label>
               <input
@@ -137,13 +108,10 @@
                 formControlName="address"
                 [class.is-invalid]="branchForm.get('address')?.invalid && branchForm.get('address')?.touched"
               />
-              @if (branchForm.get('address')?.invalid && branchForm.get('address')?.touched) {
-                <div class="invalid-feedback">
-                  Vui lòng nhập địa chỉ
-                </div>
-              }
+              <div *ngIf="branchForm.get('address')?.invalid && branchForm.get('address')?.touched" class="invalid-feedback">
+                Vui lòng nhập địa chỉ
+              </div>
             </div>
-
             <div class="mb-3">
               <label class="form-label">Số điện thoại *</label>
               <input
@@ -152,64 +120,49 @@
                 formControlName="phoneNumber"
                 [class.is-invalid]="branchForm.get('phoneNumber')?.invalid && branchForm.get('phoneNumber')?.touched"
               />
-              @if (branchForm.get('phoneNumber')?.invalid && branchForm.get('phoneNumber')?.touched) {
-                <div class="invalid-feedback">
-                  Vui lòng nhập số điện thoại
-                </div>
-              }
-            </div>
-            
-            @if (isEditMode) {
-              <div class="mb-3 form-check">
-                <input type="checkbox" class="form-check-input" id="activeCheck" formControlName="active">
-                <label class="form-check-label" for="activeCheck">Đang hoạt động</label>
+              <div *ngIf="branchForm.get('phoneNumber')?.invalid && branchForm.get('phoneNumber')?.touched" class="invalid-feedback">
+                Vui lòng nhập số điện thoại
               </div>
-            }
+            </div>
+            <div *ngIf="isEditMode" class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="activeCheck" formControlName="active">
+              <label class="form-check-label" for="activeCheck">Đang hoạt động</label>
+            </div>
           </form>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="closeBranchModal()">
-            Đóng
-          </button>
+          <button type="button" class="btn btn-secondary" (click)="closeBranchModal()">Đóng</button>
           <button
             type="button"
             class="btn btn-primary"
             (click)="onSubmitBranch()"
             [disabled]="branchForm.invalid || isSubmitting"
           >
-            @if(isSubmitting) {
-              <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-            } @else {
-              <span>Lưu</span>
-            }
+            <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            <span *ngIf="!isSubmitting">Lưu</span>
           </button>
         </div>
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show"></div>
-}
 
-@if (showDetailModal && selectedBranch) {
-  <div class="modal fade show" style="display: block" tabindex="-1" role="dialog">
+  <!-- Backdrop for Detail Modal -->
+  <div *ngIf="showDetailModal" class="modal-backdrop fade show"></div>
+  <!-- Modal Chi tiết -->
+  <div *ngIf="showDetailModal && selectedBranch" class="modal fade show" style="display: block; z-index: 1050;" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Chi tiết chi nhánh</h5>
-          <button
-            type="button"
-            class="btn-close"
-            (click)="closeDetailModal()"
-          ></button>
+          <button type="button" class="btn-close" (click)="closeDetailModal()"></button>
         </div>
         <div class="modal-body">
-          @if (isLoadingDetail) {
-            <div class="text-center p-5">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
+          <div *ngIf="isLoadingDetail" class="text-center p-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
             </div>
-          } @else {
+          </div>
+          <div *ngIf="!isLoadingDetail">
             <div class="row g-3">
               <div class="col-md-12">
                 <strong>ID:</strong>
@@ -230,11 +183,10 @@
               <div class="col-md-6">
                 <strong>Trạng thái:</strong>
                 <p>
-                  @if (selectedBranch.active === true) {
-                    <span class="badge bg-success">Hoạt động</span>
-                  } @else {
-                    <span class="badge bg-danger">Không hoạt động</span>
-                  }
+                  <span [ngClass]="selectedBranch.active ? 'badge bg-success' : 'badge bg-danger'">
+                    <i class="bi" [ngClass]="selectedBranch.active ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
+                    {{ selectedBranch.active ? 'Hoạt động' : 'Không hoạt động' }}
+                  </span>
                 </p>
               </div>
               <div class="col-md-6">
@@ -242,15 +194,12 @@
                 <p>{{ selectedBranch.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
               </div>
             </div>
-          }
+          </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="closeDetailModal()">
-            Đóng
-          </button>
+          <button type="button" class="btn btn-secondary" (click)="closeDetailModal()">Đóng</button>
         </div>
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show"></div>
-}
+</div>

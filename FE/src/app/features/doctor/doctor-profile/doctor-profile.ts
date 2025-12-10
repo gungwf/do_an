@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService, DoctorProfileDto } from '../../../core/services/auth';
 import { ToastrService } from 'ngx-toastr';
+import * as AOS from 'aos';
 
 @Component({
   selector: 'app-doctor-profile',
@@ -29,9 +30,13 @@ export class DoctorProfile implements OnInit {
   }
 
   ngOnInit(): void {
+      AOS.init({ once: true });
+
     this.loadDoctorProfile();
   }
-
+  ngAfterViewInit() {
+  AOS.refresh();
+}
   loadDoctorProfile(): void {
     this.isLoading = true;
 

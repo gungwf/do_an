@@ -8,6 +8,7 @@ import {
   SpringPage
 } from '../../../core/services/medical-record.service';
 import { MedicalRecordViewDialogComponent } from '../../../shared/components/medical-record/medical-record';
+import * as AOS from 'aos';
 
 interface ViewAppointment extends AppointmentResponseDto {
   patientDisplayName: string;
@@ -34,7 +35,13 @@ export class MedicalRecord implements OnInit {
 
   constructor(private service: MedicalRecordService) {}
 
-  ngOnInit(): void { this.loadData(); }
+  ngOnInit(): void { 
+    AOS.init({ once: true });
+    this.loadData(); 
+  }
+  ngAfterViewInit() {
+  AOS.refresh();
+  }
 
   loadData(): void {
     this.loading = true;

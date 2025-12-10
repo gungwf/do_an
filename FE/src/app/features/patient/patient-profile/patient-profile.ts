@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { AuthService, PatientProfileDto, UpdatePatientProfileDto } from '../../../core/services/auth';
 import { ToastrService } from 'ngx-toastr';
+import * as AOS from 'aos';
 
 @Component({
   selector: 'app-patient-profile',
@@ -49,6 +50,8 @@ export class PatientProfile implements OnInit {
   }
 
   ngOnInit(): void {
+      AOS.init({ once: true });
+
     this.loadPatientProfile();
   }
 

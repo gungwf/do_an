@@ -1,4 +1,4 @@
-import { Component, OnInit, EventEmitter, Output } from '@angular/core';
+import { Component, OnInit, EventEmitter, Output, AfterViewInit } from '@angular/core';
 import { CommonModule, formatDate } from '@angular/common'; 
 import { Observable, forkJoin, map, startWith, of, tap, catchError, switchMap, finalize } from 'rxjs'; 
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
@@ -6,7 +6,7 @@ import { AuthService, UserDto } from '../../../core/services/auth';
 import { AppointmentService, BranchSimpleDto, DoctorDto, SpecialtyDto } from '../../../core/services/AppointmentService'; 
 import { ToastrService } from 'ngx-toastr';
 import { ChatService } from '../../../core/services/chat.service';
-
+import * as AOS from 'aos';
 // ✅ THÊM MỚI: Interface cho slot với trạng thái booked
 interface TimeSlot {
   time: string;
@@ -62,6 +62,7 @@ export class AppointmentBooking implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    AOS.init({ once: true });
     this.isLoading = true;
     forkJoin({
       user: this.authService.getCurrentUser(),
@@ -94,6 +95,10 @@ export class AppointmentBooking implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  ngAfterViewInit() {
+  AOS.refresh();
   }
 
   private filterUniqueSpecialties(specialties: SpecialtyDto[]): SpecialtyDto[] {

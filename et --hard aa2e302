@@ -1,0 +1,85 @@
+[33md1867cc[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Merge branch 'main' of https://github.com/gungwf/do_an
+[33maa2e302[m DOne 3/4 patient + done staff
+[33ma84903a[m nút lhe
+[33m90ea693[m fix name patient chat realtime
+[33ma8e0d8d[m Merge branch 'main' of https://github.com/gungwf/do_an
+[33m61e19bb[m chat realtime
+[33m5743fce[m chat realtime
+[33md2f7d69[m gitignore
+[33mc347d8d[m slots
+[33m5b59a2a[m Update hoàn thiện Staff + trang đặt lịch, trang lịch hẹn của tôi cho bệnh nhân
+[33m3865ac6[m Merge branch 'main' of https://github.com/gungwf/do_an
+[33m3769b1a[m fe chat realtime be chatbot (unchecked)
+[33m589ada6[m Merge branch 'main' of https://github.com/gungwf/do_an
+[33m2042628[m Update toan bo giao dien benh nhan  + Ai du doan
+[33m5ed5144[m report v1 (unchecked)
+[33m5767051[m chat realtime
+[33m04c02a9[m userid
+[33mc854ab9[m search inven
+[33m093053b[m thêm branchId vào getDocPro5
+[33mbb5c72e[m avatar
+[33mb1bf4b8[m inventory
+[33m2bfc353[m status appointment sau khi done MR
+[33mb5a707f[m update MR
+[33m6f1de77[m Merge branch 'main' of https://github.com/gungwf/do_an
+[33m7465b73[m templates
+[33m9c73fac[m Update FE: Add Staff module, Doctor appointments and 3 Payment flow
+[33m1051899[m billType
+[33m5968216[m page protocol admin
+[33m41aae19[m snapshot bill
+[33m9e1ec95[m updateMedicalRecord
+[33ma16cb44[m fix status
+[33md0a9f27[m update appointmentStatus
+[33m33fd765[m get MR of appointment
+[33mde3b000[m searchAppointmentStaff
+[33m6ac308f[m searchAppointmentStaff and searchBill Admin
+[33mc58f27c[m lấy ttin doc qua token
+[33mf743051[m git ignore
+[33m15748ec[m fix logic thanh toan
+[33m40b4a5a[m del
+[33m839e290[m bill
+[33m38b2bc4[m filter time docSearchAppointment
+[33m1f53357[m update medical-record
+[33mc875076[m Merge remote-tracking branch 'origin/main'
+[33me91c1dd[m commit
+[33mef486f7[m update doctor appointment page
+[33m664f9a2[m update Admin Branch, Appointment
+[33m84e8f4d[m Merge remote-tracking branch 'origin/main'
+[33m59bbc85[m search appointment
+[33m5abb98c[m[33m ([m[1;32mupdate-products-page[m[33m)[m small Update products page after merging main
+[33m294e434[m Merge branch 'main' of https://github.com/gungwf/do_an into update-products-page
+[33mc7456ea[m[33m ([m[1;31morigin/update-products-page[m[33m, [m[1;32mFE[m[33m)[m Cập nhật trang danh sách sản phẩm và lọc theo category và sửa lỗi đăng xuất vẫn xem được cart
+[33m13cfaf5[m getCategories
+[33m9038569[m getCategories
+[33m73f7560[m phân trang product
+[33m2b0c62d[m fe
+[33me61aab4[m be
+[33m2df6344[m[33m ([m[1;31morigin/FE[m[33m)[m Thêm trang sản phẩm và cart
+[33m361f942[m Update Booking page
+[33mf4df3d3[m xoa fe
+[33meb715c6[m Restore missing FE files from master
+[33m829cd8a[m Merge remote-tracking branch 'origin/master'
+[33mde4deda[m fix
+[33mb402315[m[33m ([m[1;31morigin/master[m[33m)[m update booking FE
+[33mffc2278[m ttt
+[33m0a73216[m fix
+[33me3a1e5b[m fix
+[33m7ea9bac[m lấy thông tin user qua token
+[33mb822eeb[m up ảnh
+[33m3b037b6[m phan trang tim kiem bac si
+[33m376963f[m cors
+[33m9d8998f[m Merge remote-tracking branch 'origin/master'
+[33m24af9de[m cors
+[33mae49f59[m Merge remote-tracking branch 'origin/master'
+[33m7103655[m Merge remote-tracking branch 'origin/master'
+[33mec9509a[m add folder FE
+[33md2752a5[m trang home va login
+[33m86b5824[m docker
+[33m1a585d7[m fix
+[33m5f957e4[m sửa luồng đặt lịch
+[33m3e349cc[m Move all microservices into services folder
+[33m2b6cda8[m email
+[33mac8d501[m thanh toan
+[33ma8e8e79[m second
+[33ma3d62df[m ignore
+[33mdc0a32d[m first commit
