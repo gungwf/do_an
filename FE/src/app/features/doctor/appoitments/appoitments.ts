@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Observable, finalize, forkJoin } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
+import * as AOS from 'aos';
 
 import { 
   AppointmentService, 
@@ -54,6 +55,7 @@ export class Appoitments implements OnInit {
   public prescriptionAppointment: AppointmentResponseDto | null = null;
 
   ngOnInit(): void {
+    AOS.init({ once: true });
     this.currentDoctorId = this.authService.getUserId();
     
     if (!this.currentDoctorId) {
@@ -63,6 +65,9 @@ export class Appoitments implements OnInit {
 
     this.loadAppointments();
   }
+  ngAfterViewInit() {
+  AOS.refresh();
+}
 
   loadAppointments(): void {
     if (!this.currentDoctorId) {

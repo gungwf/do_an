@@ -55,6 +55,9 @@ export class Inventory implements OnInit {
     });
     this.loadInventory();
   }
+  ngAfterViewInit() {
+  AOS.refresh();
+}
 
   loadInventory(page: number = 0): void {
     this.isLoading = true;

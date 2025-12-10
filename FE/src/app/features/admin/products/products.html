@@ -1,63 +1,90 @@
 <div class="admin-page">
   <div class="page-header mb-4">
-    <h2 class="page-title">Quản lý Sản phẩm</h2>
-    <button class="btn btn-primary">
-      <i class="bi bi-plus-circle me-2"></i>Thêm sản phẩm
-    </button>
+    <div class="header-content">
+      <div class="header-icon">
+        <i class="bi bi-box-seam"></i>
+      </div>
+      <div class="header-text">
+        <h2 class="page-title">Quản lý Sản phẩm trong kho</h2>
+        <p class="page-subtitle">Theo dõi, tìm kiếm và thao tác với sản phẩm của từng chi nhánh</p>
+      </div>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="card-body">
-      <div *ngIf="isLoading" class="text-center p-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
-      </div>
+  <!-- Dropdown chọn chi nhánh -->
+  <div class="branch-select-wrapper mb-4">
+    <label for="branchSelect" class="form-label">Chi nhánh</label>
+    <select id="branchSelect" class="form-select" [(ngModel)]="branchId" (change)="onBranchChange()">
+      <option *ngFor="let b of branches" [value]="b.id">{{ b.branchName }}</option>
+    </select>
+  </div>
 
-      <div *ngIf="!isLoading" class="table-responsive">
-        <table class="table table-hover">
+  <div class="results-card">
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner-container">
+        <div class="spinner-border" role="status"></div>
+        <p>Đang tải dữ liệu...</p>
+      </div>
+    </div>
+    <div *ngIf="!isLoading">
+      <div class="table-container">
+        <table class="appointments-table">
           <thead>
             <tr>
-              <th>ID</th>
+              <th>Ảnh</th>
               <th>Tên sản phẩm</th>
-              <th>Danh mục</th>
-              <th>Giá</th>
               <th>Số lượng</th>
-              <th>Hành động</th>
+              <th class="col-actions">Hành động</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let product of products">
-              <td>{{ product.id }}</td>
-              <td>{{ product.name }}</td>
-              <td>{{ product.category }}</td>
-              <td>{{ product.price | number }} VNĐ</td>
-              <td>{{ product.quantity }}</td>
+            <tr *ngFor="let p of products">
               <td>
-                <button class="btn btn-sm btn-outline-primary me-2">
-                  <i class="bi bi-pencil"></i>
+                <img [src]="p.imageUrl" alt="Ảnh" style="width:64px;height:48px;object-fit:cover;border-radius:8px;">
+              </td>
+              <td>{{ p.productName }}</td>
+              <td>
+                <span class="badge bg-info">{{ p.quantity }}</span>
+              </td>
+              <td class="col-actions">
+                <button class="btn-action view" title="Xem chi tiết">
+                  <i class="bi bi-eye"></i> Xem
                 </button>
-                <button class="btn btn-sm btn-outline-danger" (click)="deleteProduct(product.id)">
-                  <i class="bi bi-trash"></i>
+                <button class="btn-action delete" (click)="deleteProduct(p.productId)" title="Xóa">
+                  <i class="bi bi-trash"></i> Xóa
                 </button>
               </td>
             </tr>
             <tr *ngIf="products.length === 0">
-              <td colspan="6" class="text-center text-muted py-4">
+              <td colspan="4" class="text-center text-muted py-4">
                 Chưa có dữ liệu
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+      <!-- Pagination -->
+      <div class="pagination-wrapper" *ngIf="totalPages > 1">
+        <div class="pagination-info">
+          <i class="bi bi-info-circle"></i>
+          Trang <strong>{{ page + 1 }}</strong> / <strong>{{ totalPages }}</strong>
+          <span class="separator">•</span>
+          Tổng <strong>{{ totalElements }}</strong> sản phẩm
+        </div>
+        <div class="pagination-controls">
+          <button class="btn-page" [disabled]="page === 0" (click)="onPageChange(page - 1)" title="Trang trước">
+            <i class="bi bi-chevron-left"></i> Trước
+          </button>
+          <ng-container *ngFor="let p of [].constructor(totalPages); let i = index">
+            <button class="btn-page" [class.active]="i === page" (click)="onPageChange(i)">
+              {{ i + 1 }}
+            </button>
+          </ng-container>
+          <button class="btn-page" [disabled]="page >= totalPages - 1" (click)="onPageChange(page + 1)" title="Trang sau">
+            Sau <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
-
-
-
-
-
-
-
-

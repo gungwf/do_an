@@ -5,6 +5,7 @@ import { AuthService, UserDto } from '../../../core/services/auth';
 import { BranchService, Branch } from '../../../core/services/branch.service';
 import { ToastrService } from 'ngx-toastr';
 import { switchMap } from 'rxjs/operators';
+import * as AOS from 'aos';
 
 interface StaffProfileExtended extends UserDto {
   branchId?: string;
@@ -44,6 +45,10 @@ export class StaffProfile implements OnInit {
 
   ngOnInit(): void {
     this.loadStaffProfile();
+    AOS.init({ once: true });
+  }
+  ngAfterViewInit() {
+  AOS.refresh();
   }
 
   // ===== ✅ CẬP NHẬT: LOAD PROFILE USING NEW API =====

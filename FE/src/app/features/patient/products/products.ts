@@ -72,6 +72,9 @@ export class ProductsComponent implements OnInit, OnDestroy {
       this.loadProducts();
     });
   }
+  ngAfterViewInit() {
+  AOS.refresh();
+  }
 
   ngOnDestroy(): void {
     // ✅ Clean up subscription

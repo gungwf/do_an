@@ -27,7 +27,7 @@ export interface ProductSearchResponse {
 })
 export class ProductService {
   private BASE_URL = 'http://localhost:8080/products';
-
+  private INVENTORY_URL = 'http://localhost:8080/inventory/branch';
   constructor(private http: HttpClient) {}
 
   private getAuthHeaders(): HttpHeaders {
@@ -61,6 +61,19 @@ export class ProductService {
   getProductById(id: string): Observable<Product> {
     return this.http.get<Product>(
       `${this.BASE_URL}/${id}`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+  searchInventoryByBranch(body: {
+    page: number;
+    size: number;
+    sortBy?: string;
+    sortDir?: string;
+    branchId: string;
+  }): Observable<any> {
+    return this.http.post<any>(
+      `${this.INVENTORY_URL}/search`,
+      body,
       { headers: this.getAuthHeaders() }
     );
   }

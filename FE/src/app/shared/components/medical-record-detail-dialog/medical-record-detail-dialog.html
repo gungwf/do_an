@@ -1,0 +1,53 @@
+<div *ngIf="open && record" class="dialog-backdrop" (mousedown)="onBackdrop($event)">
+  <div class="dialog-content" (mousedown)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <h4><i class="bi bi-file-earmark-medical me-2"></i> Chi tiết bệnh án</h4>
+      <button class="btn btn-close-custom" (click)="onClose()" aria-label="Đóng">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <!-- Phần chẩn đoán -->
+      <div class="section">
+        <div class="section-title"><i class="bi bi-clipboard2-pulse me-2"></i>Chẩn đoán</div>
+        <div class="section-content">{{ record.diagnosis }}</div>
+        <div class="section-date text-muted mt-2">
+          <i class="bi bi-clock-history"></i>
+          Ngày tạo: {{ record.createdAt | date:'dd/MM/yyyy HH:mm' }}
+        </div>
+      </div>
+
+      <!-- Phần dịch vụ đã thực hiện -->
+      <div class="section mt-4">
+        <div class="section-title"><i class="bi bi-gear-fill me-2"></i>Dịch vụ đã thực hiện</div>
+        <ul class="list-group mb-2">
+          <li *ngFor="let s of record.performedServices" class="list-group-item d-flex justify-content-between">
+            <span>{{ s.serviceName }}</span>
+            <span class="fw-bold">{{ s.price | number }} VNĐ</span>
+          </li>
+          <li *ngIf="record.performedServices.length === 0" class="list-group-item text-muted">Không có dịch vụ nào</li>
+        </ul>
+      </div>
+
+      <!-- Phần đơn thuốc -->
+      <div class="section mt-4">
+        <div class="section-title"><i class="bi bi-prescription2 me-2"></i>Đơn thuốc</div>
+        <ul class="list-group mb-3">
+          <li *ngFor="let p of record.prescriptionItems" class="list-group-item">
+            <div><strong>{{ p.productName }}</strong></div>
+            <div>Liều dùng: {{ p.dosage }}</div>
+            <div>Số lượng: {{ p.quantity }}</div>
+            <div *ngIf="p.notes">Ghi chú: {{ p.notes }}</div>
+          </li>
+          <li *ngIf="record.prescriptionItems.length === 0" class="list-group-item text-muted">Không có đơn thuốc</li>
+        </ul>
+        <button 
+          *ngIf="record.prescriptionItems.length > 0"
+          class="btn btn-success w-100"
+          (click)="addPrescriptionsToCart()">
+          <i class="bi bi-cart-plus"></i> Thêm đơn thuốc vào giỏ hàng
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -100,26 +100,33 @@
                   </button>
 
                   <button 
-                    *ngIf="canCreateMedicalRecord(appt)"
-                    class="btn btn-sm btn-success me-2"
+                    *ngIf="canCreateMedicalRecord(appt) && appt.status !== 'COMPLETED'"
+                    class="btn btn-sm"
+                    style="background:#198754; color:#fff; border:none;"
                     (click)="onStartMedicalRecord(appt)">
                     <i class="bi bi-file-earmark-plus"></i> Tạo Bệnh án
                   </button>
 
-                  <!-- ✅ THÊM BUTTON KÊ ĐƠN THUỐC -->
                   <button 
                     *ngIf="canCreatePrescription(appt)"
                     class="btn btn-sm btn-primary me-2"
                     (click)="openPrescriptionDialog(appt)">
                     <i class="bi bi-prescription2"></i> Kê đơn thuốc
                   </button>
-
+                  <!-- Tag Đã hoàn thành với màu xanh nước biển -->
+                  <span 
+                    *ngIf="appt.status === 'COMPLETED'"
+                    class="badge"
+                    style="background:#0d6efd; color:#fff;">
+                    <i class="bi bi-check2-circle"></i> Đã hoàn thành
+                  </span>
+                  
                   <span 
                     *ngIf="appt.status === 'PENDING_BILLING'"
                     class="badge bg-info">
                     <i class="bi bi-clock-fill"></i> Chờ thanh toán
                   </span>
-
+                  
                   <span 
                     *ngIf="appt.status === 'PAID_SERVICE'"
                     class="badge bg-success">

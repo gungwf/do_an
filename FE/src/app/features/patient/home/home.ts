@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Product, ProductService, ProductSearchResponse } from '../../../core/services/product';
@@ -132,6 +132,8 @@ export class Home implements OnInit, OnDestroy {
       once: true,
       mirror: false
     });
+
+  
 
     // Redirect admin to dashboard
     if (this.authService.isAuthenticated() && this.authService.isAdmin()) {

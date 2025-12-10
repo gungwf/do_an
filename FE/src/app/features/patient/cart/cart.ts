@@ -1,10 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CartService, CartItem } from '../../../core/services/cartService';
 import { ToastrService } from 'ngx-toastr';
 import { CommonModule } from '@angular/common'; 
 import { FormsModule } from '@angular/forms';
 import { CheckoutDialog } from '../../../shared/components/checkout-dialog/checkout-dialog';
-
+import * as AOS from 'aos';
 @Component({
   selector: 'app-cart',
   standalone: true, 
@@ -26,9 +26,14 @@ export class CartComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    AOS.init({ once: true });
     this.cartService.cart$.subscribe(items => {
       this.cartItems = items;
     });
+  }
+
+  ngAfterViewInit() {
+  AOS.refresh();
   }
 
   updateQuantity(itemId: number | string, quantity: number): void {

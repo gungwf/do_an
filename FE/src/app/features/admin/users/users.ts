@@ -230,13 +230,16 @@ export class AdminUsers implements OnInit, OnDestroy {
 
   onTabChange(tab: 'patients' | 'staff'): void {
     this.activeTab = tab;
-    this.activeStaffType = null;
     this.currentPage = 0;
     this.searchForm.reset();
     if (tab === 'patients') {
+      this.activeStaffType = null;
       this.loadPatients();
+    } else if (tab === 'staff') {
+      this.activeStaffType = 'doctors'; // Luôn chọn Bác sĩ khi chuyển sang tab nhân viên
+      this.loadDoctors();
     }
-  }
+}
 
   onStaffTypeChange(type: 'doctors' | 'clinic-staff'): void {
     this.activeStaffType = type;

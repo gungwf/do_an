@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface MedicalRecordDto {
@@ -91,7 +91,41 @@ export interface MedicalRecordResponse {
   locked: boolean;
   esignature: string | null;
 }
+export interface MedicalRecordListItem {
+  medicalRecordId: string;
+  diagnosis: string;
+  createdAt: string;
+  appointment: {
+    id: string;
+    appointmentTime: string;
+    status: string;
+    notes: string;
+    priceAtBooking: number;
+    patient: { id: string; fullName: string; email: string };
+    doctor: { id: string; fullName: string };
+    branch: { id: string; branchName: string; address: string };
+  };
+}
 
+export interface MedicalRecordDetail {
+  id: string;
+  appointmentId: string;
+  diagnosis: string;
+  icd10Code: string;
+  locked: boolean;
+  createdAt: string;
+  updatedAt: string;
+  performedServices: { serviceId: string; serviceName: string; price: number }[];
+  prescriptionItems: {
+    id: string;
+    productId: string;
+    quantity: number;
+    dosage: string;
+    notes?: string;
+    productName: string;
+  }[];
+  esignature: string | null;
+}
 @Injectable({ providedIn: 'root' })
 export class MedicalRecordService {
   private http = inject(HttpClient);
@@ -115,5 +149,27 @@ export class MedicalRecordService {
   // ✅ THÊM MỚI - Method update medical record với prescription items
   updateMedicalRecord(id: string, request: UpdateMedicalRecordRequest): Observable<MedicalRecordResponse> {
     return this.http.put<MedicalRecordResponse>(`${this.apiUrl}/medical-records/${id}`, request);
+  }
+  // ** Lấy danh sách bệnh án của bệnh nhân hiện tại (có phân trang) */
+  getMedicalRecordsOfCurrentPatient(page: number, size: number): Observable<{
+    content: MedicalRecordListItem[];
+    totalElements: number;
+    totalPages: number;
+    number: number;
+    size: number;
+    first: boolean;
+    last: boolean;
+    empty: boolean;
+    numberOfElements: number;
+    sort: any;
+    pageable: any;
+  }> {
+    const params = new HttpParams().set('page', page).set('size', size);
+    return this.http.get<any>(`${this.apiUrl}/medical-records/patient/me`, { params });
+  }
+
+  /** Lấy chi tiết bệnh án theo id */
+  getMedicalRecordDetailById(recordId: string): Observable<MedicalRecordDetail> {
+    return this.http.get<MedicalRecordDetail>(`${this.apiUrl}/medical-records/${recordId}/details`);
   }
 }
