@@ -14,4 +14,5 @@ public class PrescriptionItemDto {
   private Integer quantity;
   private String dosage;
   private String notes;
+  private String productName;
 }

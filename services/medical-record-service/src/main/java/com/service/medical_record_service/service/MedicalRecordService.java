@@ -1,6 +1,8 @@
 package com.service.medical_record_service.service;
 
 import com.service.medical_record_service.client.client.AppointmentServiceClient;
+import com.service.medical_record_service.client.dto.PagedAppointmentResponse;
+import com.service.medical_record_service.client.dto.AppointmentResponseDto;
 import com.service.medical_record_service.client.client.ProductInventoryClient;
 import com.service.medical_record_service.client.dto.DeductStockRequest;
 import com.service.medical_record_service.client.dto.InternalStatusUpdateRequest;
@@ -20,6 +22,11 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -94,6 +101,52 @@ public class MedicalRecordService {
         return saved;
     }
 
+        /**
+         * Lấy danh sách medical records của một bệnh nhân (dựa vào appointmentId)
+         * Sử dụng token để lấy patientId ở controller, service nhận patientId để lấy appointments
+         */
+        public Page<com.service.medical_record_service.dto.response.MedicalRecordWithAppointmentResponse> getMedicalRecordsForPatient(java.util.UUID patientId, int page, int size, String sortBy) {
+            // 1. Gọi appointment-service để lấy danh sách appointment (paged) của bệnh nhân
+            PagedAppointmentResponse apptPage = null;
+            try {
+                apptPage = appointmentServiceClient.getAppointmentsForPatient(patientId, page, size);
+            } catch (Exception e) {
+                log.warn("Không lấy được appointment của patient {}: {}", patientId, e.getMessage());
+            }
+
+            List<java.util.UUID> apptIds = java.util.Collections.emptyList();
+            if (apptPage != null && apptPage.content() != null) {
+                apptIds = apptPage.content().stream().map(AppointmentResponseDto::id).toList();
+            }
+
+            if (apptIds.isEmpty()) {
+                return Page.empty();
+            }
+
+            Pageable pageable;
+            if (sortBy == null || sortBy.isBlank()) {
+                pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
+            } else {
+                pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sortBy));
+            }
+
+            Page<MedicalRecord> recordsPage = medicalRecordRepository.findByAppointmentIdIn(apptIds, pageable);
+
+            var content = recordsPage.getContent().stream().map(r -> {
+                com.service.medical_record_service.client.dto.AppointmentResponseDto appt = null;
+                try {
+                    appt = appointmentServiceClient.getAppointmentById(r.getAppointmentId());
+                } catch (Exception ex) {
+                    log.warn("Không lấy được appointment {} cho medicalRecord {}: {}", r.getAppointmentId(), r.getId(), ex.getMessage());
+                }
+                return new com.service.medical_record_service.dto.response.MedicalRecordWithAppointmentResponse(
+                        r.getId(), appt, r.getDiagnosis(), r.getCreatedAt(), r.getUpdatedAt()
+                );
+            }).toList();
+
+            return new PageImpl<>(content, pageable, recordsPage.getTotalElements());
+        }
+
     public MedicalRecord getRecordByAppointmentId(UUID appointmentId) {
         return medicalRecordRepository.findByAppointmentId(appointmentId)
                 .orElseThrow(() -> new AppException(ERROR_CODE.PRODUCT_NOT_FOUND));
@@ -118,12 +171,20 @@ public class MedicalRecordService {
             List<PrescriptionItemDto> prescriptionItems = new ArrayList<>();
             if (record.getPrescriptionItems() != null) {
                 for (PrescriptionItem pi : record.getPrescriptionItems()) {
+                    String productName = null;
+                    try {
+                        var prod = productInventoryClient.getProductById(pi.getProductId());
+                        if (prod != null) productName = prod.productName();
+                    } catch (Exception e) {
+                        log.warn("Không lấy được tên sản phẩm {}: {}", pi.getProductId(), e.getMessage());
+                    }
                     prescriptionItems.add(new PrescriptionItemDto(
                         pi.getId(),
                         pi.getProductId(),
                         pi.getQuantity(),
                         pi.getDosage(),
-                        pi.getNotes()
+                        pi.getNotes(),
+                        productName
                     ));
                 }
             }
@@ -141,6 +202,62 @@ public class MedicalRecordService {
                 prescriptionItems
             );
     }
+
+        /**
+         * Lấy chi tiết bệnh án theo id bệnh án
+         * Trả về chi tiết gồm danh sách dịch vụ đã thực hiện và đơn thuốc
+         */
+        public MedicalRecordDetailResponse getRecordDetailById(UUID medicalRecordId) {
+            MedicalRecord record = medicalRecordRepository.findById(medicalRecordId)
+                    .orElseThrow(() -> new AppException(ERROR_CODE.MEDICAL_RECORD_NOT_FOUND));
+
+            List<PerformedServiceDto> performed = new ArrayList<>();
+            if (record.getPerformedServices() != null) {
+                for (MedicalRecordServiceLink link : record.getPerformedServices()) {
+                    var svcId = link.getId().getServiceId();
+                    var svcOpt = serviceRepository.findById(svcId);
+                    svcOpt.ifPresent(svc -> {
+                        link.setServiceName(svc.getServiceName());
+                        link.setPrice(svc.getPrice());
+                        performed.add(new PerformedServiceDto(svc.getId(), svc.getServiceName(), svc.getPrice()));
+                    });
+                }
+            }
+
+            List<PrescriptionItemDto> prescriptionItems = new ArrayList<>();
+            if (record.getPrescriptionItems() != null) {
+                for (PrescriptionItem pi : record.getPrescriptionItems()) {
+                    String productName = null;
+                    try {
+                        var prod = productInventoryClient.getProductById(pi.getProductId());
+                        if (prod != null) productName = prod.productName();
+                    } catch (Exception e) {
+                        log.warn("Không lấy được tên sản phẩm {}: {}", pi.getProductId(), e.getMessage());
+                    }
+                    prescriptionItems.add(new PrescriptionItemDto(
+                        pi.getId(),
+                        pi.getProductId(),
+                        pi.getQuantity(),
+                        pi.getDosage(),
+                        pi.getNotes(),
+                        productName
+                    ));
+                }
+            }
+
+            return new MedicalRecordDetailResponse(
+                record.getId(),
+                record.getAppointmentId(),
+                record.getDiagnosis(),
+                record.getIcd10Code(),
+                record.isLocked(),
+                record.getESignature(),
+                record.getCreatedAt(),
+                record.getUpdatedAt(),
+                performed,
+                prescriptionItems
+            );
+        }
 
     public MedicalRecord lockMedicalRecord(UUID recordId, String signatureData) {
         MedicalRecord medicalRecord = medicalRecordRepository.findById(recordId)
