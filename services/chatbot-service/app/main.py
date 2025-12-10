@@ -8,7 +8,7 @@ import httpx
 
 # Basic config via environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_BASE_URL = "https://api.openai.com/v1"
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 API_GATEWAY_URL = os.getenv("API_GATEWAY_URL", "http://api-gateway:8080")
 
