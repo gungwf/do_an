@@ -157,7 +157,8 @@ public class BillController {
                     priceMap.put(li.productId(), unitPrice);
                     total = total.add(unitPrice.multiply(BigDecimal.valueOf(li.quantity())));
 
-                    var inv = productInventoryClient.getInventoryByBranchAndProduct(staffBranchId, li.productId());
+                    var apiInv = productInventoryClient.getInventoryByBranchAndProduct(staffBranchId, li.productId());
+                    var inv = apiInv == null ? null : apiInv.result();
                     int available = (inv == null || inv.quantity() == null) ? 0 : inv.quantity();
                     if (available < li.quantity()) {
                         shortages.add(new StockShortage(li.productId(), li.quantity(), available));
@@ -221,7 +222,8 @@ public class BillController {
                     priceMap.put(li.productId(), unitPrice);
                     total = total.add(unitPrice.multiply(BigDecimal.valueOf(li.quantity())));
 
-                    var inv = productInventoryClient.getInventoryByBranchAndProduct(centralBranchId, li.productId());
+                    var apiInv = productInventoryClient.getInventoryByBranchAndProduct(centralBranchId, li.productId());
+                    var inv = apiInv == null ? null : apiInv.result();
                     int available = (inv == null || inv.quantity() == null) ? 0 : inv.quantity();
                     if (available < li.quantity()) {
                         shortages.add(new StockShortage(li.productId(), li.quantity(), available));
@@ -380,7 +382,8 @@ public class BillController {
         List<StockShortage> shortages = new ArrayList<>();
         for (BillLine l : lines) {
             try {
-                var inv = productInventoryClient.getInventoryByBranchAndProduct(bill.getBranchId(), l.getProductId());
+                var apiInv = productInventoryClient.getInventoryByBranchAndProduct(bill.getBranchId(), l.getProductId());
+                var inv = apiInv == null ? null : apiInv.result();
                 int available = (inv == null || inv.quantity() == null) ? 0 : inv.quantity();
                 if (available < l.getQuantity()) {
                     shortages.add(new StockShortage(l.getProductId(), l.getQuantity(), available));

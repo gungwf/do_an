@@ -19,6 +19,7 @@ public interface ProductInventoryClient {
     void deductStock(DeductStockRequest request);
 
     @GetMapping("/inventory/{branchId}/{productId}")
-    InventoryResponseDto getInventoryByBranchAndProduct(@PathVariable("branchId") UUID branchId, @PathVariable("productId") UUID productId);
+    com.service.medical_record_service.client.dto.ApiResponse<com.service.medical_record_service.client.dto.InventoryResponseDto>
+        getInventoryByBranchAndProduct(@PathVariable("branchId") UUID branchId, @PathVariable("productId") UUID productId);
 
 }

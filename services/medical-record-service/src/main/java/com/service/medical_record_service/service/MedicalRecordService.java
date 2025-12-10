@@ -267,13 +267,18 @@ public class MedicalRecordService {
         if (medicalRecord.getPrescriptionItems() != null) {
             for (PrescriptionItem item : medicalRecord.getPrescriptionItems()) {
                 try {
-                    var inv = productInventoryClient.getInventoryByBranchAndProduct(branchId, item.getProductId());
+                    // Log before calling inventory to help debug branch/product mismatch
+                    log.info("checkStock: medicalRecordId={}, checking product {} at branch {}", medicalRecordId, item.getProductId(), branchId);
+                    var apiResp = productInventoryClient.getInventoryByBranchAndProduct(branchId, item.getProductId());
+                    var inv = apiResp == null ? null : apiResp.result();
                     int available = (inv == null || inv.quantity() == null) ? 0 : inv.quantity();
+                    log.info("checkStock: product={}, branch={}, available={}, required={}", item.getProductId(), branchId, available, item.getQuantity());
                     if (available < item.getQuantity()) {
                         shortages.add(new StockShortage(item.getProductId(), item.getQuantity(), available));
                     }
                 } catch (Exception e) {
                     // treat as not available
+                    log.warn("checkStock: error fetching inventory for product {} at branch {}: {}", item.getProductId(), branchId, e.getMessage());
                     shortages.add(new StockShortage(item.getProductId(), item.getQuantity(), 0));
                 }
             }
@@ -286,13 +291,18 @@ public class MedicalRecordService {
                 List<ServiceMaterial> materials = serviceMaterialRepository.findById_ServiceId(serviceId);
                 for (ServiceMaterial m : materials) {
                     try {
-                        var inv = productInventoryClient.getInventoryByBranchAndProduct(branchId, m.getId().getProductId());
-                        int available = (inv == null || inv.quantity() == null) ? 0 : inv.quantity();
-                        int required = m.getQuantityConsumed();
-                        if (available < required) {
-                            shortages.add(new StockShortage(m.getId().getProductId(), required, available));
-                        }
+                            // Log service material checks
+                            log.info("checkStock: medicalRecordId={}, checking service material product {} at branch {}", medicalRecordId, m.getId().getProductId(), branchId);
+                            var apiResp2 = productInventoryClient.getInventoryByBranchAndProduct(branchId, m.getId().getProductId());
+                            var inv = apiResp2 == null ? null : apiResp2.result();
+                            int available = (inv == null || inv.quantity() == null) ? 0 : inv.quantity();
+                            int required = m.getQuantityConsumed();
+                            log.info("checkStock: product={}, branch={}, available={}, required={}", m.getId().getProductId(), branchId, available, required);
+                            if (available < required) {
+                                shortages.add(new StockShortage(m.getId().getProductId(), required, available));
+                            }
                     } catch (Exception e) {
+                            log.warn("checkStock: error fetching inventory for product {} at branch {}: {}", m.getId().getProductId(), branchId, e.getMessage());
                         shortages.add(new StockShortage(m.getId().getProductId(), m.getQuantityConsumed(), 0));
                     }
                 }
