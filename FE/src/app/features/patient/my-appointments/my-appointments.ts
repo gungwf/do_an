@@ -20,6 +20,11 @@ export class MyAppointmentsComponent implements OnInit {
   loadError = false;
   currentUser: UserDto | null = null;
   statusFilter: string = 'ALL';
+  // Pagination
+  page: number = 0;
+  size: number = 10;
+  totalPages: number = 0;
+  totalElements: number = 0;
 
   constructor(
     private authService: AuthService,
@@ -51,14 +56,17 @@ export class MyAppointmentsComponent implements OnInit {
         this.currentUser = user;
         console.log('🔍 [MyAppointments] patientId:', user.id);
 
-        // ✅ Gọi API GET /appointments/patient/{patientId}
-        this.appointmentService.getMyAppointments(user.id).subscribe({
-          next: (data) => {
-            this.appointments = data || [];
-            this.filteredAppointments = data || [];
+        // ✅ Gọi API GET /appointments/patient/{patientId}?page=&size=
+        this.appointmentService.getMyAppointments(user.id, this.page, this.size).subscribe({
+          next: (pageData) => {
+            const data = pageData?.content || [];
+            this.appointments = data;
+            this.filteredAppointments = data;
+            this.totalPages = pageData?.totalPages || 0;
+            this.totalElements = pageData?.totalElements || 0;
             this.isLoading = false;
-            console.log('✅ [MyAppointments] Nhận được', data.length, 'lịch hẹn');
-            console.log('📦 Data:', data);
+            console.log('✅ [MyAppointments] Nhận được', data.length, 'lịch hẹn (page', this.page, ')');
+            console.log('📦 Page data:', pageData);
           },
           error: (err: any) => {
             console.error('❌ [MyAppointments] Lỗi API:', err);
@@ -75,6 +83,29 @@ export class MyAppointmentsComponent implements OnInit {
         this.toastr.error('Không thể xác thực người dùng.', 'Lỗi');
       }
     });
+  }
+
+  /**
+   * Pagination helpers
+   */
+  goToPage(newPage: number): void {
+    if (this.totalPages === 0) return;
+    if (newPage < 0) return;
+    if (newPage >= this.totalPages) return;
+    this.page = newPage;
+    this.loadAppointments();
+  }
+
+  nextPage(): void {
+    if (this.page < this.totalPages - 1) {
+      this.goToPage(this.page + 1);
+    }
+  }
+
+  prevPage(): void {
+    if (this.page > 0) {
+      this.goToPage(this.page - 1);
+    }
   }
 
   /**

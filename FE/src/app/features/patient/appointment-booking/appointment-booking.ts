@@ -148,7 +148,7 @@ export class AppointmentBooking implements OnInit {
     return days;
   }
 
-  // ✅ CẬP NHẬT: Load cả available và booked slots
+  // ✅ CẬP NHẬT: Chỉ load available slots (bỏ gọi booked)
   selectDate(date: string) {
     if (!this.selectedDoctor || this.selectedDate === date) return;
 
@@ -159,30 +159,17 @@ export class AppointmentBooking implements OnInit {
 
     console.log(`Đã chọn ngày ${formatDate(date, 'dd/MM/yyyy', 'en-US')}, đang tải giờ...`);
 
-    // Gọi song song 2 API: available và booked
-    forkJoin({
-      available: this.appointmentService.getAvailableSlots(this.selectedDoctor.id, date),
-      booked: this.appointmentService.getBookedSlots(this.selectedDoctor.id, date)
-    }).pipe(
-      finalize(() => this.isLoadingSlots = false),
+    this.appointmentService.getAvailableSlots(this.selectedDoctor.id, date).pipe(
       catchError(err => {
+        console.error('Lỗi getAvailableSlots:', err);
         this.toastr.error(`Không thể tải giờ trống cho ngày ${formatDate(date, 'dd/MM/yyyy', 'en-US')}.`);
-        console.error("Lỗi load slots:", err);
-        return of({ available: [], booked: [] });
-      })
-    ).subscribe(({ available, booked }) => {
+        return of([] as string[]);
+      }),
+      finalize(() => this.isLoadingSlots = false)
+    ).subscribe((available: string[]) => {
       console.log('Available slots:', available);
-      console.log('Booked slots:', booked);
-
-      // Tạo Set để check nhanh
-      const bookedSet = new Set(booked);
-
-      // Map thành TimeSlot[] với trạng thái isBooked
-      this.availableSlots = available.map(time => ({
-        time,
-        isBooked: bookedSet.has(time)
-      }));
-
+      // Khi chỉ có available, đánh dấu tất cả là chưa booked
+      this.availableSlots = (available || []).map(time => ({ time, isBooked: false }));
       console.log('Processed slots:', this.availableSlots);
     });
   }

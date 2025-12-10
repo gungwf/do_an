@@ -138,12 +138,10 @@ public class AppointmentService {
     );
   }
 
-  public List<AppointmentResponseDto> getAppointmentsForPatient(UUID patientId) {
-    List<Appointment> appointments = appointmentRepository.findByPatientId(patientId);
-
-    return appointments.stream()
-        .map(this::mapToResponseDto)
-        .collect(Collectors.toList());
+  public org.springframework.data.domain.Page<AppointmentResponseDto> getAppointmentsForPatient(UUID patientId, int page, int size) {
+    var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
+    var pageResult = appointmentRepository.findByPatientId(patientId, pageable);
+    return pageResult.map(this::mapToResponseDto);
   }
 
   public List<AppointmentResponseDto> getAppointmentsForDoctor(UUID doctorId) {

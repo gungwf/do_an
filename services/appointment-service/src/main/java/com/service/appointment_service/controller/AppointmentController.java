@@ -56,10 +56,14 @@ public class AppointmentController {
         }
     }
 
-    // get appointment cho bệnh nhân
+    // get appointment cho bệnh nhân (with pagination & sort by updatedAt desc)
     @GetMapping("/patient/{patientId}")
-    public ResponseEntity<List<AppointmentResponseDto>> getAppointmentsForPatient(@PathVariable UUID patientId) {
-        return ResponseEntity.ok(appointmentService.getAppointmentsForPatient(patientId));
+    public ResponseEntity<org.springframework.data.domain.Page<AppointmentResponseDto>> getAppointmentsForPatient(
+            @PathVariable UUID patientId,
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(value = "size", required = false, defaultValue = "20") int size
+    ) {
+        return ResponseEntity.ok(appointmentService.getAppointmentsForPatient(patientId, page, size));
     }
 
     // get appointment cho bác sĩ

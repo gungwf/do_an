@@ -176,11 +176,14 @@ export class AppointmentService {
   }
 
   /**
-   * ✅ Lấy danh sách lịch hẹn của bệnh nhân
-   * API: GET /appointments/patient/{patientId}
+   * ✅ Lấy danh sách lịch hẹn của bệnh nhân (phân trang)
+   * API: GET /appointments/patient/{patientId}?page=&size=
    */
-  getMyAppointments(patientId: string): Observable<AppointmentResponseDto[]> {
-    return this.http.get<AppointmentResponseDto[]>(`${this.BASE_URL}/appointments/patient/${patientId}`);
+  getMyAppointments(patientId: string, page: number = 0, size: number = 10): Observable<PagedAppointmentResponse> {
+    let params = new HttpParams()
+      .set('page', String(page))
+      .set('size', String(size));
+    return this.http.get<PagedAppointmentResponse>(`${this.BASE_URL}/appointments/patient/${patientId}`, { params });
   }
 
   /**

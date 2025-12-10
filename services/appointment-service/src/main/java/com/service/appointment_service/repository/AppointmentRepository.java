@@ -11,6 +11,7 @@ import java.util.UUID;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, UUID>, JpaSpecificationExecutor<Appointment> {
     List<Appointment> findByPatientId(UUID patientId);
+    org.springframework.data.domain.Page<Appointment> findByPatientId(UUID patientId, org.springframework.data.domain.Pageable pageable);
     List<Appointment> findByDoctorId(UUID doctorId);
     List<Appointment> findByBranchId(UUID branchId);
     List<Appointment> findByDoctorIdAndAppointmentTimeBetween(UUID doctorId, OffsetDateTime startTime, OffsetDateTime endTime);
