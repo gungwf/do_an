@@ -1,0 +1,40 @@
+<div class="ai-chat-root">
+  <button class="ai-bubble-btn" (click)="toggle()" aria-label="Open AI chat">
+    <i class="bi bi-robot fs-4"></i>
+
+    <span class="ai-badge" *ngIf="!isOpen && messages.length > 0">{{ messages.length }}</span>
+  </button>
+
+  <div class="ai-panel" *ngIf="isOpen">
+    <div class="ai-header d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center">
+        <i class="bi bi-robot fs-5 me-2"></i>
+
+        <strong>Trợ lý phòng khám (AI)</strong>
+      </div>
+
+      <button class="btn btn-sm btn-light" (click)="toggle()">Đóng</button>
+    </div>
+
+    <div class="ai-body" #body>
+      <div
+        *ngFor="let m of messages"
+        class="ai-msg"
+        [ngClass]="{ user: m.role === 'user', assistant: m.role === 'assistant' }"
+      >
+        <div class="text">{{ m.text }}</div>
+      </div>
+    </div>
+
+    <div class="ai-footer d-flex">
+      <textarea
+        class="form-control form-control-sm me-2"
+        rows="1"
+        [(ngModel)]="newMessage"
+        (keydown.enter)="$event.preventDefault(); send()"
+      ></textarea>
+
+      <button class="btn btn-primary btn-sm" (click)="send()" [disabled]="isSending">Gửi</button>
+    </div>
+  </div>
+</div>

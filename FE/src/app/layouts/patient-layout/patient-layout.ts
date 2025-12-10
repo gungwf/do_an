@@ -11,6 +11,7 @@ import { AuthService } from '../../core/services/auth';
 import { AuthModal } from '../../shared/components/auth-modal/auth-modal';
 import { CartService } from '../../core/services/cartService';
 import { ChatBubbleComponent } from '../../shared/components/chat-bubble/chat-bubble.component';
+import { AiChatComponent } from '../../shared/components/ai-chat/ai-chat.component';
 import { ChatService } from '../../core/services/chat.service';
 
 @Component({
@@ -22,7 +23,8 @@ import { ChatService } from '../../core/services/chat.service';
     RouterLink,
     RouterLinkActive,
     AuthModal,
-    ChatBubbleComponent
+    ChatBubbleComponent,
+    AiChatComponent
   ],
   templateUrl: './patient-layout.html',
   styleUrls: ['./patient-layout.scss'],

@@ -197,3 +197,5 @@
 
 <!-- Chat bubble chỉ hiển thị khi đã đăng nhập -->
 <app-chat-bubble *ngIf="authService.isAuthenticated()" [userRole]="'PATIENT'"></app-chat-bubble>
+<!-- AI chat (kết nối tới chatbot-service qua API Gateway) -->
+<app-ai-chat *ngIf="authService.isAuthenticated()"></app-ai-chat>
