@@ -18,6 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.service.sys_srv.repository.BranchRepository;
+
 import com.service.sys_srv.dto.request.DoctorSearchRequest;
 import com.service.sys_srv.dto.request.LoginRequest;
 import com.service.sys_srv.dto.request.PatientSearchRequest;
@@ -62,6 +64,7 @@ public class AuthService {
     private final PatientProfileRepository patientProfileRepository;
     private final DoctorProfileRepository doctorProfileRepository;
     private final ImageUploadService imageUploadService;
+    private final BranchRepository branchRepository;
 
 
     public PatientProfile getPatientProfileByUserId(UUID userId) {
@@ -387,6 +390,11 @@ public class AuthService {
         dto.setEmail(user.getEmail());
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setBranchId(user.getBranchId());
+        // Thêm branchName nếu có branchId
+        if (user.getBranchId() != null) {
+            branchRepository.findById(user.getBranchId())
+                .ifPresent(branch -> dto.setBranchName(branch.getBranchName()));
+        }
         dto.setActive(user.isActive());
         dto.setRole(user.getRole());
 

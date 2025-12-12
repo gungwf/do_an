@@ -22,7 +22,12 @@
         class="ai-msg"
         [ngClass]="{ user: m.role === 'user', assistant: m.role === 'assistant' }"
       >
-        <div class="text">{{ m.text }}</div>
+        <ng-container *ngIf="m.role === 'assistant'; else userMsg">
+          <div class="text ai-assistant-card" [innerHTML]="m.text"></div>
+        </ng-container>
+        <ng-template #userMsg>
+          <div class="text">{{ m.text }}</div>
+        </ng-template>
       </div>
     </div>
 

@@ -12,6 +12,7 @@ public class DoctorSearchResponseDto {
     private String email;
     private String phoneNumber;
     private UUID branchId;
+    private String branchName; // Thêm trường branchName
     private boolean isActive;
     private UserRole role;
 

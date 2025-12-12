@@ -88,7 +88,13 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/api/ai/chat",
                                 "/products/search",
-                                "/ws-chat/**"
+                                "/ws-chat/**",
+                                "/products/simple",
+                                "/products/{id}",
+                                "/branches/simple",
+                                "/services/simple",
+                                "/doctor-profiles/specialties",
+                                "/branches"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.GET,
