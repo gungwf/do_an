@@ -10,7 +10,7 @@ import httpx
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-API_GATEWAY_URL = os.getenv("API_GATEWAY_URL", "http://api-gateway:8080")
+API_GATEWAY_URL = os.getenv("API_GATEWAY_URL", "http://localhost:8080")
 
 if not OPENAI_API_KEY:
     print("[WARN] OPENAI_API_KEY is not set; /chat will fail until provided.")
