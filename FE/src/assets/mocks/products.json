@@ -2,9 +2,9 @@
 [
   {
     "id": 1,
-    "name": "Thuốc Paracetamol 500mg",
+    "name": "Paracetamol 500mg",
     "price": 30000,
-    "imageUrl": "assets/images/Thuốc Paracetamol 500mg.jpg", 
+    "imageUrl": "assets/images/Paracetamol 500mg.jpg", 
     "dosageForm": "Viên nén",
     "packaging": "Hộp 10 vỉ x 10 viên",
     "category": "Hạ sốt, Giảm đau" 
@@ -13,7 +13,7 @@
     "id": 2,
     "name": "Berberin 100mg",
     "price": 55000,
-    "imageUrl": "assets/images/Thuốc Paracetamol 500mg.jpg",
+    "imageUrl": "assets/images/Paracetamol 500mg.jpg",
     "dosageForm": "Viên nang",
     "packaging": "Chai 100 viên",
     "category": "Tiêu hóa" 
@@ -58,7 +58,7 @@
     "id": 7, 
     "name": "Thuốc Tim mạch ABC",
     "price": 150000,
-    "imageUrl": "assets/images/Thuốc Paracetamol 500mg.jpg",
+    "imageUrl": "assets/images/Paracetamol 500mg.jpg",
     "dosageForm": "Viên nén",
     "packaging": "Hộp 3 vỉ x 10 viên",
     "category": "Tim mạch"
@@ -67,7 +67,7 @@
     "id": 8, 
     "name": "Thuốc Tim mạch XYZ",
     "price": 200000,
-    "imageUrl": "assets/images/Thuốc Paracetamol 500mg.jpg",
+    "imageUrl": "assets/images/Paracetamol 500mg.jpg",
     "dosageForm": "Viên nang",
     "packaging": "Hộp 5 vỉ x 10 viên",
     "category": "Tim mạch"
@@ -76,7 +76,7 @@
     "id": 9, 
     "name": "Thuốc Tim mạch DEF",
     "price": 180000,
-    "imageUrl": "assets/images/Thuốc Paracetamol 500mg.jpg",
+    "imageUrl": "assets/images/Paracetamol 500mg.jpg",
     "dosageForm": "Viên nén",
     "packaging": "Hộp 3 vỉ x 10 viên",
     "category": "Tim mạch"
@@ -85,7 +85,7 @@
     "id": 10, 
     "name": "Thuốc Tim mạch GHI",
     "price": 220000,
-    "imageUrl": "assets/images/Thuốc Paracetamol 500mg.jpg",
+    "imageUrl": "assets/images/Paracetamol 500mg.jpg",
     "dosageForm": "Viên nén",
     "packaging": "Hộp 6 vỉ x 10 viên",
     "category": "Tim mạch"
@@ -94,7 +94,7 @@
     "id": 11, 
     "name": "Thuốc Tim mạch JKL",
     "price": 250000,
-    "imageUrl": "assets/images/Thuốc Paracetamol 500mg.jpg",
+    "imageUrl": "assets/images/Paracetamol 500mg.jpg",
     "dosageForm": "Viên nén",
     "packaging": "Hộp 10 vỉ x 10 viên",
     "category": "Tim mạch"
@@ -103,7 +103,7 @@
     "id": 12, 
     "name": "Thuốc Tim mạch MNO",
     "price": 300000,
-    "imageUrl": "assets/images/Thuốc Paracetamol 500mg.jpg",
+    "imageUrl": "assets/images/Paracetamol 500mg.jpg",
     "dosageForm": "Viên nang",
     "packaging": "Hộp 10 vỉ x 10 viên",
     "category": "Tim mạch"
