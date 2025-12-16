@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:17.5
+    container_name: do_an_pg
+    environment:
+      POSTGRES_DB: do_an
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: hocdinhea
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
