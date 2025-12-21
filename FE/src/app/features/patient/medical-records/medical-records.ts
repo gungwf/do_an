@@ -57,10 +57,13 @@ export class MedicalRecords implements OnInit {
 
   viewDetail(recordId: string) {
     this.isLoading = true;
+    // Tìm bản ghi trong danh sách để lấy appointmentTime
+    const found = this.records.find(r => r.medicalRecordId === recordId);
     this.medicalRecordService.getMedicalRecordDetailById(recordId)
       .subscribe({
         next: res => {
-          this.selectedRecord = res;
+          // Gắn thêm appointmentTime nếu có
+          this.selectedRecord = found ? { ...res, appointmentTime: found.appointment.appointmentTime } : res;
           this.isDialogOpen = true;
           this.isLoading = false;
         },

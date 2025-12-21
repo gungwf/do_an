@@ -11,9 +11,13 @@
       <div class="section">
         <div class="section-title"><i class="bi bi-clipboard2-pulse me-2"></i>Chẩn đoán</div>
         <div class="section-content">{{ record.diagnosis }}</div>
-        <div class="section-date text-muted mt-2">
+        <!-- <div class="section-date text-muted mt-2">
           <i class="bi bi-clock-history"></i>
           Ngày tạo: {{ record.createdAt | date:'dd/MM/yyyy HH:mm' }}
+        </div> -->
+        <div class="section-date text-muted mt-2">
+          <i class="bi bi-calendar-event"></i>
+          Ngày khám: {{ record.appointmentTime ? (record.appointmentTime | date:'dd/MM/yyyy HH:mm') : 'Không có dữ liệu' }}
         </div>
       </div>
 

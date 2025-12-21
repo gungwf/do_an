@@ -125,6 +125,8 @@ export interface MedicalRecordDetail {
     productName: string;
   }[];
   esignature: string | null;
+  // Thêm appointmentTime để hiển thị ngày khám nếu có
+  appointmentTime?: string;
 }
 @Injectable({ providedIn: 'root' })
 export class MedicalRecordService {
