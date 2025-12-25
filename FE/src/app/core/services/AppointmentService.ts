@@ -23,6 +23,7 @@ export interface DoctorDto {
   active?: boolean;
   specialty?: string;
   price?: number;
+  avatarUrl?: string;
 }
 
 export interface SpecialtyDto {

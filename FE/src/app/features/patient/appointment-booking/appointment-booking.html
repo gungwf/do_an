@@ -135,7 +135,10 @@
                   <!-- Doctor Basic Info -->
                   <div class="doctor-header">
                     <div class="doctor-avatar">
-                      <i class="bi bi-person-circle"></i>
+                      <img *ngIf="doctor.avatarUrl; else defaultAvatar" [src]="doctor.avatarUrl" alt="avatar" class="avatar-img" />
+                      <ng-template #defaultAvatar>
+                        <i class="bi bi-person-circle"></i>
+                      </ng-template>
                     </div>
                     <div class="doctor-info">
                       <h6 class="doctor-name">{{ doctor.fullName }}</h6>
@@ -146,7 +149,7 @@
                         </span>
                         <span class="price">
                           <i class="bi bi-cash-coin"></i>
-                          {{ (doctor.price || 300000) | currency:'VND':'symbol':'1.0-0' }}
+                          {{ (doctor.price || 150000) | currency:'VND':'symbol':'1.0-0' }}
                         </span>
                       </div>
                     </div>
@@ -214,7 +217,7 @@
                             <i class="bi bi-cash-coin"></i>
                             <div class="detail-content">
                               <strong>Giá khám</strong>
-                              <span class="price-value">{{ (doctor.price || 300000) | currency:'VND':'symbol':'1.0-0' }}</span>
+                              <span class="price-value">{{ (doctor.price || 150000) | currency:'VND':'symbol':'1.0-0' }}</span>
                             </div>
                           </div>
                         </div>
@@ -230,7 +233,7 @@
                           <div class="time-period-section" *ngIf="getMorningSlots().length > 0 || getAfternoonSlots().length > 0">
                             <div class="period-header">
                               <i class="bi bi-sunrise-fill"></i>
-                              <span>Buổi sáng (7:00 - 12:59)</span>
+                              <span>Buổi sáng (8:00 - 10:15)</span>
                             </div>
                             <div class="slots-container">
                               <ng-container *ngIf="getMorningSlots().length > 0; else noMorningSlots">
@@ -258,7 +261,7 @@
                           <div class="time-period-section" *ngIf="getMorningSlots().length > 0 || getAfternoonSlots().length > 0">
                             <div class="period-header">
                               <i class="bi bi-sunset-fill"></i>
-                              <span>Buổi chiều (13:00 - 18:00)</span>
+                              <span>Buổi chiều (13:00 - 15:15)</span>
                             </div>
                             <div class="slots-container">
                               <ng-container *ngIf="getAfternoonSlots().length > 0; else noAfternoonSlots">
@@ -346,7 +349,12 @@
       <!-- Doctor Info -->
       <div class="summary-section">
         <div class="doctor-summary">
-          <i class="bi bi-person-circle"></i>
+          <div class="doctor-avatar">
+            <img *ngIf="selectedDoctor.avatarUrl; else defaultAvatarModal" [src]="selectedDoctor.avatarUrl" alt="avatar" class="avatar-img" />
+            <ng-template #defaultAvatarModal>
+              <i class="bi bi-person-circle"></i>
+            </ng-template>
+          </div>
           <div class="doctor-summary-info">
             <h5>{{ selectedDoctor.fullName }}</h5>
             <p>{{ selectedDoctor.specialty || 'Chuyên khoa...' }}</p>
@@ -415,7 +423,7 @@
           <div class="item-content">
             <label>Chi phí khám</label>
             <div class="item-value">
-              <strong class="price-highlight">{{ (selectedDoctor.price || 300000) | currency:'VND':'symbol':'1.0-0' }}</strong>
+              <strong class="price-highlight">{{ (selectedDoctor.price || 150000) | currency:'VND':'symbol':'1.0-0' }}</strong>
             </div>
           </div>
         </div>

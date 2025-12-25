@@ -72,6 +72,35 @@
     <div *ngIf="currentView === 'chat' && selectedRoom" class="chat-view">
       <!-- Messages container -->
       <div class="messages-container" #messagesContainer>
+        <div class="messages-container" #messagesContainer>
+          <div *ngIf="messages.length === 0" class="empty-messages">
+            <i class="bi bi-chat-square-dots"></i>
+            <p>Bắt đầu cuộc hội thoại</p>
+          </div>
+
+          <div
+            class="message"
+            *ngFor="let message of messages"
+            [class.my-message]="isMyMessage(message)"
+            [class.other-message]="!isMyMessage(message)">
+            
+            <div class="message-content">
+              <div class="sender-name" *ngIf="!isMyMessage(message)">
+                {{ getSenderName(message.senderId, message) }}
+              </div>
+              <div class="message-bubble">
+                {{ message.content }}
+              </div>
+              <div class="message-time">
+                {{ formatTime(message.createdAt) }}
+              </div>
+            </div>
+          </div>
+
+          <!-- 🔥 ANCHOR – QUAN TRỌNG -->
+          <div #bottomAnchor></div>
+        </div>
+
         <div *ngIf="messages.length === 0" class="empty-messages">
           <i class="bi bi-chat-square-dots"></i>
           <p>Bắt đầu cuộc hội thoại</p>
@@ -79,7 +108,8 @@
 
         <div class="message" *ngFor="let message of messages" 
              [class.my-message]="isMyMessage(message)"
-             [class.other-message]="!isMyMessage(message)">
+             [class.other-message]="!isMyMessage(message)"
+             [@messageAnim]>
           <div class="message-content">
             <div class="sender-name" *ngIf="!isMyMessage(message)">
               {{ getSenderName(message.senderId, message) }}
@@ -94,6 +124,11 @@
             </div>
           </div>
         </div>
+        <!-- Typing indicator -->
+        <div class="typing-indicator" *ngIf="isTyping">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span class="typing-text">Đang nhập...</span>
+        </div>
       </div>
 
       <!-- Input area -->
@@ -104,6 +139,7 @@
             class="form-control message-input" 
             placeholder="Nhập tin nhắn..."
             [(ngModel)]="newMessage"
+            (input)="onInputChange()"
             (keypress)="onKeyPress($event)"
             [disabled]="isSending">
           <button 

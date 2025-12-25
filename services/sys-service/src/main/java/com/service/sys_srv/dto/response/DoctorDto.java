@@ -16,4 +16,5 @@ public class DoctorDto {
     private boolean isActive;
     private String specialty;
     private String degree;
+    private String avatarUrl;
 }

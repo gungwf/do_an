@@ -72,29 +72,46 @@ async def call_openai(messages: list[Dict[str, Any]]) -> Dict[str, Any]:
         return r.json()
 
 
-async def call_gateway_create_appointment(args: Dict[str, Any]) -> Dict[str, Any]:
+async def call_gateway_create_appointment(args: Dict[str, Any], token: str = "") -> Dict[str, Any]:
     # Adjust path to match your gateway route for appointment creation
     # Example: POST /appointments
     url = f"{API_GATEWAY_URL}/appointments"
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    logging.info(f"[DEBUG] Gửi request tạo lịch: {args}")
+    # Kiểm tra các trường bắt buộc
+    required_fields = ["doctorId", "appointmentTime"]
+    for field in required_fields:
+        if field not in args or not args[field]:
+            logging.error(f"[ERROR] Thiếu trường bắt buộc: {field}")
+            raise Exception(f"Thiếu trường bắt buộc: {field}")
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
     async with httpx.AsyncClient(timeout=30) as client:
-        r = await client.post(url, json=args)
-        if r.status_code == 400:
-            # Có thể là trùng slot
-            raise Exception(r.text)
-        r.raise_for_status()
-        appointment = r.json()
+        try:
+            r = await client.post(url, json=args, headers=headers)
+            logging.info(f"[DEBUG] Response status: {r.status_code}, body: {r.text}")
+            if r.status_code == 400:
+                # Có thể là trùng slot
+                raise Exception(r.text)
+            r.raise_for_status()
+            appointment = r.json()
+        except Exception as e:
+            logging.error(f"[ERROR] Lỗi khi gọi API Gateway: {e}")
+            raise
         # Sau khi tạo thành công, gọi tiếp API tạo link thanh toán
         appointment_id = appointment.get('id')
         if not appointment_id:
+            logging.error(f"[ERROR] Không có appointment_id trong response: {appointment}")
             return appointment
         # Gọi API tạo link thanh toán
         try:
             pay_url = f"{API_GATEWAY_URL}/api/v1/payment/create-payment/{appointment_id}"
-            pay_resp = await client.post(pay_url)
+            pay_resp = await client.post(pay_url, headers=headers)
             pay_resp.raise_for_status()
             payment_link = pay_resp.text.strip('"')
             appointment['paymentLink'] = payment_link
-        except Exception:
+        except Exception as e:
+            logging.error(f"[WARN] Không tạo được link thanh toán: {e}")
             appointment['paymentLink'] = None
         return appointment
 
@@ -186,6 +203,134 @@ async def chat(req: ChatRequest, request: Request):
         )
         return ChatResponse(sessionId=req.sessionId, reply=reply, toolCall=None)
     
+
+    # Intent: đặt lịch khám nếu phát hiện đủ thông tin (bác sĩ, ngày, giờ)
+    import re
+    # Cải tiến nhận diện intent đặt lịch: log debug chi tiết
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    # Nhận diện intent đặt lịch bằng nhiều regex nhỏ, tách riêng từng thành phần
+    # Bắt tên bác sĩ đến trước các từ khóa thời gian/ngày/chi nhánh hoặc hết câu
+    doctor_match = re.search(r"bác sĩ ([\w .-]+?)(?:\s+(?:vào lúc|lúc|ngày|tại|chi nhánh)\b|[.,;!?]|$)", user_msg)
+    import datetime
+    date_match = re.search(r"(\d{1,2}/\d{1,2}/\d{4}|\d{4}-\d{2}-\d{2})", user_msg)
+    # Thêm nhận diện ngày thiếu tháng/năm: 'ngày 25', '25', '25/12', '25-12'
+    date_day_match = re.search(r"ngày (\d{1,2})", user_msg)
+    date_short_match = re.search(r"(\d{1,2})[/-](\d{1,2})", user_msg)
+    time_match = re.search(r"(\d{1,2}:[0-9]{2}|\d{1,2} ?giờ)", user_msg)
+    branch_match = re.search(r"chi nhánh ([\w\s-]+)", user_msg)
+    doctor_name = doctor_match.group(1).strip() if doctor_match else ''
+    # Xử lý ngày
+    if date_match:
+        date_str = date_match.group(1).strip()
+    elif date_short_match:
+        # dạng 25/12 hoặc 25-12, thêm năm hiện tại
+        d, m = date_short_match.groups()
+        year = str(datetime.datetime.now().year)
+        date_str = f"{d.zfill(2)}/{m.zfill(2)}/{year}"
+    elif date_day_match:
+        # dạng 'ngày 25', thêm tháng/năm hiện tại
+        d = date_day_match.group(1)
+        now = datetime.datetime.now()
+        date_str = f"{d.zfill(2)}/{now.month:02d}/{now.year}"
+    else:
+        # dạng chỉ số, ví dụ '25'
+        date_num_match = re.search(r"\b(\d{1,2})\b", user_msg)
+        if date_num_match:
+            d = date_num_match.group(1)
+            now = datetime.datetime.now()
+            date_str = f"{d.zfill(2)}/{now.month:02d}/{now.year}"
+        else:
+            date_str = ''
+    time_str = time_match.group(1).replace('giờ', '').strip() if time_match else ''
+    branch_name = branch_match.group(1).strip() if branch_match else ''
+    logging.info(f"[DEBUG] doctor_name: {doctor_name}, date_str: {date_str}, time_str: {time_str}, branch_name: {branch_name}")
+    # Chuẩn hóa giờ nếu user nhập "8 giờ" thành "08:00"
+    if time_str and ':' not in time_str:
+        try:
+            hour = int(time_str)
+            time_str = f"{hour:02d}:00"
+        except:
+            time_str = None
+    logging.info(f"[DEBUG] after hour normalization: time_str={time_str}")
+    if doctor_name and date_str and time_str:
+        try:
+            # Tìm bác sĩ theo tên
+            doctors = await search_doctor_by_name(token, doctor_name)
+            logging.info(f"[DEBUG] doctors found: {doctors}")
+            if not doctors:
+                reply = f"Không tìm thấy bác sĩ tên '{doctor_name}'."
+                return ChatResponse(sessionId=req.sessionId, reply=reply, toolCall=None)
+            doc = doctors[0]
+            doctor_id = doc.get('id')
+            # Ghép ngày giờ thành appointmentTime ISO
+            from datetime import datetime
+            try:
+                import pytz
+                tz = pytz.timezone('Asia/Ho_Chi_Minh')
+                if '-' in date_str:
+                    dt = datetime.strptime(date_str + ' ' + time_str, '%Y-%m-%d %H:%M')
+                else:
+                    dt = datetime.strptime(date_str + ' ' + time_str, '%d/%m/%Y %H:%M')
+                dt = tz.localize(dt)
+                appointment_time = dt.isoformat()  # sẽ có dạng 2025-12-25T08:00:00+07:00
+            except Exception as ex:
+                logging.error(f"[ERROR] Không nhận diện được ngày giờ: {ex}")
+                reply = "Không nhận diện được ngày giờ. Vui lòng nhập đúng định dạng."
+                return ChatResponse(sessionId=req.sessionId, reply=reply, toolCall=None)
+            args = {
+                "doctorId": doctor_id,
+                "appointmentTime": appointment_time
+            }
+            # Nếu user nhắc đến tên chi nhánh, cố gắng map sang branchId
+            if branch_name:
+                try:
+                    url = f"{API_GATEWAY_URL}/branches"
+                    async with httpx.AsyncClient(timeout=30) as client:
+                        r = await client.get(url)
+                        r.raise_for_status()
+                        branches = r.json()
+                    def norm(s):
+                        import unicodedata
+                        s = s or ''
+                        s = unicodedata.normalize('NFKD', s)
+                        s = ''.join(c for c in s if not unicodedata.combining(c))
+                        return s.strip().lower()
+                    norm_branch = norm(branch_name)
+                    found = None
+                    for b in branches:
+                        if norm(b.get('branchName')) == norm_branch or norm_branch in norm(b.get('branchName')):
+                            found = b
+                            break
+                    if found:
+                        args['branchId'] = found.get('id')
+                    logging.info(f"[DEBUG] branch_name: {branch_name}, mapped branchId: {args.get('branchId')}")
+                except Exception as ex:
+                    logging.error(f"[ERROR] Lỗi khi map branch: {ex}")
+            if 'branchId' not in args and doc.get('branchId'):
+                args['branchId'] = doc.get('branchId')
+            logging.info(f"[DEBUG] booking args: {args}")
+            result = await call_gateway_create_appointment(args, token)
+            logging.info(f"[DEBUG] booking result: {result}")
+            if result.get('paymentLink'):
+                reply = (
+                    "<b>Đặt lịch thành công!</b><br>"
+                    f"Vui lòng thanh toán tại: <a href='{result['paymentLink']}' target='_blank'>Link thanh toán</a>"
+                )
+            else:
+                reply = "Đặt lịch thành công! (Không lấy được link thanh toán)"
+            return ChatResponse(sessionId=req.sessionId, reply=reply, toolCall={"name": "appointment_create", "result": result})
+        except Exception as e:
+            err = str(e)
+            logging.error(f"[ERROR] Đặt lịch exception: {err}")
+            if 'đã có người đặt' in err or 'trùng' in err:
+                reply = "<b>Lịch hẹn này đã có người đặt. Vui lòng chọn thời gian khác.</b>"
+            else:
+                reply = f"Không đặt được lịch: {err}"
+            return ChatResponse(sessionId=req.sessionId, reply=reply, toolCall={"name": "appointment_create", "error": err})
+    else:
+        logging.info(f"[DEBUG] Thiếu thông tin: doctor_name={doctor_name}, date_str={date_str}, time_str={time_str}")
+
     # Intent: tra cứu thông tin chi nhánh (dùng API)
     if (
         "thông tin chi nhánh" in user_msg
@@ -213,124 +358,7 @@ async def chat(req: ChatRequest, request: Request):
                 + "<br>".join(f"&bull; {name}" for name in branch_names)
                 + "<br><i>Bạn muốn biết thông tin chi nhánh nào? Hãy hỏi tên chi nhánh cụ thể!</i>"
             )
-            # Nếu user hỏi tên chi nhánh cụ thể, trả về chi tiết
-            import re
-            import unicodedata
-            def normalize(s):
-                if not s: return ''
-                s = unicodedata.normalize('NFKD', s)
-                s = ''.join(c for c in s if not unicodedata.combining(c))
-                s = s.lower().replace('-', ' ').replace('_', ' ')
-                return ''.join(c for c in s if c.isalnum() or c.isspace()).strip()
-
-            norm_user_msg = normalize(user_msg)
-            for b in branches:
-                name = b.get('branchName', '')
-                norm_name = normalize(name)
-                    # Intent: đặt lịch khám nếu phát hiện đủ thông tin (bác sĩ, ngày, giờ)
-                import re
-                book_pattern = re.search(r"đặt lịch.*bác sĩ ([\w .-]+?)(?:\s+(vào|ngày|lúc|thời gian|date|at)\b|$)(.*)", user_msg)
-                if book_pattern:
-                    doctor_name = book_pattern.group(1).strip()
-                    time_info = book_pattern.group(3) or ''
-                    # Tìm ngày và giờ trong time_info
-                    date_match = re.search(r"(\d{1,2}/\d{1,2}/\d{4}|\d{4}-\d{2}-\d{2})", time_info)
-                    time_match = re.search(r"(\d{1,2}:\d{2})", time_info)
-                    date_str = date_match.group(1) if date_match else None
-                    time_str = time_match.group(1) if time_match else None
-                    if doctor_name and date_str and time_str:
-                        try:
-                            # Tìm bác sĩ theo tên
-                            doctors = await search_doctor_by_name(token, doctor_name)
-                            if not doctors:
-                                reply = f"Không tìm thấy bác sĩ tên '{doctor_name}'."
-                                return ChatResponse(sessionId=req.sessionId, reply=reply, toolCall=None)
-                            doc = doctors[0]
-                            doctor_id = doc.get('id')
-                            # Ghép ngày giờ thành appointmentTime ISO
-                            from datetime import datetime
-                            try:
-                                if '-' in date_str:
-                                    dt = datetime.strptime(date_str + ' ' + time_str, '%Y-%m-%d %H:%M')
-                                else:
-                                    dt = datetime.strptime(date_str + ' ' + time_str, '%d/%m/%Y %H:%M')
-                                appointment_time = dt.isoformat()
-                            except Exception:
-                                reply = "Không nhận diện được ngày giờ. Vui lòng nhập đúng định dạng."
-                                return ChatResponse(sessionId=req.sessionId, reply=reply, toolCall=None)
-                            # Chỉ cần doctorId, branchId, appointmentTime là đủ
-                            args = {
-                                "doctorId": doctor_id,
-                                "appointmentTime": appointment_time
-                            }
-                            if doc.get('branchId'):
-                                args['branchId'] = doc.get('branchId')
-                            # Đặt lịch luôn, không hỏi lại tên/sdt/dịch vụ
-                            result = await call_gateway_create_appointment(args)
-                            if result.get('paymentLink'):
-                                reply = (
-                                    "<b>Đặt lịch thành công!</b><br>"
-                                    f"Vui lòng thanh toán tại: <a href='{result['paymentLink']}' target='_blank'>Link thanh toán</a>"
-                                )
-                            else:
-                                reply = "Đặt lịch thành công! (Không lấy được link thanh toán)"
-                            return ChatResponse(sessionId=req.sessionId, reply=reply, toolCall={"name": "appointment_create", "result": result})
-                        except Exception as e:
-                            err = str(e)
-                            if 'đã có người đặt' in err or 'trùng' in err:
-                                reply = "<b>Lịch hẹn này đã có người đặt. Vui lòng chọn thời gian khác.</b>"
-                            else:
-                                reply = f"Không đặt được lịch: {err}"
-                            return ChatResponse(sessionId=req.sessionId, reply=reply, toolCall={"name": "appointment_create", "error": err})
-                    # Nếu thiếu ngày/giờ thì fallback về intent hỏi bác sĩ
-                # ...intent hỏi thông tin bác sĩ như cũ...
-                patterns = [
-                    r"thông tin về bác sĩ ([\w .-]+)",
-                    r"xem thông tin bác sĩ ([\w .-]+)",
-                    r"thông tin bác sĩ ([\w .-]+)",
-                    r"bác sĩ ([\w .-]+?)(?:\s+(vào|ngày|lúc|thời gian|date|at)\b|$)"
-                ]
-                doctor_name = None
-                for pat in patterns:
-                    match = re.search(pat, user_msg)
-                    if match:
-                        doctor_name = match.group(1).strip()
-                        break
-                if doctor_name:
-                    try:
-                        doctors = await search_doctor_by_name(token, doctor_name)
-                        if not doctors:
-                            reply = f"Không tìm thấy bác sĩ tên '{doctor_name}'."
-                        else:
-                            doc = doctors[0]
-                            doc_id = doc.get("id")
-                            profile = await get_doctor_profile_by_id(token, doc_id)
-                            # Ưu tiên branchName nếu có, fallback branchId
-                            branch = doc.get('branchName') or profile.get('branchName') or doc.get('branchId') or profile.get('branchId') or 'Không rõ'
-                            reply = (
-                                f"<span class='emoji'>\U0001F468‍⚕️</span> <b>{doc.get('fullName','Không rõ')}</b><br>"
-                                f"<b>Chuyên khoa:</b> {doc.get('specialty', profile.get('specialty','Không rõ'))}<br>"
-                                f"<b>Học vị:</b> {doc.get('degree', profile.get('degree','Không rõ'))}<br>"
-                                f"<b>Chi nhánh:</b> {branch}<br>"
-                                f"<b>Email:</b> {doc.get('email','Không rõ')}<br>"
-                                f"<b>SĐT:</b> {doc.get('phoneNumber','Không rõ')}"
-                            )
-                    except Exception as e:
-                        reply = f"Không lấy được thông tin bác sĩ: {e}"
-                    return ChatResponse(sessionId=req.sessionId, reply=reply, toolCall=None)
-                doc = doctors[0]
-                doc_id = doc.get("id")
-                profile = await get_doctor_profile_by_id(token, doc_id)
-                # Ưu tiên branchName nếu có, fallback branchId
-                branch = doc.get('branchName') or profile.get('branchName') or doc.get('branchId') or profile.get('branchId') or 'Không rõ'
-                reply = (
-                    f"<span class='emoji'>\U0001F468‍⚕️</span> <b>{doc.get('fullName','Không rõ')}</b><br>"
-                    f"<b>Chuyên khoa:</b> {doc.get('specialty', profile.get('specialty','Không rõ'))}<br>"
-                    f"<b>Học vị:</b> {doc.get('degree', profile.get('degree','Không rõ'))}<br>"
-                    f"<b>Chi nhánh:</b> {branch}<br>"
-                    f"<b>Email:</b> {doc.get('email','Không rõ')}<br>"
-                    f"<b>SĐT:</b> {doc.get('phoneNumber','Không rõ')}"
-                )
+            return ChatResponse(sessionId=req.sessionId, reply=reply, toolCall=None)
         except Exception as e:
             reply = f"Không lấy được thông tin bác sĩ: {e}"
         return ChatResponse(sessionId=req.sessionId, reply=reply, toolCall=None)
@@ -505,17 +533,18 @@ async def chat(req: ChatRequest, request: Request):
             return ChatResponse(sessionId=req.sessionId, reply=reply, toolCall=None)
 
     # ...existing code...
+    # Không dùng OpenAI fallback cho đặt lịch nữa, chỉ dùng intent logic phía trên
     system_prompt = (
-        "Bạn là trợ lý phòng khám, hỗ trợ bệnh nhân bằng tiếng Việt. "
-        "Không chẩn đoán y khoa; hướng dẫn liên hệ bác sĩ khi cần. "
-        "Chỉ thu thập thông tin tối thiểu để đặt lịch và xin sự đồng ý trước khi thu thập. "
-        "Nếu đủ thông tin, hãy gọi function 'appointment_create'."
-    )
+            "Bạn là trợ lý phòng khám, hỗ trợ bệnh nhân bằng tiếng Việt. "
+            "Không chẩn đoán y khoa; hướng dẫn liên hệ bác sĩ khi cần. "
+            "Chỉ thu thập thông tin tối thiểu để đặt lịch và xin sự đồng ý trước khi thu thập. "
+            "Nếu đủ thông tin, hãy gọi function 'appointment_create'."
+        )
 
     messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": req.message},
-    ]
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": req.message},
+        ]
 
     try:
         completion = await call_openai(messages)

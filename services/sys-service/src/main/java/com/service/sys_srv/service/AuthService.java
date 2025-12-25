@@ -237,6 +237,7 @@ public class AuthService {
         userDto.setBranchId(user.getBranchId());
         userDto.setSpecialty(user.getDoctorProfile().getSpecialty());
         userDto.setDegree(user.getDoctorProfile().getDegree());
+        userDto.setAvatarUrl(user.getAvatarUrl());
         return userDto;
     }
 
@@ -500,12 +501,16 @@ public class AuthService {
         return convertToDto(updatedUser);
     }
 
-    public List<UserSimpleDto> getDoctorsSimple() {
+        public List<UserSimpleDto> getDoctorsSimple() {
         return userRepository.findByRole(UserRole.doctor)
-                .stream()
-                .map(user -> new UserSimpleDto(user.getId(), user.getFullName()))
-                .collect(Collectors.toList());
-    }
+            .stream()
+            .map(user -> new UserSimpleDto(
+                user.getId(),
+                user.getFullName(),
+                user.getAvatarUrl()
+            ))
+            .collect(Collectors.toList());
+        }
 
     @Transactional
     public PatientProfile addPointsToPatient(UUID userId, int pointsToAdd) {
