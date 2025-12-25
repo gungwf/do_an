@@ -101,7 +101,12 @@
     <div *ngIf="authService.isAuthenticated()" class="dropdown text-end">
       <a href="#" class="d-block text-dark text-decoration-none dropdown-toggle"
          data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="bi bi-person-circle fs-4"></i>
+        <ng-container *ngIf="currentUser?.avatarUrl; else defaultUserIcon">
+          <img [src]="currentUser?.avatarUrl" alt="avatar" class="avatar-img-header" />
+        </ng-container>
+        <ng-template #defaultUserIcon>
+          <i class="bi bi-person-circle fs-4"></i>
+        </ng-template>
       </a>
       <ul class="dropdown-menu text-small dropdown-menu-end shadow-sm">
         <!-- ✅ NEW: Profile Link -->

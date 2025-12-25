@@ -21,13 +21,18 @@ import { ChatBubbleComponent } from '../../shared/components/chat-bubble/chat-bu
 })
 export class DoctorLayout {
   isSidebarCollapsed = false;
+  currentUser: import('../../core/services/auth').UserDto | null = null;
 
   constructor(
     public authService: AuthService,
     private toastr: ToastrService,
     private router: Router,
     private chatService: ChatService
-  ) {}
+  ) {
+    this.authService.getCurrentUser().subscribe(user => {
+      this.currentUser = user;
+    });
+  }
 
   ngOnInit(): void {
     // Kết nối WebSocket cho bác sĩ

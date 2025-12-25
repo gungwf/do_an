@@ -1,5 +1,13 @@
 @use '../admin-layout/admin-layout.scss' as admin;
-
+// Avatar in header
+.avatar-img-header {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: inline-block;
+  vertical-align: middle;
+}
 // Tùy chỉnh nhẹ khác biệt nếu cần (mặc định tái sử dụng toàn bộ kiểu admin)
 .sidebar .logo i {
   color: #3498db;

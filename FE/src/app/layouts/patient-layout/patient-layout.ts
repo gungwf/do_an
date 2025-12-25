@@ -32,6 +32,7 @@ import { ChatService } from '../../core/services/chat.service';
 export class PatientLayout {
   isAuthModalOpen = false;
   showCartPreview = false;
+  currentUser: import('../../core/services/auth').UserDto | null = null;
 
   constructor(
     public authService: AuthService,
@@ -39,7 +40,11 @@ export class PatientLayout {
     public router: Router,
     public cartService: CartService,
     private chatService: ChatService
-  ) {}
+  ) {
+    this.authService.getCurrentUser().subscribe(user => {
+      this.currentUser = user;
+    });
+  }
 
   ngOnInit(): void {
     // Kết nối WebSocket nếu user đã đăng nhập

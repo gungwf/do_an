@@ -18,12 +18,17 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class AdminLayout {
   isSidebarCollapsed = false;
+  currentUser: import('../../core/services/auth').UserDto | null = null;
 
   constructor(
     public authService: AuthService,
     private toastr: ToastrService,
     private router: Router
-  ) {}
+  ) {
+    this.authService.getCurrentUser().subscribe(user => {
+      this.currentUser = user;
+    });
+  }
 
   toggleSidebar() {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;

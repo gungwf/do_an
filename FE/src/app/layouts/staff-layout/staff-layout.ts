@@ -12,11 +12,16 @@ import { AuthService } from '../../core/services/auth';
 })
 export class StaffLayout {
   isSidebarCollapsed = false;
+  currentUser: import('../../core/services/auth').UserDto | null = null;
 
   constructor(
     public authService: AuthService,
     private router: Router
-  ) {}
+  ) {
+    this.authService.getCurrentUser().subscribe(user => {
+      this.currentUser = user;
+    });
+  }
 
   toggleSidebar(): void {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;
