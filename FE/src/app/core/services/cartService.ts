@@ -91,6 +91,10 @@ export class CartService {
   getTotalQuantity(): number {
     return this.cartItems.reduce((sum, item) => sum + item.quantity, 0);
   }
+  /** 🔢 Đếm số dòng sản phẩm (không quan tâm số lượng mỗi món) */
+  getProductCount(): number {
+    return this.cartItems.length;
+  }
 
   /** 💾 Lưu localStorage + thông báo */
   private saveCart(): void {

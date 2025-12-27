@@ -5,11 +5,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CheckoutDialog } from '../../../shared/components/checkout-dialog/checkout-dialog';
 import * as AOS from 'aos';
+import { RouterModule } from '@angular/router';
 @Component({
   selector: 'app-cart',
   standalone: true, 
   templateUrl: './cart.html',
   imports: [
+    RouterModule,
     CommonModule,
     FormsModule,
     CheckoutDialog

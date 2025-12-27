@@ -128,14 +128,24 @@ export class AppointmentBooking implements OnInit {
   }
 
   selectDoctor(doctor: DoctorDto) {
-    if (this.selectedDoctor?.id === doctor.id) return;
-    this.selectedDoctor = doctor;
-    this.selectedDate = null; 
-    this.selectedTime = null; 
-    this.availableSlots = []; 
+  if (this.selectedDoctor?.id === doctor.id) {
+    // Nếu đã chọn, bấm lại thì hủy chọn
+    this.selectedDoctor = null;
+    this.selectedDate = null;
+    this.selectedTime = null;
+    this.availableSlots = [];
     this.calendarDays = this.generateCalendarDays(7);
-    console.log("Đã chọn bác sĩ:", doctor);
+    console.log("Đã hủy chọn bác sĩ:", doctor);
+    return;
   }
+  // Chọn bác sĩ mới
+  this.selectedDoctor = doctor;
+  this.selectedDate = null; 
+  this.selectedTime = null; 
+  this.availableSlots = []; 
+  this.calendarDays = this.generateCalendarDays(7);
+  console.log("Đã chọn bác sĩ:", doctor);
+}
 
   generateCalendarDays(numberOfDays: number): { date: string, label: string, dayOfWeek: string }[] {
     const days = [];
