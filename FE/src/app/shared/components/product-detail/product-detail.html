@@ -1,0 +1,112 @@
+<div class="product-detail-overlay" *ngIf="visible" (click)="isEditing ? null : close()">
+  <div class="product-detail-dialog" (click)="$event.stopPropagation()">
+    
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner-border text-teal" role="status"></div>
+      <p>Đang xử lý dữ liệu...</p>
+    </div>
+
+    <div *ngIf="!isLoading && product">
+      <div class="dialog-header-custom">
+        <div class="header-info">
+          <i class="bi" [ngClass]="isEditing ? (productId ? 'bi-pencil-square' : 'bi-plus-circle-fill') : 'bi-capsule-pill'"></i>
+          <h4>
+            <ng-container *ngIf="productId">
+              {{ isEditing ? 'Chỉnh sửa sản phẩm' : 'Chi tiết sản phẩm' }}
+            </ng-container>
+            <ng-container *ngIf="!productId">
+              Thêm sản phẩm mới
+            </ng-container>
+          </h4>
+        </div>
+        <button class="btn-close-custom" (click)="close()" [disabled]="isLoading">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="dialog-body-custom">
+        <div class="row">
+          <div class="col-md-5">
+            <div class="image-wrapper">
+              <img [src]="product.imageUrl || 'assets/images/no-image.png'" class="product-img-main" alt="Product Image">
+              
+              <label class="btn-upload-overlay" *ngIf="isEditing">
+                <i class="bi bi-camera-fill"></i> {{ productId ? 'Thay ảnh' : 'Chọn ảnh' }}
+                <input type="file" (change)="onFileSelected($event)" hidden accept="image/*">
+              </label>
+            </div>
+
+            <div class="status-badge-container mt-3" *ngIf="!isEditing">
+              <span class="badge-status" [ngClass]="product.active ? 'active' : 'inactive'">
+                {{ product.active ? 'Đang kinh doanh' : 'Ngừng kinh doanh' }}
+              </span>
+            </div>
+            
+            <div class="form-group mt-3" *ngIf="isEditing">
+              <label>Trạng thái kinh doanh</label>
+              <select [(ngModel)]="product.active" class="input-edit">
+                <option [ngValue]="true">Đang kinh doanh</option>
+                <option [ngValue]="false">Ngừng kinh doanh</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="col-md-7">
+            <div class="info-form">
+              <div class="form-group">
+                <label>Tên sản phẩm <span class="text-danger" *ngIf="isEditing">*</span></label>
+                <input *ngIf="isEditing" type="text" [(ngModel)]="product.productName" class="input-edit" placeholder="Nhập tên sản phẩm...">
+                <h3 *ngIf="!isEditing" class="text-display title">{{ product.productName }}</h3>
+              </div>
+
+              <div class="row">
+                <div class="col-6">
+                  <div class="form-group">
+                    <label>Danh mục</label>
+                    <input *ngIf="isEditing" type="text" [(ngModel)]="product.category" class="input-edit" placeholder="VD: Tim mạch">
+                    <span *ngIf="!isEditing" class="text-display">{{ product.category || '---' }}</span>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="form-group">
+                    <label>Loại sản phẩm</label>
+                    <select *ngIf="isEditing" [(ngModel)]="product.productType" class="input-edit">
+                      <option value="MEDICINE">MEDICINE (Thuốc)</option>
+                      <option value="SUPPLY">SUPPLY (Vật tư)</option>
+                    </select>
+                    <span *ngIf="!isEditing" class="text-display">{{ product.productType }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group price-box">
+                <label>Giá bán lẻ (đ) <span class="text-danger" *ngIf="isEditing">*</span></label>
+                <input *ngIf="isEditing" type="number" [(ngModel)]="product.price" class="input-edit price-field">
+                <span *ngIf="!isEditing" class="text-display price">{{ product.price | number:'1.0-0' }} đ</span>
+              </div>
+
+              <div class="form-group">
+                <label>Mô tả chi tiết</label>
+                <textarea *ngIf="isEditing" [(ngModel)]="product.description" class="input-edit" rows="4" placeholder="Nhập mô tả sản phẩm..."></textarea>
+                <p *ngIf="!isEditing" class="text-display description">
+                  {{ product.description || 'Chưa có mô tả cho sản phẩm này.' }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dialog-footer-custom">
+        <button class="btn-cancel" (click)="isEditing && productId ? toggleEdit() : close()">
+          {{ isEditing ? 'Hủy bỏ' : 'Đóng' }}
+        </button>
+        
+        <button class="btn-save" (click)="isEditing ? saveProduct() : toggleEdit()">
+          <i class="bi" [ngClass]="isEditing ? 'bi-check-lg' : 'bi-pencil-square'"></i>
+          {{ isEditing ? (productId ? 'Lưu thông tin' : 'Tạo sản phẩm') : 'Chỉnh sửa' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
