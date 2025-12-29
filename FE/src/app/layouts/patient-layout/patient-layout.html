@@ -17,12 +17,19 @@
         </a>
       </li>
       <li class="nav-item">
-        <a (click)="handleProtectedLink('/appointments')" class="nav-link px-3 text-dark" style="cursor: pointer;">
+        <a (click)="handleProtectedLink('/appointments')" 
+          class="nav-link px-3 text-dark" 
+          [ngClass]="{'text-brand fw-semibold': router.url.includes('/appointments')}"
+          style="cursor: pointer;">
           Đặt lịch hẹn
         </a>
       </li>
+
       <li class="nav-item">
-        <a (click)="handleProtectedLink('/records')" class="nav-link px-3 text-dark" style="cursor: pointer;">
+        <a (click)="handleProtectedLink('/records')" 
+          class="nav-link px-3 text-dark" 
+          [ngClass]="{'text-brand fw-semibold': router.url.includes('/records')}"
+          style="cursor: pointer;">
           Hồ sơ bệnh án
         </a>
       </li>
@@ -35,11 +42,14 @@
          style="cursor: pointer;">
 
       <div class="cart-icon position-relative d-flex align-items-center" (click)="handleProtectedLink('/cart')">
-        <i class="bi bi-cart3 fs-4 text-brand"></i>
+  
+        <i class="bi bi-cart3 fs-4" 
+          [ngClass]="router.url.includes('/cart') ? 'text-brand' : 'text-dark'">
+        </i>
 
         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
               *ngIf="authService.isAuthenticated() && cartService.getTotalQuantity() > 0">
-          {{ cartService.getTotalQuantity() }}
+          {{ cartService.getProductCount() }}
         </span>
       </div>
 
