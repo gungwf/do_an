@@ -1,97 +1,222 @@
+// --- VARIABLES ---
+$primary-gradient: linear-gradient(135deg, #9C27B0 0%, #448AFF 100%);
+$user-bubble-gradient: linear-gradient(135deg, #AB47BC 0%, #5C6BC0 100%);
+$bg-color: #ffffff;
+$text-color: #333;
+$shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.15);
+
+// --- ROOT & BUBBLE BUTTON ---
+// --- ROOT ---
 .ai-chat-root {
   position: fixed;
   right: 20px;
-  bottom: 95px; 
+  
+  // 🔥 1. Đặt toàn bộ cụm này cách đáy 100px (để tránh chatbot kia)
+  bottom: 100px; 
+  
   z-index: 3000;
+
+  // 🔥 2. Quan trọng: Thiết lập vùng chứa để các con neo theo nó
+  width: 0; // Để width 0 để không chặn click chuột vào web bên dưới
+  height: 0;
+  overflow: visible; // Để nội dung bên trong hiển thị ra ngoài
 }
 
 .ai-bubble-btn {
-  width:60px;
-  height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(135deg,#0d6efd,#6610f2);
-  color: #fff;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 6px 18px rgba(13,110,253,0.18);
-}
-
-.ai-badge {
   position: absolute;
-  top: -6px;
-  right: -6px;
-  background: #dc3545;
-  color: #fff;
-  border-radius: 12px;
-  padding: 2px 6px;
-  font-size: 11px;
+  bottom: 0;
+  right: 0;
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: $primary-gradient;
+  color: #fff; border: none;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 20px rgba(156, 39, 176, 0.6);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+
+  &:hover { transform: scale(1.1); }
+  &.hidden { transform: scale(0); opacity: 0; pointer-events: none; }
+  
+  .ai-badge {
+    position: absolute; top: 0; right: 0;
+    background: #ff3d00; color: white;
+    border-radius: 10px; padding: 2px 6px; font-size: 10px; font-weight: bold;
+    border: 2px solid white;
+  }
 }
 
+// --- MAIN PANEL ---
 .ai-panel {
-  width: 320px;
-  max-height: 480px;
+  position: absolute;
+  bottom: 0; 
+  right: 0;
+  width: 350px;
+  height: 500px;
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  
+  display: flex; 
+  flex-direction: column;
   overflow: hidden;
-  margin-bottom: 10px;
+
+  // --- 🔥 LOGIC HIỆU ỨNG ĐÓNG/MỞ 🔥 ---
+  
+  // 1. Trạng thái ĐÓNG (Mặc định)
+  opacity: 0;
+  visibility: hidden; /* Dùng visibility để khi ẩn không bấm nhầm vào được */
+  transform: scale(0) translateY(60px); /* Thu nhỏ và tụt xuống dưới */
+  transform-origin: bottom right; /* Neo ở góc nút bấm */
+  
+  // 2. Thiết lập chuyển động mượt (cho cả lúc mở và đóng)
+  transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+
+  // 3. Trạng thái MỞ (Khi có class .open)
+  &.open {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1); /* Phóng to và về vị trí chuẩn */
+  }
 }
 
+@keyframes paperUnfold {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) translateY(60px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// 1. HEADER
 .ai-header {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  background: #fafafa;
+  background: $primary-gradient;
+  padding: 15px 20px;
+  display: flex; justify-content: space-between; align-items: center;
+  color: white;
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  flex-shrink: 0; z-index: 10;
+
+  .header-content {
+    display: flex; align-items: center; gap: 10px;
+    .avatar-circle {
+      width: 40px; height: 40px; background: rgba(255,255,255,0.2);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      i { font-size: 20px; }
+    }
+    .header-text {
+      display: flex; flex-direction: column;
+      strong { font-size: 16px; font-weight: 600; }
+      span { font-size: 11px; opacity: 0.9; }
+    }
+  }
+  .btn-close-custom {
+    background: transparent; border: none; color: white;
+    font-size: 18px; opacity: 0.8; cursor: pointer;
+    &:hover { opacity: 1; }
+  }
 }
 
+// 2. BODY
 .ai-body {
-  padding: 10px;
-  height: 340px;
+  flex: 1; padding: 20px;
+  background: #f9f9f9;
   overflow-y: auto;
-  background: #f8f9fa;
+  display: flex; flex-direction: column; gap: 12px;
+  scroll-behavior: smooth;
+
+  &::-webkit-scrollbar { width: 5px; }
+  &::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
+
+  .empty-state {
+    text-align: center; color: #999; margin-top: 50%; font-size: 14px;
+  }
+
+  .ai-msg {
+    display: flex; gap: 8px; max-width: 85%;
+    
+    // BOT STYLE
+    &.assistant {
+      align-self: flex-start;
+      .msg-avatar {
+        width: 28px; height: 28px; flex-shrink: 0;
+        background: $primary-gradient; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        color: white; font-size: 14px; margin-top: 2px;
+      }
+      .bubble {
+        background: white; color: #333;
+        padding: 10px 14px; border-radius: 16px 16px 16px 4px; // Nhọn góc dưới trái
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 14px; line-height: 1.5;
+        
+        // Style cho HTML render
+        ::ng-deep b { color: #673AB7; font-weight: 600; }
+        ::ng-deep a { color: #2196F3; text-decoration: none; font-weight: 500; }
+      }
+    }
+
+    // USER STYLE
+    &.user {
+      align-self: flex-end;
+      flex-direction: row-reverse; // Đảo chiều layout
+      .bubble {
+        background: $user-bubble-gradient; color: white;
+        padding: 10px 14px; border-radius: 16px 16px 4px 16px; // Nhọn góc dưới phải
+        box-shadow: 0 4px 10px rgba(103, 58, 183, 0.2); font-size: 14px;
+      }
+    }
+  }
+
+  // Typing animation
+  .typing span {
+    display: inline-block; width: 4px; height: 4px; background: #bbb; border-radius: 50%;
+    margin: 0 2px; animation: bounce 1.4s infinite ease-in-out both;
+  }
+  .typing span:nth-child(1) { animation-delay: -0.32s; }
+  .typing span:nth-child(2) { animation-delay: -0.16s; }
 }
 
-.ai-msg { margin-bottom: 8px; }
-.ai-msg.user { text-align: right; }
-.ai-msg.assistant { text-align: left; }
-.ai-msg .text {
-  display: inline-block;
-  padding: 10px 14px;
-  border-radius: 14px;
-  max-width: 85%;
-  font-size: 15px;
-  line-height: 1.6;
-  word-break: break-word;
-}
-.ai-msg.user .text {
-  background: #0d6efd;
-  color: #fff;
-}
-.ai-msg.assistant .text {
-  background: #fff;
-  color: #333;
-  border: 1px solid #e9ecef;
-}
-.ai-assistant-card {
-  background: #f8f9fa;
-  border: 1.5px solid #e0e0e0;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(13,110,253,0.06);
-  padding: 16px 18px;
-  margin: 2px 0 2px 0;
-  font-size: 15px;
-  color: #222;
-}
-/* Style for bold and emoji in assistant card */
-.ai-assistant-card b {
-  color: #0d6efd;
-  font-weight: 600;
-}
-.ai-assistant-card .emoji {
-  font-size: 20px;
-  margin-right: 4px;
-  vertical-align: middle;
-}
+@keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
-.ai-footer { padding: 8px; border-top: 1px solid #eee; background: #fff; }
+// 3. FOOTER
+.ai-footer {
+  padding: 12px 16px; background: white;
+  display: flex; align-items: flex-end; gap: 10px;
+  border-top: 1px solid #eee;
+
+  .input-pill {
+    flex: 1; background: #f0f2f5;
+    border-radius: 20px; padding: 8px 16px;
+    display: flex; align-items: center;
+    transition: background 0.2s;
+    &:focus-within { background: #eef0f3; box-shadow: 0 0 0 2px rgba(156, 39, 176, 0.1); }
+
+    textarea {
+      flex: 1; background: transparent; border: none; outline: none;
+      resize: none; max-height: 100px; font-size: 14px; padding: 4px 0;
+      color: #333; &::placeholder { color: #aaa; }
+    }
+  }
+
+  .btn-send {
+    width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%;
+    background: $primary-gradient; border: none; color: white;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 8px rgba(156, 39, 176, 0.3); cursor: pointer;
+    transition: transform 0.2s;
+    
+    i { font-size: 16px; margin-left: 2px; }
+    &:hover:not(:disabled) { transform: scale(1.05); }
+    &:disabled { background: #ddd; box-shadow: none; cursor: default; }
+  }
+}

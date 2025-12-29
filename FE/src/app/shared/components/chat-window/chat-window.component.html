@@ -1,155 +1,118 @@
 <div class="chat-window-container">
-  <!-- Header -->
-  <div class="chat-header">
-    <div class="header-content">
-      <button class="btn-back" *ngIf="currentView === 'chat'" (click)="backToRooms()">
-        <i class="bi bi-arrow-left"></i>
-      </button>
-      <h5 class="mb-0">
-        <span *ngIf="currentView === 'rooms'">
-          <i class="bi bi-chat-dots me-2"></i>Tin nhắn
-        </span>
-        <span *ngIf="currentView === 'chat' && selectedRoom">
-          {{ getRoomName(selectedRoom) }}
-          <small class="text-muted ms-2">
-            ({{ getOtherParticipantRole(selectedRoom) }})
-          </small>
-        </span>
-      </h5>
-      <button class="btn-close-chat" (click)="close()">
-        <i class="bi bi-x-lg"></i>
-      </button>
+  
+  <div *ngIf="currentView === 'rooms'" class="rooms-view">
+    <div class="main-header">
+      <h5><i class="bi bi-chat-dots-fill me-2"></i>Tin nhắn</h5>
+      <button class="btn-close-custom" (click)="close()"><i class="bi bi-x-lg"></i></button>
     </div>
-  </div>
 
-  <!-- Body -->
-  <div class="chat-body">
-    <!-- Danh sách rooms -->
-    <div *ngIf="currentView === 'rooms'" class="rooms-list">
+    <div class="rooms-list">
       <div *ngIf="isLoading" class="text-center p-4">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
+        <div class="spinner-border text-primary" role="status"></div>
       </div>
 
       <div *ngIf="!isLoading && rooms.length === 0" class="empty-state">
-        <i class="bi bi-chat-left-text"></i>
+        <img src="assets/images/no-chat.png" alt="" onerror="this.style.display='none'">
         <p>Chưa có cuộc hội thoại nào</p>
-        <small class="text-muted">
-          {{ userRole === 'PATIENT' ? 'Nhấn "Liên hệ ngay" từ danh sách bác sĩ để bắt đầu chat' : 'Bệnh nhân sẽ liên hệ với bạn khi cần' }}
-        </small>
       </div>
 
       <div class="room-item" *ngFor="let room of rooms" (click)="openRoom(room)">
         <div class="room-avatar">
-          <i class="bi" [class.bi-person-circle]="getOtherParticipantRole(room) === 'PATIENT'"
-                        [class.bi-hospital]="getOtherParticipantRole(room) === 'DOCTOR'"></i>
+          <i class="bi bi-person-fill"></i>
         </div>
         <div class="room-info">
-          <div class="room-name">
-            {{ getRoomName(room) }}
-            <span class="role-badge" [class.doctor]="getOtherParticipantRole(room) === 'DOCTOR'"
-                                    [class.patient]="getOtherParticipantRole(room) === 'PATIENT'">
-              {{ getOtherParticipantRole(room) }}
-            </span>
+          <div class="d-flex justify-content-between">
+            <span class="room-name">{{ getRoomName(room) }}</span>
+            <span class="room-time" *ngIf="room.lastMessage">{{ formatTime(room.lastMessage.createdAt) }}</span>
           </div>
-          <div class="room-last-message text-muted" *ngIf="room.lastMessage">
-            {{ room.lastMessage.content }}
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="room-last-message">{{ room.lastMessage?.content || '...' }}</span>
+            <span class="badge rounded-pill bg-danger" *ngIf="room.unreadCount">{{ room.unreadCount }}</span>
           </div>
-        </div>
-        <div class="room-meta">
-          <div class="room-time text-muted" *ngIf="room.lastMessage">
-            {{ formatTime(room.lastMessage.createdAt) }}
-          </div>
-          <span class="unread-count" *ngIf="room.unreadCount && room.unreadCount > 0">
-            {{ room.unreadCount }}
-          </span>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Cửa sổ chat -->
-    <div *ngIf="currentView === 'chat' && selectedRoom" class="chat-view">
-      <!-- Messages container -->
-      <div class="messages-container" #messagesContainer>
-        <div class="messages-container" #messagesContainer>
-          <div *ngIf="messages.length === 0" class="empty-messages">
-            <i class="bi bi-chat-square-dots"></i>
-            <p>Bắt đầu cuộc hội thoại</p>
-          </div>
+  <div *ngIf="currentView === 'chat' && selectedRoom" class="chat-view">
+    
+    <div class="chat-header">
+      <div class="header-left">
+        <button class="btn-back" (click)="backToRooms()">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <div class="avatar-circle">
+          <i class="bi bi-robot" *ngIf="getOtherParticipantRole(selectedRoom) === 'DOCTOR'"></i>
+          <i class="bi bi-person" *ngIf="getOtherParticipantRole(selectedRoom) !== 'DOCTOR'"></i>
+        </div>
+        <div class="header-info">
+          <h3>{{ getRoomName(selectedRoom) }}</h3>
+          <p>Đang hoạt động</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn-icon" (click)="close()"><i class="bi bi-dash-lg"></i></button>
+      </div>
+    </div>
 
-          <div
-            class="message"
-            *ngFor="let message of messages"
-            [class.my-message]="isMyMessage(message)"
-            [class.other-message]="!isMyMessage(message)">
-            
-            <div class="message-content">
-              <div class="sender-name" *ngIf="!isMyMessage(message)">
-                {{ getSenderName(message.senderId, message) }}
-              </div>
-              <div class="message-bubble">
-                {{ message.content }}
-              </div>
-              <div class="message-time">
-                {{ formatTime(message.createdAt) }}
-              </div>
-            </div>
-          </div>
-
-          <!-- 🔥 ANCHOR – QUAN TRỌNG -->
-          <div #bottomAnchor></div>
+    <div class="chat-body" #messagesContainer>
+      <div class="messages-wrapper">
+        <div *ngIf="messages.length === 0" class="empty-chat">
+          <p>Hãy bắt đầu cuộc trò chuyện...</p>
         </div>
 
-        <div *ngIf="messages.length === 0" class="empty-messages">
-          <i class="bi bi-chat-square-dots"></i>
-          <p>Bắt đầu cuộc hội thoại</p>
-        </div>
-
-        <div class="message" *ngFor="let message of messages" 
-             [class.my-message]="isMyMessage(message)"
-             [class.other-message]="!isMyMessage(message)"
-             [@messageAnim]>
+        <div *ngFor="let msg of messages" 
+             class="message-row"
+             [ngClass]="{'me': isMyMessage(msg), 'other': !isMyMessage(msg)}">
+          
           <div class="message-content">
-            <div class="sender-name" *ngIf="!isMyMessage(message)">
-              {{ getSenderName(message.senderId, message) }}
+            <small *ngIf="!isMyMessage(msg)" class="sender-name">
+              {{ getSenderName(msg.senderId, msg) }}
+            </small>
+
+            <div class="bubble">
+              {{ msg.content }}
             </div>
-            <div class="message-bubble">
-              {{ message.content }}
-            </div>
-            <div class="message-time">
-              {{ formatTime(message.createdAt) }}
-              <i class="bi bi-check2-all ms-1" *ngIf="isMyMessage(message) && message.read"></i>
-              <i class="bi bi-check2 ms-1" *ngIf="isMyMessage(message) && message.delivered && !message.read"></i>
+            
+            <span class="time">{{ formatTime(msg.createdAt) }}</span>
+          </div>
+        </div>
+
+        <div class="message-row other" *ngIf="isTyping">
+          <div class="message-content">
+            <div class="bubble typing">
+              <span></span><span></span><span></span>
             </div>
           </div>
         </div>
-        <!-- Typing indicator -->
-        <div class="typing-indicator" *ngIf="isTyping">
-          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-          <span class="typing-text">Đang nhập...</span>
+        
+        <div #bottomAnchor></div>
+      </div>
+    </div>
+
+    <div class="chat-footer">
+      <div class="input-pill">
+        <textarea 
+          #chatInput
+          rows="1"
+          placeholder="Nhập tin nhắn..."
+          [(ngModel)]="newMessage"
+          (input)="autoResize($event.target)"
+          (keydown)="onKeyDown($event)"
+          [disabled]="isSending"
+        ></textarea>
+        
+        <div class="actions">
+          <i class="bi bi-emoji-smile"></i>
+          <i class="bi bi-paperclip"></i>
         </div>
       </div>
 
-      <!-- Input area -->
-      <div class="input-area">
-        <div class="input-wrapper">
-          <input 
-            type="text" 
-            class="form-control message-input" 
-            placeholder="Nhập tin nhắn..."
-            [(ngModel)]="newMessage"
-            (input)="onInputChange()"
-            (keypress)="onKeyPress($event)"
-            [disabled]="isSending">
-          <button 
-            class="btn btn-primary btn-send" 
-            (click)="sendMessage()"
-            [disabled]="!newMessage.trim() || isSending">
-            <i class="bi bi-send-fill"></i>
-          </button>
-        </div>
-      </div>
+      <button class="btn-send-circle" (click)="sendMessage()" [disabled]="!newMessage.trim() || isSending">
+        <i class="bi bi-send-fill" *ngIf="!isSending"></i>
+        <div class="spinner-border spinner-border-sm" *ngIf="isSending"></div>
+      </button>
     </div>
+
   </div>
 </div>

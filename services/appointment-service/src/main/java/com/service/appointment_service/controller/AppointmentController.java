@@ -101,7 +101,7 @@ public class AppointmentController {
         return ResponseEntity.ok(updatedAppointment);
     }
 
-    @PatchMapping("/{id}/cancel")
+    @PutMapping("/{id}/cancel")
     public ResponseEntity<?> cancelAppointment(
             @PathVariable UUID id,
             Authentication authentication) {

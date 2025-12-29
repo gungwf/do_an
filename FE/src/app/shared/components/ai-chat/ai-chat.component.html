@@ -1,45 +1,77 @@
 <div class="ai-chat-root">
-  <button class="ai-bubble-btn" (click)="toggle()" aria-label="Open AI chat">
+  <button class="ai-bubble-btn" (click)="toggle()" aria-label="Open AI chat" [class.hidden]="isOpen">
     <i class="bi bi-robot fs-4"></i>
-
     <span class="ai-badge" *ngIf="!isOpen && messages.length > 0">{{ messages.length }}</span>
   </button>
 
-  <div class="ai-panel" *ngIf="isOpen">
-    <div class="ai-header d-flex align-items-center justify-content-between">
-      <div class="d-flex align-items-center">
-        <i class="bi bi-robot fs-5 me-2"></i>
-
-        <strong>Trợ lý phòng khám (AI)</strong>
+  <div class="ai-panel" [class.open]="isOpen">    
+    <div class="ai-header">
+      <div class="header-content">
+        <div class="avatar-circle">
+          <i class="bi bi-robot"></i>
+        </div>
+        <div class="header-text">
+          <strong>Trợ lý AI</strong>
+          <span>Luôn sẵn sàng hỗ trợ</span>
+        </div>
       </div>
-
-      <button class="btn btn-sm btn-light" (click)="toggle()">Đóng</button>
+      <button class="btn-close-custom" (click)="toggle()">
+        <i class="bi bi-chevron-down"></i>
+      </button>
     </div>
 
     <div class="ai-body" #body>
-      <div
-        *ngFor="let m of messages"
-        class="ai-msg"
-        [ngClass]="{ user: m.role === 'user', assistant: m.role === 'assistant' }"
-      >
-        <ng-container *ngIf="m.role === 'assistant'; else userMsg">
-          <div class="text ai-assistant-card" [innerHTML]="m.text"></div>
-        </ng-container>
-        <ng-template #userMsg>
-          <div class="text">{{ m.text }}</div>
-        </ng-template>
+      <div *ngIf="messages.length === 0" class="empty-state">
+        <p>👋 Xin chào! Tôi có thể giúp gì cho bạn?</p>
+      </div>
+
+      <div *ngFor="let m of messages" 
+           class="ai-msg"
+           [ngClass]="{ 'user': m.role === 'user', 'assistant': m.role === 'assistant' }">
+        
+        <div class="msg-avatar" *ngIf="m.role === 'assistant'">
+          <i class="bi bi-robot"></i>
+        </div>
+
+        <div class="msg-content">
+          <ng-container *ngIf="m.role === 'assistant'; else userText">
+             <div class="bubble assistant" [innerHTML]="m.text"></div>
+          </ng-container>
+          
+          <ng-template #userText>
+             <div class="bubble user">{{ m.text }}</div>
+          </ng-template>
+        </div>
+      </div>
+
+      <div class="ai-msg assistant" *ngIf="isSending">
+        <div class="msg-avatar"><i class="bi bi-robot"></i></div>
+        <div class="msg-content">
+          <div class="bubble assistant typing">
+            <span>.</span><span>.</span><span>.</span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="ai-footer d-flex">
-      <textarea
-        class="form-control form-control-sm me-2"
-        rows="1"
-        [(ngModel)]="newMessage"
-        (keydown.enter)="$event.preventDefault(); send()"
-      ></textarea>
+    <div class="ai-footer">
+      <div class="input-pill">
+        <textarea
+          #chatInput
+          rows="1"
+          placeholder="Hỏi gì đi..."
+          [(ngModel)]="newMessage"
+          (input)="autoResize($event.target)"
+          (keydown)="onKeyDown($event)"
+          [disabled]="isSending"
+        ></textarea>
+        </div>
 
-      <button class="btn btn-primary btn-sm" (click)="send()" [disabled]="isSending">Gửi</button>
+      <button class="btn-send" (click)="send()" [disabled]="!newMessage.trim() || isSending">
+        <i class="bi bi-send-fill" *ngIf="!isSending"></i>
+        <div class="spinner-border spinner-border-sm" *ngIf="isSending"></div>
+      </button>
     </div>
+
   </div>
 </div>
