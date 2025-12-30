@@ -102,14 +102,12 @@ async def handle_booking_intent(user_msg: str, token: str, session_id: str) -> T
     # 3. Trích xuất thông tin từ tin nhắn hiện tại (Fill in the blanks)
     
     # 3a. Thử tìm tên bác sĩ
-    # 3a. Thử tìm tên bác sĩ
     # Regex ưu tiên: "bác sĩ Hoa", "bs Minh"
     match_doc = re.search(r"(?:bác sĩ|bs|bác sỹ)\s+([\w .-]+?)(?:\s+(?:vào lúc|lúc|ngày|tại|chi nhánh)\b|[.,;!?]|$)", user_msg, re.IGNORECASE)
     if match_doc:
         state["doctor_name"] = match_doc.group(1).strip()
     
     # Logic fallback: Nếu user trả lời ngắn (VD: "Hoa", "Minh") thì coi là tên.
-    # [FIX] NHƯNG phải loại trừ các câu mệnh lệnh như "tôi muốn đặt lịch", "đặt khám nha"
     elif not state["doctor_name"]:
         # Chỉ nhận diện là tên nếu câu ngắn (<= 4 từ) VÀ không chứa số
         if len(user_msg.split()) <= 4 and not any(c.isdigit() for c in user_msg):

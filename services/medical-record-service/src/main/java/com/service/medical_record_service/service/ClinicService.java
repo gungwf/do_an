@@ -10,10 +10,13 @@ import com.service.medical_record_service.exception.AppException;
 import com.service.medical_record_service.exception.ERROR_CODE;
 import com.service.medical_record_service.repository.ServiceMaterialRepository;
 import com.service.medical_record_service.repository.ServiceRepository;
+
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.data.jpa.domain.Specification;
 
 @org.springframework.stereotype.Service
 @RequiredArgsConstructor
@@ -21,8 +24,28 @@ public class ClinicService {
     private final ServiceRepository serviceRepository;
     private final ServiceMaterialRepository serviceMaterialRepository;
 
-    public List<Service> getAllServices() {
-        return serviceRepository.findAll();
+    public List<Service> getAllServices(int page, int size, String search, String sortBy, String sortDir) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+                page, size,
+                sortDir.equalsIgnoreCase("desc") ? org.springframework.data.domain.Sort.by(sortBy).descending() : org.springframework.data.domain.Sort.by(sortBy).ascending()
+        );
+        Specification<Service> spec = (root, query, cb) -> {
+            if (search != null && !search.isEmpty()) {
+                String likePattern = "%" + search.toLowerCase() + "%";
+                Predicate namePredicate = cb.like(cb.lower(root.get("serviceName")), likePattern);
+                Predicate pricePredicate = cb.like(cb.toString(root.get("price")), likePattern);
+                return cb.or(namePredicate, pricePredicate);
+            }
+            return cb.conjunction();
+        };
+        if (serviceRepository instanceof org.springframework.data.jpa.repository.JpaSpecificationExecutor) {
+            org.springframework.data.jpa.repository.JpaSpecificationExecutor<Service> specRepo =
+                    (org.springframework.data.jpa.repository.JpaSpecificationExecutor<Service>) serviceRepository;
+            return specRepo.findAll(spec, pageable).getContent();
+        } else {
+            // fallback if not implemented
+            return serviceRepository.findAll(pageable).getContent();
+        }
     }
 
     public Service createService(Service service) {

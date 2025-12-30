@@ -1,5 +1,6 @@
 package com.service.medical_record_service.controller;
 
+import com.service.medical_record_service.dto.request.ServiceSearchRequest;
 import com.service.medical_record_service.dto.response.ServiceSimpleDto;
 import com.service.medical_record_service.entity.Service;
 import com.service.medical_record_service.service.ClinicService;
@@ -23,10 +24,12 @@ public class ServiceController {
         return ResponseEntity.ok(clinicService.createService(service));
     }
 
-    @GetMapping
-    public ResponseEntity<List<Service>> getAllServices() {
-        return ResponseEntity.ok(clinicService.getAllServices());
-    }
+        @PostMapping("/search")
+        public ResponseEntity<List<Service>> getAllServices(@RequestBody ServiceSearchRequest request) {
+        return ResponseEntity.ok(
+            clinicService.getAllServices(request.getPage(), request.getSize(), request.getSearch(), request.getSortBy(), request.getSortDir())
+        );
+        }
 
     @GetMapping("/{id}")
     public ResponseEntity<Service> getServiceById(@PathVariable UUID id) {
