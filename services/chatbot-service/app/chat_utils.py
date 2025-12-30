@@ -16,7 +16,6 @@ booking_states = {}
 # --- HELPER FUNCTIONS ---
 
 async def call_gateway_create_appointment(args: Dict[str, Any], token: str = "") -> Dict[str, Any]:
-    # (Giữ nguyên như cũ)
     url = f"{API_GATEWAY_URL}/appointments"
     headers = {"Authorization": f"Bearer {token}"} if token else {}
     if not args.get("doctorId") or not args.get("appointmentTime"):
@@ -35,7 +34,6 @@ async def call_gateway_create_appointment(args: Dict[str, Any], token: str = "")
         return appointment
 
 async def search_doctor_by_name(name: str, token: str) -> list:
-    # (Giữ nguyên như cũ)
     url = f"{API_GATEWAY_URL}/users/doctors/search"
     headers = {"Authorization": f"Bearer {token}"} if token else {}
     async with httpx.AsyncClient(timeout=30) as client:
@@ -43,7 +41,6 @@ async def search_doctor_by_name(name: str, token: str) -> list:
         return r.json().get("content", []) if r.status_code == 200 else []
 
 async def get_doctor_list(token: str) -> list:
-    # (Giữ nguyên như cũ)
     url = f"{API_GATEWAY_URL}/users/doctors/simple"
     headers = {"Authorization": f"Bearer {token}"} if token else {}
     async with httpx.AsyncClient(timeout=30) as client:
@@ -51,7 +48,6 @@ async def get_doctor_list(token: str) -> list:
         return r.json() if r.status_code == 200 else []
 
 def parse_booking_datetime(user_msg: str) -> Tuple[Optional[str], Optional[str]]:
-    # (Giữ nguyên logic Regex mới của bạn ở bước trước)
     user_msg = user_msg.lower()
     now = datetime.datetime.now()
     date_str, time_str = None, None
@@ -106,14 +102,25 @@ async def handle_booking_intent(user_msg: str, token: str, session_id: str) -> T
     # 3. Trích xuất thông tin từ tin nhắn hiện tại (Fill in the blanks)
     
     # 3a. Thử tìm tên bác sĩ
-    # Regex cũ: "bác sĩ Hoa"
-    match_doc = re.search(r"bác sĩ ([\w .-]+?)(?:\s+(?:vào lúc|lúc|ngày|tại|chi nhánh)\b|[.,;!?]|$)", user_msg, re.IGNORECASE)
+    # 3a. Thử tìm tên bác sĩ
+    # Regex ưu tiên: "bác sĩ Hoa", "bs Minh"
+    match_doc = re.search(r"(?:bác sĩ|bs|bác sỹ)\s+([\w .-]+?)(?:\s+(?:vào lúc|lúc|ngày|tại|chi nhánh)\b|[.,;!?]|$)", user_msg, re.IGNORECASE)
     if match_doc:
         state["doctor_name"] = match_doc.group(1).strip()
-    # Logic mới: Nếu đang thiếu bác sĩ mà user trả lời ngắn gọn (VD: "Hoa"), coi đó là tên bác sĩ
-    elif not state["doctor_name"] and len(user_msg.split()) <= 4 and not any(c.isdigit() for c in user_msg):
-        # Giả sử user trả lời tên khi được hỏi
-        state["doctor_name"] = user_msg.replace("bác sĩ", "").strip()
+    
+    # Logic fallback: Nếu user trả lời ngắn (VD: "Hoa", "Minh") thì coi là tên.
+    # [FIX] NHƯNG phải loại trừ các câu mệnh lệnh như "tôi muốn đặt lịch", "đặt khám nha"
+    elif not state["doctor_name"]:
+        # Chỉ nhận diện là tên nếu câu ngắn (<= 4 từ) VÀ không chứa số
+        if len(user_msg.split()) <= 4 and not any(c.isdigit() for c in user_msg):
+            potential_name = user_msg.replace("bác sĩ", "").replace("bs", "").strip()
+            
+            # Danh sách từ khóa cấm (Blocklist) - Nếu dính từ này thì KHÔNG PHẢI tên
+            forbidden_words = ["đặt", "lịch", "khám", "muốn", "tôi", "cho", "em", "anh", "chị", "ơi", "ad"]
+            
+            # Chỉ chấp nhận nếu KHÔNG chứa từ cấm nào
+            if not any(w in potential_name.lower() for w in forbidden_words):
+                state["doctor_name"] = potential_name
 
     # 3b. Thử tìm ngày và giờ
     d_new, t_new = parse_booking_datetime(user_msg)
@@ -238,67 +245,119 @@ async def handle_lookup_intent(user_msg: str, token: str) -> Optional[str]:
     if match_prod:
         keyword = match_prod.group(2).strip()
         try:
-            # Gọi API Search của bạn
             url = f"{API_GATEWAY_URL}/products/search"
-            # Payload giả định theo API search thông thường
-            payload = {"productName": keyword, "page": 0, "size": 5}
+            payload = {"productName": keyword, "page": 0, "size": 10} # Lấy nhiều hơn chút để lọc
             
+            headers = {}
+            if token:
+                headers = {"Authorization": f"Bearer {token}"}
+
             async with httpx.AsyncClient(timeout=30) as client:
-                # Nếu API search của bạn là GET thì đổi thành client.get(..., params=...)
-                r = await client.post(url, json=payload) 
+                r = await client.post(url, json=payload, headers=headers) 
+                # Nếu API trả về danh sách tất cả sản phẩm (do backend xử lý search chưa tốt)
+                # Ta cần lọc cứng ở đây
                 products = r.json().get('content', []) if r.status_code == 200 else []
 
-            # Lọc kết quả (Vì API search thường trả về cả những cái không liên quan lắm)
-            # Chúng ta ưu tiên cái nào chứa keyword user nhập
-            results = [p for p in products if keyword in normalize_str(p.get('productName', ''))]
+            # --- LOGIC LỌC NGHIÊM NGẶT ---
+            # Chỉ lấy sản phẩm mà tên có chứa từ khóa user nhập
+            key_norm = normalize_str(keyword)
+            results = [p for p in products if key_norm in normalize_str(p.get('productName', ''))]
             
-            # Nếu không tìm thấy bằng API search, thử lấy danh sách về lọc tay (nếu data ít)
-            if not results and products: 
-                results = products # Lấy tạm kết quả API trả về
+            # [QUAN TRỌNG] XÓA DÒNG FALLBACK CŨ: if not results and products: results = products
             
             if results:
-                html = f"<b>Tìm thấy {len(results)} sản phẩm liên quan '{keyword}':</b><br>"
-                for p in results[:3]: # Chỉ hiện 3 cái đầu
-                    price = f"{p.get('price', 0):,}".replace(",", ".") # Format tiền việt: 100.000
+                html = f"<b>Kết quả tìm kiếm '{keyword}':</b><br>"
+                for p in results[:3]: # Chỉ hiện 3 cái khớp nhất
+                    price = f"{p.get('price', 0):,}".replace(",", ".")
                     html += f"💊 <b>{p.get('productName')}</b> - {price}đ<br>"
                     desc = p.get('description')
                     if desc: html += f"<i>({desc[:50]}...)</i><br>"
                 return html
             else:
-                return f"Không tìm thấy thuốc/sản phẩm nào tên là '{keyword}'."
+                # Nếu lọc xong mà danh sách rỗng -> Báo không tìm thấy
+                return f"Không tìm thấy sản phẩm nào có tên chứa từ khóa '<b>{keyword}</b>'."
+
         except Exception as e:
              logging.error(f"Lỗi tra cứu thuốc: {e}")
+             return f"Lỗi hệ thống khi tra cứu thuốc."
 
     # ---------------------------------------------------------
-    # 3. TRA CỨU DỊCH VỤ (Service Search)
+    # 3. TRA CỨU DỊCH VỤ (NÂNG CẤP TÌM KIẾM THÔNG MINH)
     # ---------------------------------------------------------
-    # Regex bắt: "giá khám", "dịch vụ siêu âm", "giá chụp xquang"
-    if "dich vu" in msg_lower or "gia kham" in msg_lower or "chi phi" in msg_lower:
+    if any(k in msg_lower for k in ["dich vu", "gia kham", "chi phi", "bang gia"]):
         try:
-            # Lấy toàn bộ dịch vụ (hoặc search nếu có API search service)
+            headers = {}
+            if token:
+                headers = {"Authorization": f"Bearer {token}"}
+
             async with httpx.AsyncClient(timeout=30) as client:
-                r = await client.get(f"{API_GATEWAY_URL}/services")
+                r = await client.get(f"{API_GATEWAY_URL}/services", headers=headers)
                 services = r.json() if r.status_code == 200 else []
                 if isinstance(services, dict): services = services.get('content', [])
 
-            # Nếu user hỏi cụ thể: "giá siêu âm"
-            specific_key = user_msg.replace("giá", "").replace("dịch vụ", "").replace("chi phí", "").strip()
-            key_norm = normalize_str(specific_key)
+            # --- BƯỚC 1: LÀM SẠCH TỪ KHÓA ---
+            clean_msg = user_msg.lower()
+            # Xóa các từ nối để lại từ khóa chính (VD: "giá khám răng" -> "răng")
+            for w in ["giá dịch vụ", "dịch vụ", "giá khám", "chi phí", "bảng giá", "giá"]:
+                clean_msg = clean_msg.replace(w, "")
+            
+            keyword = clean_msg.strip()
+            key_norm = normalize_str(keyword)
+            
+            # Tách từ khóa thành các từ đơn (VD: "rang tong quat" -> ['rang', 'tong', 'quat'])
+            key_tokens = key_norm.split()
 
-            found = []
-            if len(key_norm) > 3: # Nếu từ khóa đủ dài mới search lọc
-                found = [s for s in services if key_norm in normalize_str(s.get('serviceName', ''))]
+            found_services = []
+
+            # --- BƯỚC 2: THUẬT TOÁN TÍNH ĐIỂM KHỚP (SCORING) ---
+            if not key_norm or len(key_norm) < 2:
+                # Nếu không có từ khóa (Hỏi chung chung) -> Lấy top 5
+                found_services = [(s, 0) for s in services[:5]]
+                header_text = "Bảng giá các dịch vụ phổ biến:"
             else:
-                # Nếu hỏi chung chung "giá dịch vụ", hiển thị vài cái tiêu biểu
-                found = services[:5]
+                header_text = f"Kết quả tìm kiếm '{keyword}':"
+                for s in services:
+                    s_name = s.get('serviceName', '')
+                    s_norm = normalize_str(s_name)
+                    
+                    # Logic 1: Tìm chính xác (Tuyệt đối)
+                    if key_norm in s_norm:
+                        found_services.append((s, 100)) # Điểm cao nhất
+                        continue
+                    
+                    # Logic 2: Tìm ngược (User tìm dài hơn tên dịch vụ)
+                    # VD: User tìm "Khám răng tổng quát", DB có "Khám răng" -> Khớp
+                    if len(s_norm) > 4 and s_norm in key_norm:
+                        found_services.append((s, 90)) # Điểm cao nhì
+                        continue
 
-            if found:
-                html = "<b>Bảng giá dịch vụ tham khảo:</b><br>"
-                for s in found[:5]:
+                    # Logic 3: Tìm theo từ khóa (Khớp từng từ)
+                    # Đếm xem có bao nhiêu từ của User xuất hiện trong tên Dịch vụ
+                    s_tokens = s_norm.split()
+                    matches = 0
+                    for k in key_tokens:
+                        if any(k in t for t in s_tokens): # k nằm trong t
+                            matches += 1
+                    
+                    # Nếu khớp trên 50% số từ khóa -> Chấp nhận
+                    if len(key_tokens) > 0 and (matches / len(key_tokens)) >= 0.5:
+                         found_services.append((s, matches * 10))
+
+                # Sắp xếp kết quả theo điểm số (cao xuống thấp)
+                found_services.sort(key=lambda x: x[1], reverse=True)
+
+            # --- BƯỚC 3: HIỂN THỊ ---
+            if found_services:
+                html = f"<b>{header_text}</b><br>"
+                # Chỉ lấy tối đa 5 kết quả tốt nhất
+                for item in found_services[:5]:
+                    s = item[0]
                     price = f"{s.get('price', 0):,}".replace(",", ".")
                     html += f"💉 {s.get('serviceName')}: <b>{price}đ</b><br>"
                 return html
+            else:
+                return f"Không tìm thấy dịch vụ nào liên quan đến '<b>{keyword}</b>'.<br><i>Gợi ý: Thử nhập từ khóa ngắn hơn (VD: 'răng', 'siêu âm').</i>"
+
         except Exception as e:
              logging.error(f"Lỗi tra cứu dịch vụ: {e}")
-
-    return None
+             return "Lỗi hệ thống tra cứu dịch vụ."

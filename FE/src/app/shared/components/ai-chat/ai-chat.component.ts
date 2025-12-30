@@ -44,6 +44,14 @@ export class AiChatComponent {
     textarea.style.height = textarea.scrollHeight + 'px';
   }
 
+  private focusInput(): void {
+    setTimeout(() => {
+      if (this.chatInput) {
+        this.chatInput.nativeElement.focus();
+      }
+    }, 10); // Delay nhỏ để đảm bảo DOM đã sẵn sàng
+  }
+
   onKeyDown(e: KeyboardEvent): void {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault(); // Ngăn xuống dòng
@@ -68,7 +76,7 @@ export class AiChatComponent {
     
     // Reset input về 1 dòng
     this.resetInputHeight();
-    
+    this.focusInput();
     this.isSending = true;
     this.scrollToBottom();
 
@@ -78,6 +86,7 @@ export class AiChatComponent {
         this.messages.push({ role: 'assistant', text: reply });
         this.isSending = false;
         this.scrollToBottom();
+        this.focusInput();
       },
       error: (err) => {
         console.error('AI chat error', err);

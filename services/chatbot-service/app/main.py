@@ -5,8 +5,6 @@ from pydantic import BaseModel
 from typing import Optional, Dict, Any
 import httpx
 
-# --- IMPORT FILE TIỆN ÍCH VỪA TẠO ---
-# Chú ý: import các hàm từ file chat_utils.py
 from chat_utils import (
     handle_booking_intent, 
     handle_lookup_intent, 
@@ -31,7 +29,7 @@ class ChatResponse(BaseModel):
     reply: str
     toolCall: Optional[Dict[str, Any]] = None
 
-# --- HÀM GỌI OPENAI (Giữ lại để xử lý câu hỏi chung) ---
+# --- HÀM GỌI OPENAI ---
 async def call_openai(messages: list) -> Dict[str, Any]:
     headers = {
         "Authorization": f"Bearer {OPENAI_API_KEY}",
@@ -40,7 +38,6 @@ async def call_openai(messages: list) -> Dict[str, Any]:
     payload = {
         "model": OPENAI_MODEL,
         "messages": messages,
-        # Vẫn giữ tool function calling để AI dùng nếu Regex trượt
         "tools": [{
             "type": "function",
             "function": {
@@ -70,13 +67,12 @@ async def chat(req: ChatRequest, request: Request):
 
     user_msg = req.message.strip().lower()
     
-    # Lấy token từ Header để xác thực người dùng
     auth_header = request.headers.get("authorization")
-    print(f"[MAIN DEBUG] Auth Header gốc: {auth_header}") # <--- Thêm dòng này
+    print(f"[MAIN DEBUG] Auth Header gốc: {auth_header}")
     token = auth_header[7:] if auth_header and auth_header.lower().startswith("bearer ") else ""
-    print(f"[MAIN DEBUG] Token đã cắt: '{token[:10]}...'") # <--- Thêm dòng này
+    print(f"[MAIN DEBUG] Token đã cắt: '{token[:10]}...'")
     # ---------------------------------------------------------
-    # 1. XỬ LÝ INTENT: DANH SÁCH BÁC SĨ (Ưu tiên cao nhất)
+    # 1. XỬ LÝ INTENT: DANH SÁCH BÁC SĨ
     # ---------------------------------------------------------
     if "danh sách bác sĩ" in user_msg or "list bác sĩ" in user_msg:
         docs = await get_doctor_list(token)
@@ -87,9 +83,8 @@ async def chat(req: ChatRequest, request: Request):
         return ChatResponse(sessionId=req.sessionId, reply=reply)
 
     # ---------------------------------------------------------
-    # 2. XỬ LÝ INTENT: ĐẶT LỊCH (Gọi hàm từ chat_utils)
+    # 2. XỬ LÝ INTENT: ĐẶT LỊCH
     # ---------------------------------------------------------
-    # Hàm này trả về (reply, tool_data) nếu bắt được thông tin đặt lịch
     book_reply, book_tool = await handle_booking_intent(user_msg, token, req.sessionId)
     if book_reply:
         return ChatResponse(sessionId=req.sessionId, reply=book_reply, toolCall=book_tool)
@@ -105,7 +100,7 @@ async def chat(req: ChatRequest, request: Request):
     # ---------------------------------------------------------
     system_prompt = (
         "Bạn là trợ lý phòng khám. Trả lời ngắn gọn tiếng Việt. "
-        "Nếu user muốn đặt lịch, hãy hỏi: Tên bác sĩ, Ngày, Giờ. "
+        "Nếu user muốn đặt lịch, hãy hỏi: Tên bác sĩ, Ngày, Giờ, Triệu chứng. "
         "Đừng tự bịa thông tin y tế."
     )
     messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": req.message}]
