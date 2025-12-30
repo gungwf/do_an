@@ -1,0 +1,200 @@
+.modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-container {
+  background: white;
+  width: 1000px; 
+  max-width: 95vw; 
+  max-height: 90vh;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden; 
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  padding: 20px 24px;
+  background: #f8fbfb;
+  border-bottom: 1px solid #eee;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-shrink: 0; 
+  h3 { 
+    margin: 0; color: #3fbbc0; font-weight: 700; 
+    display: flex; align-items: center; gap: 10px;
+    i { font-size: 1.4rem; }
+  }
+  .btn-close { border: none; background: none; font-size: 24px; cursor: pointer; color: #999; }
+}
+
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  overflow-x: hidden; 
+
+  .row {
+    margin: 0 -10px; 
+    display: flex;
+    flex-wrap: wrap; 
+  }
+
+  .col-md-6 {
+    padding: 0 10px; 
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+    label { display: block; margin-bottom: 6px; font-weight: 600; color: #555; }
+    input, select, textarea {
+      width: 100%; padding: 10px 12px;
+      border: 1px solid #ddd; border-radius: 8px; outline: none;
+      transition: border-color 0.2s;
+      &:focus { border-color: #3fbbc0; box-shadow: 0 0 0 3px rgba(63, 187, 192, 0.1); }
+      &:disabled { background: #f9f9f9; cursor: not-allowed; }
+    }
+  }
+}
+
+// Hộp thêm vật tư nhanh
+.material-add-box {
+  display: flex; 
+  gap: 8px; 
+  margin: 10px 0 20px 0;
+  align-items: center;
+
+  select { 
+    flex: 1; 
+    min-width: 0; 
+    padding: 10px; 
+    border-radius: 8px; 
+    border: 1px solid #ddd; 
+    height: 42px; // Đảm bảo chiều cao đồng nhất
+  }
+
+  input { 
+    width: 70px; 
+    height: 42px;
+    border: 1px solid #ddd; 
+    border-radius: 8px; 
+    padding: 0 5px; 
+    text-align: center;
+    flex-shrink: 0;
+  }
+  
+  // Nút thêm vật tư hình Ô VUÔNG (CẬP NHẬT MỚI)
+  .btn-add-item { 
+    background-color: #3fbbc0; // Màu Teal đồng bộ
+    color: white; 
+    border: none; 
+    width: 42px; 
+    height: 42px; 
+    border-radius: 8px; // Bo góc nhẹ để trông hiện đại hơn
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    flex-shrink: 0; 
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(63, 187, 192, 0.2);
+    
+    i {
+      font-size: 1.4rem;
+      line-height: 1;
+    }
+    
+    &:hover { 
+      background-color: #34a3a7; 
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(63, 187, 192, 0.3);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(63, 187, 192, 0.2);
+    }
+  }
+}
+
+.material-list {
+  border: 1px solid #edf2f2; border-radius: 12px; overflow: hidden;
+  max-height: 250px; overflow-y: auto;
+  width: 100%;
+  
+  .table {
+    width: 100%; 
+    margin: 0;
+    table-layout: fixed; 
+
+    th { 
+      background: #f8fbfb; padding: 12px; font-size: 0.85rem; color: #7f8c8d; border-bottom: 1px solid #eee; 
+    }
+    td { 
+      padding: 12px; border-bottom: 1px solid #f1f1f1; vertical-align: middle; 
+      word-wrap: break-word; 
+    }
+  }
+
+  .inline-input-edit { 
+    width: 50px; border: 1px solid #ddd; text-align: center; border-radius: 6px; padding: 4px;
+    &:focus { border-color: #3fbbc0; outline: none; }
+  }
+
+  .btn-delete-item { 
+    background: none; border: none; color: #e74c3c; cursor: pointer; padding: 5px;
+    border-radius: 6px; transition: background 0.2s;
+    &:hover { background: #fdedec; }
+  }
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #eee;
+  display: flex; justify-content: flex-end; gap: 12px;
+  flex-shrink: 0;
+
+  .btn-secondary { 
+    background: #f1f1f1; color: #555; border: none; padding: 10px 20px; 
+    border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s;
+    &:hover { background: #e5e5e5; }
+  }
+
+  .btn-primary { 
+    background: #3fbbc0; color: white; border: none; padding: 10px 25px; 
+    border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    &:hover { background: #34a3a7; transform: translateY(-1px); }
+  }
+
+  .btn-save-main {
+    background: linear-gradient(135deg, #3fbbc0 0%, #34a3a7 100%);
+    color: white; border: none; padding: 10px 25px; 
+    border-radius: 8px; font-weight: 600; cursor: pointer; 
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 4px 10px rgba(63, 187, 192, 0.2);
+    transition: all 0.2s;
+    &:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(63, 187, 192, 0.3); }
+    &:disabled { opacity: 0.7; cursor: not-allowed; }
+  }
+}
+
+@media (max-width: 850px) {
+  .modal-container { width: 98vw; }
+  .col-md-6 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+.text-teal { color: #3fbbc0 !important; }

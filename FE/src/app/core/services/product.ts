@@ -144,4 +144,10 @@ export class ProductService {
       { headers: this.getAuthHeaders() }
     );
   }
+  getProducts(): Observable<Product[]> {
+  return this.http.get<Product[]>(
+    this.BASE_URL,
+    { headers: this.getAuthHeaders() }
+  );
+  }
 }

@@ -1,0 +1,124 @@
+<div class="modal-backdrop" *ngIf="visible" (click)="close()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    
+    <div class="modal-header">
+      <h3>
+        <i class="bi" [ngClass]="mode === 'view' ? 'bi-eye' : (mode === 'edit' ? 'bi-pencil-square' : 'bi-plus-circle')"></i>
+        <ng-container [ngSwitch]="mode">
+          <span *ngSwitchCase="'view'">Chi tiết Dịch vụ</span>
+          <span *ngSwitchCase="'edit'">Chỉnh sửa Dịch vụ</span>
+          <span *ngSwitchDefault>Thêm Dịch vụ Mới</span>
+        </ng-container>
+      </h3>
+      <button class="btn-close" (click)="close()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div *ngIf="isLoading" class="text-center py-5">
+        <div class="spinner-border text-teal"></div>
+        <p class="mt-2 text-muted">Đang tải dữ liệu...</p>
+      </div>
+
+      <div class="row" *ngIf="!isLoading">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>Tên dịch vụ <span class="text-danger" *ngIf="mode !== 'view'">*</span></label>
+            <input type="text" [(ngModel)]="serviceData.serviceName" 
+                   [disabled]="mode === 'view'" 
+                   placeholder="Ví dụ: Khám răng tổng quát">
+          </div>
+          
+          <div class="form-group">
+            <label>Giá dịch vụ (VNĐ) <span class="text-danger" *ngIf="mode !== 'view'">*</span></label>
+            <input type="number" [(ngModel)]="serviceData.price" 
+                   [disabled]="mode === 'view'">
+          </div>
+
+          <div class="form-group">
+            <label>Trạng thái kinh doanh</label>
+            <select [(ngModel)]="serviceData.active" [disabled]="mode === 'view'">
+              <option [ngValue]="true">Đang hoạt động</option>
+              <option [ngValue]="false">Tạm dừng</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Mô tả dịch vụ</label>
+            <textarea rows="4" [(ngModel)]="serviceData.description" 
+                      [disabled]="mode === 'view'"
+                      placeholder="Nhập mô tả chi tiết về dịch vụ..."></textarea>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="fw-bold mb-2 d-block">Vật tư tiêu hao đi kèm</label>
+          
+          <div class="material-add-box mb-3" *ngIf="mode !== 'view'">
+            <select [(ngModel)]="selectedMaterialId" class="flex-grow-1">
+              <option value="">-- Chọn vật tư từ kho --</option>
+              <option *ngFor="let item of supplyProducts" [value]="item.id">
+                {{ item.productName }}
+              </option>
+            </select>
+            
+            <input type="number" [(ngModel)]="materialQuantity" class="quantity-input" min="1">
+            
+            <button class="btn-add-item" (click)="addMaterial()" title="Thêm vật tư">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </div>
+
+          <div class="material-list shadow-sm">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Tên vật tư</th>
+                  <th width="90" class="text-center">Số lượng</th>
+                  <th width="50" *ngIf="mode !== 'view'"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let m of serviceData.materials; let i = index">
+                  <td class="align-middle">{{ m.productName }}</td>
+                  <td class="text-center align-middle">
+                    <span *ngIf="mode === 'view'" class="fw-bold">{{ m.quantityConsumed }}</span>
+                    <input *ngIf="mode !== 'view'" type="number" 
+                           [(ngModel)]="m.quantityConsumed" 
+                           class="inline-input-edit" min="1">
+                  </td>
+                  <td class="text-end" *ngIf="mode !== 'view'">
+                    <button class="btn-delete-item" (click)="removeMaterial(i)" title="Xóa vật tư">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr *ngIf="serviceData.materials.length === 0">
+                  <td [attr.colspan]="mode === 'view' ? 2 : 3" class="text-center py-4 text-muted small">
+                    <i class="bi bi-info-circle me-1"></i> Chưa có vật tư nào được gán cho dịch vụ này
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="close()">
+        {{ mode === 'view' ? 'Đóng' : 'Hủy bỏ' }}
+      </button>
+
+      <button *ngIf="mode === 'view'" class="btn-primary" (click)="mode = 'edit'">
+        <i class="bi bi-pencil-square me-1"></i> Chỉnh sửa
+      </button>
+
+      <button *ngIf="mode !== 'view'" class="btn-save-main" (click)="save()" [disabled]="isLoading">
+        <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-1"></span>
+        <i class="bi bi-check-lg me-1" *ngIf="!isLoading"></i>
+        {{ mode === 'edit' ? 'Lưu thay đổi' : 'Tạo dịch vụ' }}
+      </button>
+    </div>
+
+  </div>
+</div>

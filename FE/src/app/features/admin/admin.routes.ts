@@ -5,6 +5,7 @@ import { BranchesComponent } from './branches/branches';
 import { AdminProducts } from './products/products';
 import { AdminAppointments } from './appointments/appointments';
 import { ProductManagement } from './product-management/product-management';
+import { ServiceManagement } from './service-management/service-management';
 
 export const ADMIN_ROUTES: Routes = [
   {
@@ -31,6 +32,10 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'product-management',
     component: ProductManagement,
+  },
+  {
+    path: 'service-management',
+    component: ServiceManagement,
   },
   {
     path: 'appointments',
