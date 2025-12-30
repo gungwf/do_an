@@ -1,7 +1,10 @@
 package com.service.medical_record_service.controller;
 
+import com.service.medical_record_service.dto.request.ServiceMaterialRequest;
 import com.service.medical_record_service.dto.request.ServiceSearchRequest;
+import com.service.medical_record_service.dto.request.UpdateServiceRequest;
 import com.service.medical_record_service.dto.response.ServiceSimpleDto;
+import com.service.medical_record_service.dto.response.ServiceWithMaterialsResponseDto;
 import com.service.medical_record_service.entity.Service;
 import com.service.medical_record_service.service.ClinicService;
 import lombok.RequiredArgsConstructor;
@@ -32,9 +35,11 @@ public class ServiceController {
         }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Service> getServiceById(@PathVariable UUID id) {
+    public ResponseEntity<?> getServiceById(@PathVariable UUID id) {
         try {
-            return ResponseEntity.ok(clinicService.getServiceById(id));
+            Service service = clinicService.getServiceById(id);
+            var materials = clinicService.getMaterialsForService(id);
+            return ResponseEntity.ok(new ServiceWithMaterialsResponseDto(service, materials));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -42,9 +47,25 @@ public class ServiceController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('admin')")
-    public ResponseEntity<Service> updateService(@PathVariable UUID id, @RequestBody Service serviceDetails) {
+    public ResponseEntity<?> updateService(@PathVariable UUID id, @RequestBody UpdateServiceRequest request) {
         try {
-            return ResponseEntity.ok(clinicService.updateService(id, serviceDetails));
+            Service serviceDetails = new Service();
+            serviceDetails.setServiceName(request.getServiceName());
+            serviceDetails.setDescription(request.getDescription());
+            serviceDetails.setPrice(request.getPrice());
+            serviceDetails.setActive(request.getActive() != null ? request.getActive() : true);
+            Service updatedService = clinicService.updateService(id, serviceDetails);
+            if (request.getMaterials() != null) {
+                for (var m : request.getMaterials()) {
+                    var materialRequest = new ServiceMaterialRequest();
+                    materialRequest.setServiceId(id);
+                    materialRequest.setProductId(m.getProductId());
+                    materialRequest.setQuantityConsumed(m.getQuantityConsumed());
+                    clinicService.updateMaterialInService(materialRequest);
+                }
+            }
+            var materials = clinicService.getMaterialsForService(id);
+            return ResponseEntity.ok(new com.service.medical_record_service.dto.response.ServiceWithMaterialsResponseDto(updatedService, materials));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

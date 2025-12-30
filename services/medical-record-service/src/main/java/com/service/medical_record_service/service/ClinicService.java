@@ -1,5 +1,6 @@
 package com.service.medical_record_service.service;
 
+import com.service.medical_record_service.client.client.ProductInventoryClient;
 import com.service.medical_record_service.dto.request.ServiceMaterialRequest;
 import com.service.medical_record_service.dto.response.ServiceMaterialResponseDto;
 import com.service.medical_record_service.dto.response.ServiceSimpleDto;
@@ -16,6 +17,10 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
 @org.springframework.stereotype.Service
@@ -23,11 +28,12 @@ import org.springframework.data.jpa.domain.Specification;
 public class ClinicService {
     private final ServiceRepository serviceRepository;
     private final ServiceMaterialRepository serviceMaterialRepository;
+    private final ProductInventoryClient productInventoryClient;
 
     public List<Service> getAllServices(int page, int size, String search, String sortBy, String sortDir) {
-        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+        Pageable pageable = PageRequest.of(
                 page, size,
-                sortDir.equalsIgnoreCase("desc") ? org.springframework.data.domain.Sort.by(sortBy).descending() : org.springframework.data.domain.Sort.by(sortBy).ascending()
+                sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending()
         );
         Specification<Service> spec = (root, query, cb) -> {
             if (search != null && !search.isEmpty()) {
@@ -87,13 +93,37 @@ public class ClinicService {
         return serviceMaterialRepository.save(material);
     }
 
+    public ServiceMaterial updateMaterialInService(ServiceMaterialRequest request) {
+        ServiceMaterialId id = new ServiceMaterialId();
+        id.setServiceId(request.getServiceId());
+        id.setProductId(request.getProductId());
+
+        ServiceMaterial material = serviceMaterialRepository.findById(id)
+            .orElse(new ServiceMaterial());
+        material.setId(id);
+        material.setQuantityConsumed(request.getQuantityConsumed());
+
+        return serviceMaterialRepository.save(material);
+    }
+
     public List<ServiceMaterialResponseDto> getMaterialsForService(UUID serviceId) {
         List<ServiceMaterial> materials = serviceMaterialRepository.findById_ServiceId(serviceId);
         return materials.stream()
-                .map(material -> new ServiceMaterialResponseDto(
-                        material.getId().getProductId(),
+                .map(material -> {
+                    var productId = material.getId().getProductId();
+                    String productName = null;
+                    try {
+                        var product = productInventoryClient.getProductById(productId);
+                        productName = product != null ? product.productName() : null;
+                    } catch (Exception e) {
+                        productName = null;
+                    }
+                    return new ServiceMaterialResponseDto(
+                        productId,
+                        productName,
                         material.getQuantityConsumed()
-                ))
+                    );
+                })
                 .collect(Collectors.toList());
     }
 
