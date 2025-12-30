@@ -1,0 +1,102 @@
+<div class="admin-page">
+  <div class="page-header mb-4">
+    <div class="header-content">
+      <div class="header-icon">
+        <i class="bi bi-box-seam"></i>
+      </div>
+      <div class="header-text">
+        <h2 class="page-title">Quản lý Sản phẩm</h2>
+        <p class="page-subtitle">Thêm mới, tìm kiếm và cập nhật thông tin sản phẩm trong hệ thống</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-action primary" (click)="addProduct()">
+          <i class="bi bi-plus-lg"></i> Thêm sản phẩm
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-card">
+    <div class="top-bar-custom mb-4">
+      <div class="search-box">
+        <i class="bi bi-search search-icon"></i>
+        <input 
+          type="text" 
+          class="form-control-custom"
+          placeholder="Tìm tên sản phẩm..."
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()"
+        >
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner-container">
+        <div class="spinner-border" role="status"></div>
+        <p>Đang tải dữ liệu...</p>
+      </div>
+    </div>
+
+    <div *ngIf="!isLoading">
+      <div class="table-container">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Ảnh</th>
+              <th>Tên sản phẩm</th>
+              <th class="col-actions text-center">Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of products">
+              <td>
+                <img [src]="p.imageUrl || p.image" alt="Ảnh" class="product-img-thumb">
+              </td>
+              <td class="product-name">{{ p.productName }}</td>
+              <td class="col-actions text-center">
+                <button class="btn-action-sm view" (click)="viewProduct(p)" title="Xem chi tiết">
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button class="btn-action-sm edit" (click)="editProduct(p)" title="Sửa">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn-action-sm delete" (click)="deleteProduct(p)" title="Xóa">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="products.length === 0">
+              <td colspan="3" class="text-center text-muted py-5">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                Chưa có dữ liệu sản phẩm phù hợp
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination-wrapper" *ngIf="totalPages > 1">
+        <div class="pagination-info">
+          <i class="bi bi-info-circle"></i>
+          Trang <strong>{{ page + 1 }}</strong> / <strong>{{ totalPages }}</strong>
+        </div>
+        <div class="pagination-controls">
+          <button class="btn-page" [disabled]="page === 0" (click)="prevPage()">
+            <i class="bi bi-chevron-left"></i> Trước
+          </button>
+          <button class="btn-page active">{{ page + 1 }}</button>
+          <button class="btn-page" [disabled]="page >= totalPages - 1" (click)="nextPage()">
+            Sau <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <app-product-detail 
+  [visible]="showDetail" 
+  [productId]="selectedProductId" 
+  (closed)="closeDetail()"
+  (updated)="onProductUpdated()">
+</app-product-detail>
+</div>

@@ -6,6 +6,7 @@ import { finalize } from 'rxjs';
 import { AppointmentResponseDto } from '../../../core/services/AppointmentService';
 import { ServiceDto, ServiceService } from '../../../core/services/service.service';
 import { CreateMedicalRecordDto, MedicalRecordService } from '../../../core/services/medical-record.service';
+import * as AOS from 'aos';
 
 @Component({
   selector: 'app-medical-record-form',

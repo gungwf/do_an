@@ -7,11 +7,21 @@ export interface Product {
   productName: string;
   description: string;
   price: number;
-  stockQuantity: number;
-  image?: string; // ✅ THÊM LẠI field này
-  imageUrl?: string; // ✅ Field từ backend
-  categoryName?: string;
+  
+  // Các trường mới từ API Chi tiết (Optional để tương thích code cũ)
+  createdAt?: string; 
+  updatedAt?: string;
+  productType?: string;
+  category?: string; 
+  active?: boolean;
+
+  // Các trường cũ/dự phòng
+  categoryName?: string; 
   categoryId?: string;
+  image?: string;
+  imageUrl?: string;
+  stockQuantity?: number;
+  quantity?: number; 
 }
 
 export interface ProductSearchResponse {
@@ -28,21 +38,28 @@ export interface ProductSearchResponse {
 export class ProductService {
   private BASE_URL = 'http://localhost:8080/products';
   private INVENTORY_URL = 'http://localhost:8080/inventory/branch';
+
   constructor(private http: HttpClient) {}
 
+  /**
+   * Header mặc định cho các request JSON
+   */
   private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('access_token');
-    if (token) {
-      return new HttpHeaders({
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      });
-    }
-    return new HttpHeaders({
+    const headersConfig: any = {
       'Content-Type': 'application/json'
-    });
+    };
+    
+    if (token) {
+      headersConfig['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return new HttpHeaders(headersConfig);
   }
 
+  /**
+   * Tìm kiếm sản phẩm phân trang (POST)
+   */
   searchProducts(body: any): Observable<ProductSearchResponse> {
     return this.http.post<ProductSearchResponse>(
       `${this.BASE_URL}/search`,
@@ -51,6 +68,9 @@ export class ProductService {
     );
   }
 
+  /**
+   * Lấy danh sách danh mục
+   */
   getCategories(): Observable<any[]> {
     return this.http.get<any[]>(
       `${this.BASE_URL}/categories`,
@@ -58,12 +78,59 @@ export class ProductService {
     );
   }
 
+  /**
+   * Lấy chi tiết một sản phẩm theo ID (GET)
+   */
   getProductById(id: string): Observable<Product> {
     return this.http.get<Product>(
       `${this.BASE_URL}/${id}`,
       { headers: this.getAuthHeaders() }
     );
   }
+
+  /**
+   * Cập nhật thông tin sản phẩm (PUT)
+   * Gửi dữ liệu dưới dạng JSON
+   */
+  updateProduct(id: string, product: Product): Observable<Product> {
+    return this.http.put<Product>(
+      `${this.BASE_URL}/${id}`,
+      product,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  /**
+   * Cập nhật hình ảnh sản phẩm (POST)
+   * Sử dụng FormData để gửi file vật lý (Multipart), khớp với Postman
+   */
+  uploadProductImage(id: string, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file); 
+
+    const token = localStorage.getItem('access_token');
+    // Quan trọng: Không set Content-Type để trình duyệt tự điền Boundary cho Multipart
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+
+    return this.http.post(
+      `${this.BASE_URL}/${id}/image`,
+      formData,
+      { headers: headers }
+    );
+  }
+  createProduct(product: Product): Observable<Product> {
+  return this.http.post<Product>(
+    this.BASE_URL,
+    product,
+    { headers: this.getAuthHeaders() }
+  );
+  }
+
+  /**
+   * Tìm kiếm tồn kho theo chi nhánh
+   */
   searchInventoryByBranch(body: {
     page: number;
     size: number;

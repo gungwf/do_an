@@ -4,6 +4,7 @@ import { AdminUsers } from './users/users';
 import { BranchesComponent } from './branches/branches';
 import { AdminProducts } from './products/products';
 import { AdminAppointments } from './appointments/appointments';
+import { ProductManagement } from './product-management/product-management';
 
 export const ADMIN_ROUTES: Routes = [
   {
@@ -26,6 +27,10 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'products',
     component: AdminProducts,
+  },
+  {
+    path: 'product-management',
+    component: ProductManagement,
   },
   {
     path: 'appointments',
