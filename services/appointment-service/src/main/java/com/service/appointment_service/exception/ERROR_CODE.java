@@ -22,7 +22,7 @@ public enum ERROR_CODE {
     APPOINTMENT_NOT_FOUND(3001, "Không tìm thấy lịch hẹn", HttpStatus.NOT_FOUND),
     APPOINTMENT_CONFLICT(3002, "Lịch hẹn bị trùng", HttpStatus.BAD_REQUEST),
     APPOINTMENT_NOT_COMPLETED(3003, "Lịch hẹn chưa hoàn thành", HttpStatus.BAD_REQUEST),
-    DOCTOR_BUSY(3004,"Doctor is already booked at this time.",HttpStatus.CONFLICT),
+    DOCTOR_BUSY(3004, "Lịch hẹn này đã có người đặt. Vui lòng chọn thời gian khác.", HttpStatus.CONFLICT),
     PATIENT_BUSY(3005,"Patient has an appointment at this time.",HttpStatus.CONFLICT),
     INVALID_STATUS(3006,"Invalid status.",HttpStatus.CONFLICT),
     USER_SERVICE_UNAVAILABLE(3007,"Cannot connect to user-service" ,HttpStatus.BAD_REQUEST ),

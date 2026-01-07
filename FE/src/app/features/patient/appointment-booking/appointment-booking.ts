@@ -270,14 +270,22 @@ export class AppointmentBooking implements OnInit {
       }),
       catchError(err => {
         this.isBooking = false;
-        
+
+        // Trường hợp API trả về text (ví dụ createPayment)
         if (err.status === 200 && err.error?.text && err.statusText === 'OK') {
-           console.warn('Lỗi parsing đã được xử lý (API trả về text), đang lấy URL từ text...');
-           return of(err.error.text);
+          console.warn('Lỗi parsing đã được xử lý (API trả về text), đang lấy URL từ text...');
+          return of(err.error.text);
         }
 
-        const errorMsg = err.error?.message || err.error?.error || err.message || 'Lỗi không xác định';
-        this.toastr.error(`Xử lý thất bại: ${errorMsg}`);
+        // Trường hợp đặt lịch lỗi: backend trả về chuỗi thuần (plain text)
+        let errorMsg: string;
+        if (typeof err?.error === 'string' && (err.status === 400 || err.status === 409)) {
+          errorMsg = err.error; // ví dụ: "Lịch hẹn này đã có người đặt. Vui lòng chọn thời gian khác."
+        } else {
+          errorMsg = err?.error?.message || err?.error?.error || err?.message || 'Lỗi không xác định';
+        }
+
+        this.toastr.error(errorMsg, 'Thất bại');
         console.error('Lỗi trong chuỗi đặt lịch/thanh toán:', err);
         return of(null);
       })
