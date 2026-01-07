@@ -65,7 +65,7 @@ public class ServiceController {
                 }
             }
             var materials = clinicService.getMaterialsForService(id);
-            return ResponseEntity.ok(new com.service.medical_record_service.dto.response.ServiceWithMaterialsResponseDto(updatedService, materials));
+            return ResponseEntity.ok(new ServiceWithMaterialsResponseDto(updatedService, materials));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

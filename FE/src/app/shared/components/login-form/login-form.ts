@@ -67,8 +67,8 @@ export class LoginForm {
             
             // ✅ Navigate based on role with FULL PATH
             if (this.authService.isAdmin()) {
-              console.log('🔄 Redirecting to /admin/dashboard');
-              this.router.navigate(['/admin/dashboard']);
+              console.log('🔄 Redirecting to /admin/users');
+              this.router.navigate(['/admin/users']);
             } else if (this.authService.isDoctor()) {
               console.log('🔄 Redirecting to /doctor/dashboard');
               this.router.navigate(['/doctor/dashboard']);
@@ -84,7 +84,7 @@ export class LoginForm {
             console.error('❌ Error loading user info:', err);
             // Still navigate even if user info fails
             if (this.authService.isAdmin()) {
-              this.router.navigate(['/admin/dashboard']);
+              this.router.navigate(['/admin/users']);
             } else if (this.authService.isDoctor()) {
               this.router.navigate(['/doctor/dashboard']);
             } else if (this.authService.isStaff()) {

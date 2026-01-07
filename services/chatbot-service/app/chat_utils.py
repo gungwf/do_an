@@ -172,7 +172,7 @@ async def handle_booking_intent(user_msg: str, token: str, session_id: str) -> T
         
         reply = f"<b>Đã đặt lịch thành công với BS {doc.get('fullName')}!</b><br>Thời gian: {state['time_str']} - {state['date_str']}"
         if result.get('paymentLink'):
-            reply += f"<br>Vui lòng thanh toán tại: <a href='{result['paymentLink']}' target='_blank'>Link này</a>"
+            reply += f"<br>Vui lòng thanh toán tại: <a href='{result['paymentLink']}' target='_blank'>Link này</a> để xác nhận lịch hẹn"
             
         return reply, {"name": "appointment_create", "result": result}
 
