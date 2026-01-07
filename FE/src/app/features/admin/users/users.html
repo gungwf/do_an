@@ -137,7 +137,7 @@
       <table class="appointments-table">
         <thead>
           <tr>
-            <th>ID</th>
+            <th>STT</th>
             <th>Họ tên</th>
             <th>Email</th>
             <th>Số điện thoại</th>
@@ -146,8 +146,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let user of patients">
-            <td>{{ user.id }}</td>
+          <tr *ngFor="let user of patients; let i = index">
+            <td>{{ (currentPage * pageSize) + i + 1 }}</td>
             <td>{{ user.fullName }}</td>
             <td>{{ user.email }}</td>
             <td>{{ user.phoneNumber }}</td>
@@ -163,11 +163,7 @@
             </td>
             <td class="actions-cell text-center">
               <div class="action-buttons">
-                <button class="btn-action view" (click)="openDetailModal(user.id)" title="Xem chi tiết">
-                  <i class="bi bi-eye"></i>
-                  Xem
-                </button>
-                <button class="btn-action edit" title="Sửa">
+                <button class="btn-action edit" (click)="openEditModal(user)" title="Sửa">
                   <i class="bi bi-pencil"></i>
                   Sửa
                 </button>
@@ -208,7 +204,7 @@
       <table class="appointments-table">
         <thead>
           <tr>
-            <th>ID</th>
+            <th>STT</th>
             <th>Họ tên</th>
             <th>Email</th>
             <th>Số điện thoại</th>
@@ -220,8 +216,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let user of doctors">
-            <td>{{ user.id }}</td>
+          <tr *ngFor="let user of doctors; let i = index">
+            <td>{{ (currentPage * pageSize) + i + 1 }}</td>
             <td>{{ user.fullName }}</td>
             <td>{{ user.email }}</td>
             <td>{{ user.phoneNumber }}</td>
@@ -240,11 +236,7 @@
             </td>
             <td class="actions-cell text-center">
               <div class="action-buttons">
-                <button class="btn-action view" (click)="openDetailModal(user.id)" title="Xem chi tiết">
-                  <i class="bi bi-eye"></i>
-                  Xem
-                </button>
-                <button class="btn-action edit" title="Sửa">
+                <button class="btn-action edit" (click)="openEditModal(user)" title="Sửa">
                   <i class="bi bi-pencil"></i>
                   Sửa
                 </button>
@@ -285,7 +277,7 @@
       <table class="appointments-table">
         <thead>
           <tr>
-            <th>ID</th>
+            <th>STT</th>
             <th>Họ tên</th>
             <th>Email</th>
             <th>Số điện thoại</th>
@@ -295,8 +287,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let user of clinicStaff">
-            <td>{{ user.id }}</td>
+          <tr *ngFor="let user of clinicStaff; let i = index">
+            <td>{{ (currentPage * pageSize) + i + 1 }}</td>
             <td>{{ user.fullName }}</td>
             <td>{{ user.email }}</td>
             <td>{{ user.phoneNumber }}</td>
@@ -313,11 +305,7 @@
           </td>
             <td class="actions-cell text-center">
               <div class="action-buttons">
-                <button class="btn-action view" (click)="openDetailModal(user.id)" title="Xem chi tiết">
-                  <i class="bi bi-eye"></i>
-                  Xem
-                </button>
-                <button class="btn-action edit" title="Sửa">
+                <button class="btn-action edit" (click)="openEditModal(user)" title="Sửa">
                   <i class="bi bi-pencil"></i>
                   Sửa
                 </button>
@@ -452,6 +440,88 @@
     </div>
   </div>
 </div>
+
+<!-- Edit User Modal -->
+<div *ngIf="showEditModal" class="modal-backdrop fade show"></div>
+<div
+  *ngIf="showEditModal"
+  class="modal fade show"
+  style="display: block"
+  tabindex="-1"
+  role="dialog"
+>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cập nhật người dùng</h5>
+        <button type="button" class="btn-close" (click)="closeEditModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="editUserForm">
+          <div class="mb-3">
+            <label class="form-label">Họ tên *</label>
+            <input
+              type="text"
+              class="form-control"
+              formControlName="fullName"
+              [class.is-invalid]="editUserForm.get('fullName')?.invalid && editUserForm.get('fullName')?.touched"
+            />
+            <div *ngIf="editUserForm.get('fullName')?.invalid && editUserForm.get('fullName')?.touched" class="invalid-feedback">
+              Vui lòng nhập họ tên
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Số điện thoại *</label>
+            <input
+              type="text"
+              class="form-control"
+              formControlName="phoneNumber"
+              [class.is-invalid]="editUserForm.get('phoneNumber')?.invalid && editUserForm.get('phoneNumber')?.touched"
+            />
+            <div *ngIf="editUserForm.get('phoneNumber')?.invalid && editUserForm.get('phoneNumber')?.touched" class="invalid-feedback">
+              Vui lòng nhập số điện thoại
+            </div>
+          </div>
+
+          <div *ngIf="activeTab === 'staff'" class="mb-3">
+            <label class="form-label">Chi nhánh *</label>
+            <select
+              class="form-select"
+              formControlName="branchId"
+              [class.is-invalid]="editUserForm.get('branchId')?.invalid && editUserForm.get('branchId')?.touched"
+            >
+              <option value="">Chọn chi nhánh</option>
+              <option *ngFor="let branch of branches" [value]="branch.id">
+                {{ branch.branchName || branch.name }}
+              </option>
+            </select>
+            <div *ngIf="editUserForm.get('branchId')?.invalid && editUserForm.get('branchId')?.touched" class="invalid-feedback">
+              Vui lòng chọn chi nhánh
+            </div>
+          </div>
+          <div *ngIf="activeTab === 'staff' && activeStaffType === 'doctors'" class="mb-3">
+            <label class="form-label">Chuyên khoa</label>
+            <input type="text" class="form-control" formControlName="specialty" placeholder="Nhập chuyên khoa" />
+          </div>
+          <div *ngIf="activeTab === 'staff' && activeStaffType === 'doctors'" class="mb-3">
+            <label class="form-label">Chứng chỉ</label>
+            <input type="text" class="form-control" formControlName="degree" placeholder="Nhập chứng chỉ" />
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeEditModal()" [disabled]="isSubmittingEdit">
+          Đóng
+        </button>
+        <button type="button" class="btn btn-primary" (click)="onSubmitEditUser()" [disabled]="isSubmittingEdit">
+          <span *ngIf="isSubmittingEdit" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          <span *ngIf="!isSubmittingEdit">Lưu</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 <div *ngIf="showPatientModal" class="modal-backdrop fade show"></div>
 
 <!-- Staff Modal -->
@@ -466,7 +536,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-          {{ staffForm.get('role')?.value === 'DOCTOR' ? 'Thêm Bác sĩ' : 'Thêm Nhân viên phòng khám' }}
+          {{ staffForm.get('role')?.value === 'doctor' ? 'Thêm Bác sĩ' : 'Thêm Nhân viên phòng khám' }}
         </h5>
         <button
           type="button"
@@ -555,24 +625,6 @@
               Vui lòng chọn chi nhánh
             </div>
           </div>
-          <div *ngIf="staffForm.get('role')?.value === 'DOCTOR'" class="mb-3">
-            <label class="form-label">Chuyên khoa</label>
-            <input
-              type="text"
-              class="form-control"
-              formControlName="specialty"
-              placeholder="Vd: Tim mạch, Hô hấp..."
-            />
-          </div>
-          <div *ngIf="staffForm.get('role')?.value === 'DOCTOR'" class="mb-3">
-            <label class="form-label">Chứng chỉ</label>
-            <input
-              type="text"
-              class="form-control"
-              formControlName="certificate"
-              placeholder="Vd: BS-12345..."
-            />
-          </div>
         </form>
       </div>
       <div class="modal-footer">
@@ -619,10 +671,6 @@
         </div>
         <div *ngIf="!isLoadingDetail && selectedUser">
           <div class="row g-3">
-            <div class="col-md-6">
-              <strong>ID:</strong>
-              <p>{{ selectedUser.id }}</p>
-            </div>
             <div class="col-md-6">
               <strong>Họ tên:</strong>
               <p>{{ selectedUser.fullName }}</p>

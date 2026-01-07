@@ -80,6 +80,12 @@ public class UserController {
         return ResponseEntity.ok(authService.updateUser(id, request));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
+        authService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/doctors/simple")
     public ResponseEntity<List<UserSimpleDto>> getDoctorsSimple() {
         return ResponseEntity.ok(authService.getDoctorsSimple());

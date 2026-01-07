@@ -82,6 +82,13 @@ public class AuthService {
     }
 
     @Transactional
+    public void deleteUser(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ERROR_CODE.USER_NOT_FOUND));
+        userRepository.delete(user);
+    }
+
+    @Transactional
     public User registerPatient(RegisterRequest request) {
         User savedUser = registerUser(request, UserRole.patient);
         PatientProfile newProfile = new PatientProfile();

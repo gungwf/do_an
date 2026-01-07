@@ -60,8 +60,11 @@ export class AdminUsers implements OnInit, OnDestroy {
   showPatientModal = false;
   showStaffModal = false;
   showDetailModal = false;
+  showEditModal = false;
   selectedUser: any = null;
   isLoadingDetail = false;
+  isSubmittingEdit = false;
+  private editingUserId: string | null = null;
 
   // Search Forms
   searchForm = new FormGroup({
@@ -83,15 +86,21 @@ export class AdminUsers implements OnInit, OnDestroy {
     phoneNumber: new FormControl('', [Validators.required]),
   });
 
+  editUserForm = new FormGroup({
+    fullName: new FormControl('', [Validators.required]),
+    phoneNumber: new FormControl('', [Validators.required]),
+    branchId: new FormControl(''),
+    specialty: new FormControl(''),
+    degree: new FormControl(''),
+  });
+
   staffForm = new FormGroup({
     fullName: new FormControl('', [Validators.required]),
     email: new FormControl('', [Validators.required, Validators.email]),
     password: new FormControl('', [Validators.required, Validators.minLength(6)]),
     phoneNumber: new FormControl('', [Validators.required]),
     branchId: new FormControl('', [Validators.required]),
-    specialty: new FormControl(''), // Chỉ cho bác sĩ
-    certificate: new FormControl(''), // Chỉ cho bác sĩ
-    role: new FormControl('', [Validators.required]), // DOCTOR hoặc CLINIC_STAFF
+    role: new FormControl('', [Validators.required]), // doctor hoặc staff
   });
 
   private apiUrl = 'http://localhost:8080';
@@ -100,6 +109,88 @@ export class AdminUsers implements OnInit, OnDestroy {
     private http: HttpClient,
     private toastr: ToastrService
   ) {}
+
+  openEditModal(user: any): void {
+    this.editingUserId = user?.id || null;
+    if (!this.editingUserId) {
+      this.toastr.error('Không tìm thấy ID người dùng để sửa.');
+      return;
+    }
+
+    // Branch chỉ áp dụng cho staff/doctor
+    if (this.activeTab === 'staff') {
+      this.editUserForm.get('branchId')?.setValidators([Validators.required]);
+    } else {
+      this.editUserForm.get('branchId')?.clearValidators();
+    }
+    this.editUserForm.get('branchId')?.updateValueAndValidity();
+
+
+    this.editUserForm.reset({
+      fullName: user.fullName || '',
+      phoneNumber: user.phoneNumber || '',
+      branchId: user.branchId || '',
+      specialty: (this.activeStaffType === 'doctors' ? user.specialty || '' : ''),
+      degree: (this.activeStaffType === 'doctors' ? user.degree || '' : ''),
+    });
+
+    this.showEditModal = true;
+  }
+
+  closeEditModal(): void {
+    if (this.isSubmittingEdit) return;
+    this.showEditModal = false;
+    this.editingUserId = null;
+    this.editUserForm.reset();
+  }
+
+  onSubmitEditUser(): void {
+    if (!this.editingUserId) {
+      this.toastr.error('Không tìm thấy ID người dùng để cập nhật.');
+      return;
+    }
+
+    if (this.editUserForm.invalid) {
+      this.editUserForm.markAllAsTouched();
+      return;
+    }
+
+    const formValue = this.editUserForm.value;
+
+
+    const payload: any = {
+      fullName: (formValue.fullName || '').trim(),
+      phoneNumber: (formValue.phoneNumber || '').trim(),
+    };
+    if (this.activeTab === 'staff') {
+      payload.branchId = formValue.branchId || null;
+      if (this.activeStaffType === 'doctors') {
+        payload.specialty = (formValue.specialty || '').trim();
+        payload.degree = (formValue.degree || '').trim();
+      }
+    }
+
+    this.isSubmittingEdit = true;
+    this.http.put(`${this.apiUrl}/users/${this.editingUserId}`, payload).subscribe({
+      next: () => {
+        this.toastr.success('Cập nhật người dùng thành công!');
+        this.isSubmittingEdit = false;
+        this.closeEditModal();
+        if (this.activeTab === 'patients') {
+          this.loadPatients();
+        } else if (this.activeStaffType === 'doctors') {
+          this.loadDoctors();
+        } else {
+          this.loadClinicStaff();
+        }
+      },
+      error: (err) => {
+        console.error('Error updating user:', err);
+        this.toastr.error('Không thể cập nhật người dùng. Vui lòng thử lại.');
+        this.isSubmittingEdit = false;
+      },
+    });
+  }
 
   ngOnInit(): void {
     this.loadBranches();
@@ -331,7 +422,7 @@ export class AdminUsers implements OnInit, OnDestroy {
   openStaffModal(type: 'doctors' | 'clinic-staff'): void {
     this.staffForm.reset();
     this.staffForm.patchValue({
-      role: type === 'doctors' ? 'DOCTOR' : 'CLINIC_STAFF',
+      role: type === 'doctors' ? 'doctor' : 'staff',
     });
     this.showStaffModal = true;
   }
@@ -344,7 +435,7 @@ export class AdminUsers implements OnInit, OnDestroy {
   onSubmitPatient(): void {
     if (this.patientForm.valid) {
       const formData = this.patientForm.value;
-      this.http.post(`${this.apiUrl}/auth/register/patient`, formData).subscribe({
+      this.http.post(`${this.apiUrl}/auth/register/patient`, formData, { responseType: 'text' }).subscribe({
         next: () => {
           this.toastr.success('Thêm bệnh nhân thành công!');
           this.closePatientModal();
@@ -352,7 +443,8 @@ export class AdminUsers implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Error adding patient:', err);
-          this.toastr.error('Không thể thêm bệnh nhân. Vui lòng thử lại.');
+          const message = typeof err?.error === 'string' && err.error.trim() ? err.error : 'Không thể thêm bệnh nhân. Vui lòng thử lại.';
+          this.toastr.error(message);
         },
       });
     } else {
@@ -362,8 +454,16 @@ export class AdminUsers implements OnInit, OnDestroy {
 
   onSubmitStaff(): void {
     if (this.staffForm.valid) {
-      const formData = this.staffForm.value;
-      this.http.post(`${this.apiUrl}/auth/register/staff`, formData).subscribe({
+      const formValue = this.staffForm.value;
+      const payload = {
+        fullName: formValue.fullName,
+        email: formValue.email,
+        password: formValue.password,
+        phoneNumber: formValue.phoneNumber,
+        branchId: formValue.branchId,
+        role: formValue.role,
+      };
+      this.http.post(`${this.apiUrl}/auth/register/staff`, payload, { responseType: 'text' }).subscribe({
         next: () => {
           this.toastr.success('Thêm nhân viên thành công!');
           this.closeStaffModal();
@@ -375,7 +475,8 @@ export class AdminUsers implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Error adding staff:', err);
-          this.toastr.error('Không thể thêm nhân viên. Vui lòng thử lại.');
+          const message = typeof err?.error === 'string' && err.error.trim() ? err.error : 'Không thể thêm nhân viên. Vui lòng thử lại.';
+          this.toastr.error(message);
         },
       });
     } else {

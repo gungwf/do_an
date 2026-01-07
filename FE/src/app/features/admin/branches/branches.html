@@ -29,7 +29,7 @@
         <table class="appointments-table">
           <thead>
             <tr>
-              <th class="col-id">ID</th>
+              <th class="col-id">STT</th>
               <th>Tên chi nhánh</th>
               <th>Địa chỉ</th>
               <th>Số điện thoại</th>
@@ -38,8 +38,8 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let branch of branches">
-              <td class="col-id" style="max-width: 220px;">{{ branch.id }}</td>
+            <tr *ngFor="let branch of branches; let i = index">
+              <td class="col-id">{{ i + 1 }}</td>
               <td>{{ branch.branchName }}</td>
               <td>{{ branch.address }}</td>
               <td>{{ branch.phoneNumber }}</td>
@@ -51,9 +51,6 @@
               </td>
               <td class="col-actions text-center">
                 <div class="action-buttons">
-                  <button class="btn-action view" (click)="openDetailModal(branch)" title="Xem chi tiết">
-                    <i class="bi bi-eye"></i> Xem
-                  </button>
                   <button *ngIf="authService.isAdmin()" class="btn-action edit" (click)="openBranchModal(branch)" title="Chỉnh sửa">
                     <i class="bi bi-pencil"></i> Chỉnh sửa
                   </button>
@@ -164,10 +161,6 @@
           </div>
           <div *ngIf="!isLoadingDetail">
             <div class="row g-3">
-              <div class="col-md-12">
-                <strong>ID:</strong>
-                <p>{{ selectedBranch.id }}</p>
-              </div>
               <div class="col-md-6">
                 <strong>Tên chi nhánh:</strong>
                 <p>{{ selectedBranch.branchName }}</p>

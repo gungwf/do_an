@@ -41,6 +41,6 @@ export class BranchService {
 
   /** 4. Cập nhật chi nhánh (gửi full object) */
   updateBranch(branch: Branch): Observable<Branch> {
-    return this.http.post<Branch>(this.apiUrl, branch);
+    return this.http.put<Branch>(`${this.apiUrl}/${branch.id}`, branch);
   }
 }

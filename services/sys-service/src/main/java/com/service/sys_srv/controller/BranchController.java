@@ -24,6 +24,12 @@ public class BranchController {
         return ResponseEntity.ok(branchService.createBranch(branch));
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('admin')")
+    public ResponseEntity<Branch> updateBranch(@PathVariable UUID id, @RequestBody Branch branch) {
+        return ResponseEntity.ok(branchService.updateBranch(id, branch));
+    }
+
     @GetMapping
     public ResponseEntity<List<Branch>> getAllBranches() {
         return ResponseEntity.ok(branchService.getAllBranches());
