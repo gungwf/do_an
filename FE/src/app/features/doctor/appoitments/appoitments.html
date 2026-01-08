@@ -239,7 +239,17 @@
         </div>
       </div>
       
-      <div class="modal-footer">
+      <div class="modal-footer d-flex justify-content-between">
+        <!-- Nút xem bệnh án ở góc trái -->
+        <button 
+          *ngIf="selectedAppointment?.medicalRecordId" 
+          type="button" 
+          class="btn btn-sm btn-info" 
+          (click)="selectedAppointment && viewMedicalRecord(selectedAppointment.id)">
+          <i class="bi bi-file-medical"></i> Xem Bệnh Án
+        </button>
+        <div *ngIf="!selectedAppointment?.medicalRecordId"></div>
+        
         <button type="button" class="btn btn-secondary" (click)="onCloseModal()">
           Đóng
         </button>
@@ -248,6 +258,13 @@
     </div>
   </div>
 </div>
+
+<!-- Dialog xem chi tiết bệnh án -->
+<app-medical-record-detail-dialog
+  [record]="viewMedicalRecordDetail"
+  [open]="showMedicalRecordDetail"
+  (close)="closeMedicalRecordDetail()">
+</app-medical-record-detail-dialog>
 
 <app-medical-record-form
   [appointment]="recordForAppointment"

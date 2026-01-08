@@ -14,13 +14,14 @@ import {
 
 import { MedicalRecordForm } from '../medical-record-form/medical-record-form';
 import { PrescriptionDialog } from '../../../shared/components/prescription-dialog/prescription-dialog';
+import { MedicalRecordDetailDialog } from '../../../shared/components/medical-record-detail-dialog/medical-record-detail-dialog';
 import { AuthService } from '../../../core/services/auth';
-import { MedicalRecordService } from '../../../core/services/medical-record.service';
+import { MedicalRecordService, MedicalRecordDetail } from '../../../core/services/medical-record.service';
 
 @Component({
   selector: 'app-appoitments',
   standalone: true,
-  imports: [CommonModule, MedicalRecordForm, FormsModule, PrescriptionDialog], 
+  imports: [CommonModule, MedicalRecordForm, FormsModule, PrescriptionDialog, MedicalRecordDetailDialog], 
   templateUrl: './appoitments.html',
   styleUrl: './appoitments.scss'
 })
@@ -53,6 +54,9 @@ export class Appoitments implements OnInit {
 
   public showPrescriptionDialog = false;
   public prescriptionAppointment: AppointmentResponseDto | null = null;
+
+  public viewMedicalRecordDetail: MedicalRecordDetail | null = null;
+  public showMedicalRecordDetail = false;
 
   ngOnInit(): void {
     AOS.init({ once: true });
@@ -152,7 +156,23 @@ export class Appoitments implements OnInit {
 
     this.appointmentService.getAppointmentById(appointmentId).subscribe({
       next: (data) => {
-        this.selectedAppointment = data; 
+        this.selectedAppointment = data;
+        
+        // Load medical record ID nếu appointment có thể có bệnh án
+        const eligibleStatuses = ['PAID_SERVICE', 'PENDING_BILLING', 'COMPLETED'];
+        if (eligibleStatuses.includes(data.status)) {
+          this.medicalRecordService.getMedicalRecordByAppointment(data.id).subscribe({
+            next: (record) => {
+              if (this.selectedAppointment) {
+                this.selectedAppointment.medicalRecordId = record.id;
+              }
+            },
+            error: () => {
+              // Chưa có bệnh án, bỏ qua
+            }
+          });
+        }
+        
         this.isLoadingDetail = false;
       },
       error: (err) => {
@@ -225,5 +245,30 @@ export class Appoitments implements OnInit {
   onPrescriptionSaved(): void {
     this.toastr.success('Đơn thuốc đã được lưu thành công!');
     this.loadAppointments();
+  }
+
+  // Xem bệnh án từ modal chi tiết
+  viewMedicalRecord(appointmentId: string): void {
+    const appointment = this.selectedAppointment;
+    if (!appointment || !appointment.medicalRecordId) {
+      this.toastr.error('Cuộc hẹn này chưa có bệnh án');
+      return;
+    }
+
+    this.medicalRecordService.getMedicalRecordDetailById(appointment.medicalRecordId).subscribe({
+      next: (record) => {
+        this.viewMedicalRecordDetail = record;
+        this.showMedicalRecordDetail = true;
+      },
+      error: (err) => {
+        console.error('Lỗi khi tải chi tiết bệnh án:', err);
+        this.toastr.error('Không thể tải bệnh án');
+      }
+    });
+  }
+
+  closeMedicalRecordDetail(): void {
+    this.showMedicalRecordDetail = false;
+    this.viewMedicalRecordDetail = null;
   }
 }
