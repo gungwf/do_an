@@ -240,15 +240,23 @@
       </div>
       
       <div class="modal-footer d-flex justify-content-between">
-        <!-- Nút xem bệnh án ở góc trái -->
-        <button 
-          *ngIf="selectedAppointment?.medicalRecordId" 
-          type="button" 
-          class="btn btn-sm btn-info" 
-          (click)="selectedAppointment && viewMedicalRecord(selectedAppointment.id)">
-          <i class="bi bi-file-medical"></i> Xem Bệnh Án
-        </button>
-        <div *ngIf="!selectedAppointment?.medicalRecordId"></div>
+        <!-- Nút xem bệnh án và đơn thuốc ở góc trái -->
+        <div>
+          <button 
+            *ngIf="selectedAppointment?.medicalRecordId" 
+            type="button" 
+            class="btn btn-sm btn-info me-2" 
+            (click)="selectedAppointment && viewMedicalRecord(selectedAppointment.id)">
+            <i class="bi bi-file-medical"></i> Xem Bệnh Án
+          </button>
+          <button 
+            *ngIf="selectedAppointment?.medicalRecordId" 
+            type="button" 
+            class="btn btn-sm btn-success" 
+            (click)="selectedAppointment && viewPrescription(selectedAppointment)">
+            <i class="bi bi-prescription2"></i> Xem Đơn Thuốc
+          </button>
+        </div>
         
         <button type="button" class="btn btn-secondary" (click)="onCloseModal()">
           Đóng
@@ -283,3 +291,10 @@
   (closed)="closePrescriptionDialog()"
   (saved)="onPrescriptionSaved()"
 ></app-prescription-dialog>
+
+<!-- Dialog xem đơn thuốc (read-only) -->
+<app-view-prescription-dialog
+  [medicalRecordId]="viewPrescriptionRecordId"
+  [open]="showViewPrescription"
+  (close)="closeViewPrescription()"
+></app-view-prescription-dialog>

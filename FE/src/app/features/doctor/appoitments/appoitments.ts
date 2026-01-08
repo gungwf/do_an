@@ -14,6 +14,7 @@ import {
 
 import { MedicalRecordForm } from '../medical-record-form/medical-record-form';
 import { PrescriptionDialog } from '../../../shared/components/prescription-dialog/prescription-dialog';
+import { ViewPrescriptionDialog } from '../../../shared/components/view-prescription-dialog/view-prescription-dialog';
 import { MedicalRecordDetailDialog } from '../../../shared/components/medical-record-detail-dialog/medical-record-detail-dialog';
 import { AuthService } from '../../../core/services/auth';
 import { MedicalRecordService, MedicalRecordDetail } from '../../../core/services/medical-record.service';
@@ -21,7 +22,7 @@ import { MedicalRecordService, MedicalRecordDetail } from '../../../core/service
 @Component({
   selector: 'app-appoitments',
   standalone: true,
-  imports: [CommonModule, MedicalRecordForm, FormsModule, PrescriptionDialog, MedicalRecordDetailDialog], 
+  imports: [CommonModule, MedicalRecordForm, FormsModule, PrescriptionDialog, MedicalRecordDetailDialog, ViewPrescriptionDialog], 
   templateUrl: './appoitments.html',
   styleUrl: './appoitments.scss'
 })
@@ -57,6 +58,9 @@ export class Appoitments implements OnInit {
 
   public viewMedicalRecordDetail: MedicalRecordDetail | null = null;
   public showMedicalRecordDetail = false;
+
+  public showViewPrescription = false;
+  public viewPrescriptionRecordId: string | null = null;
 
   ngOnInit(): void {
     AOS.init({ once: true });
@@ -270,5 +274,20 @@ export class Appoitments implements OnInit {
   closeMedicalRecordDetail(): void {
     this.showMedicalRecordDetail = false;
     this.viewMedicalRecordDetail = null;
+  }
+
+  // Xem đơn thuốc từ modal chi tiết (chỉ xem, không chỉnh sửa)
+  viewPrescription(appointment: AppointmentResponseDto): void {
+    if (!appointment || !appointment.medicalRecordId) {
+      this.toastr.error('Cuộc hẹn này chưa có bệnh án');
+      return;
+    }
+    this.viewPrescriptionRecordId = appointment.medicalRecordId;
+    this.showViewPrescription = true;
+  }
+
+  closeViewPrescription(): void {
+    this.showViewPrescription = false;
+    this.viewPrescriptionRecordId = null;
   }
 }

@@ -122,6 +122,7 @@ export interface MedicalRecordDetail {
     quantity: number;
     dosage: string;
     notes?: string;
+    price?: number;
     productName: string;
   }[];
   esignature: string | null;
