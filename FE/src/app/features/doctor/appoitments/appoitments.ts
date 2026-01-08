@@ -162,6 +162,19 @@ export class Appoitments implements OnInit {
     });
   }
 
+  getPatientAge(dob?: string): string {
+    if (!dob) return 'Không có';
+    const birth = new Date(dob);
+    if (isNaN(birth.getTime())) return 'Không có';
+    const now = new Date();
+    let age = now.getFullYear() - birth.getFullYear();
+    const m = now.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age >= 0 ? `${age} tuổi` : 'Không có';
+  }
+
   onCloseModal(): void {
     this.selectedAppointment = null;
     this.isLoadingDetail = false;

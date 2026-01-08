@@ -2,6 +2,7 @@ package com.service.appointment_service.service;
 
 import com.service.appointment_service.client.client.MedicalServiceClient;
 import com.service.appointment_service.client.client.UserServiceClient;
+import com.service.appointment_service.client.dto.PatientProfileDto;
 import com.service.appointment_service.client.dto.MedicalRecordDto;
 import com.service.appointment_service.client.dto.UserDto;
 import com.service.appointment_service.config.VnPayConfig;
@@ -509,11 +510,19 @@ public class PaymentService {
         UserDto patient = null;
         UserDto doctor = null;
         BranchDto branch = null;
+        PatientProfileDto patientProfile = null;
 
         try {
             patient = userServiceClient.getUserById(appointment.getPatientId());
         } catch (Exception e) {
             throw new AppException(ERROR_CODE.PATIENT_NOT_FOUND);
+        }
+
+        try {
+            patientProfile = userServiceClient.getPatientProfile(appointment.getPatientId());
+        } catch (Exception e) {
+            log.warn("Patient profile not found for patient ID: {}", appointment.getPatientId());
+            patientProfile = null;
         }
 
         if (appointment.getDoctorId() != null) {
@@ -530,7 +539,16 @@ public class PaymentService {
             throw new AppException(ERROR_CODE.BRANCH_NOT_FOUND);
         }
 
-        PatientDto patientDto = (patient != null) ? new PatientDto(patient.id(), patient.fullName(), patient.email()) : null;
+        PatientDto patientDto = (patient != null)
+            ? new PatientDto(
+                patient.id(),
+                patient.fullName(),
+                patient.email(),
+                patient.phoneNumber(),
+                patientProfile != null ? patientProfile.dateOfBirth() : null,
+                patientProfile != null ? patientProfile.allergies() : null,
+                patientProfile != null ? patientProfile.contraindications() : null)
+            : null;
         DoctorDto doctorDto = (doctor != null) ? new DoctorDto(doctor.id(), doctor.fullName()) : null;
         BranchDto branchDto = (branch != null) ? new BranchDto(branch.id(), branch.branchName(), branch.address()) : null;
 

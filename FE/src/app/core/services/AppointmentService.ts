@@ -50,7 +50,11 @@ export interface AppointmentResponseDto {
   patient: { 
     id: string; 
     fullName: string; 
-    email: string; 
+    email: string;
+    phoneNumber?: string;
+    dateOfBirth?: string;
+    allergies?: string | null;
+    contraindications?: string | null;
   };
   doctor: { 
     id: string; 

@@ -202,6 +202,10 @@
               <ul class="list-group list-group-flush">
                 <li class="list-group-item"><strong>Tên:</strong> {{ appt.patient.fullName }}</li>
                 <li class="list-group-item"><strong>Email:</strong> {{ appt.patient.email }}</li>
+                <li class="list-group-item"><strong>SĐT:</strong> {{ appt.patient.phoneNumber || 'Không có' }}</li>
+                <li class="list-group-item"><strong>Tuổi:</strong> {{ getPatientAge(appt.patient.dateOfBirth) }}</li>
+                <li class="list-group-item"><strong>Dị ứng:</strong> {{ appt.patient.allergies || 'Không có' }}</li>
+                <li class="list-group-item"><strong>Chống chỉ định:</strong> {{ appt.patient.contraindications || 'Không có' }}</li>
               </ul>
             </div>
             
