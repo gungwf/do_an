@@ -58,7 +58,7 @@ export class MedicalRecordForm implements OnChanges {
   }
 
   loadAllServices(): void {
-    this.serviceService.getServices().subscribe(services => {
+    this.serviceService.searchServices({ page: 0, size: 100, sortBy: 'serviceName', sortDir: 'asc' }).subscribe(services => {
       this.allServices = services.filter(s => s.active); // Chỉ lấy services active
       this.filteredServices = [...this.allServices];
       console.log('✅ Đã load services:', this.allServices.length);
